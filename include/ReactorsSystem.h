@@ -21,6 +21,7 @@ public:
 
     ReactorsSystem(
         size_t n_cells,
+        const vector<double>& cells_vol;
         const std::string& cantera_file,
         const std::string& solver_config_file,
         int gpu_device_id = 0
@@ -51,15 +52,9 @@ public:
     
 private:
     
-    size_t n_cells_;        // Количество ячеек (фиксировано)
-    size_t n_species_;      // Количество компонент (определяется механизмом)
+    size_t n_cells_;
+    size_t n_species_;
     
-    // Информация из расчета
-    SolverConfig        solver_config_;
-    ThermodynamicData   thermo_data_;
-    TransportData       transport_data_;
-    ReactionsData       mechanism_data_;
-
     Solver              solver_;
     ChemistryModel      chemistry_model_;
 };

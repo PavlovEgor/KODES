@@ -1,0 +1,9 @@
+{
+    "config_version": 1,
+    "solver":{
+        "solver": "seulex",
+        "abstol": 1e-12,
+        "reltol": 1e-1,
+        "initialChemicalTimeStep": 1e-7
+    }
+}
