@@ -9,7 +9,7 @@ namespace kodes
 {
 class seulex
 :
-    public ODESolver
+    public integrator
 {
     // Private data
 

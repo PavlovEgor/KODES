@@ -6,6 +6,10 @@
 
 #include "ODESystem.cuh"
 
+#include "rapidjson/document.h"
+#include "rapidjson/filereadstream.h"
+#include <string>
+
 namespace kodes 
 {
 
@@ -66,7 +70,7 @@ public:
     // Constructors
 
         //- Construct for given ODESystem
-        integrator(const ODESystem& ode, const std::string& config);
+        integrator(const ODESystem& ode, const std::string& config_path);
 
         //- Construct for given ODESystem specifying tolerances
         integrator
@@ -82,7 +86,7 @@ public:
         static autoPtr<integrator> New
         (
             const ODESystem& ode,
-            const std::string& config
+            const std::string& config_path
         );
 
 

@@ -1,5 +1,7 @@
 #include "integrator.cuh"
 #include <cmath>
+#include <cstdio>
+#include <stdexcept>
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
@@ -24,14 +26,15 @@ double kodes::integrator::normalizeError
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-kodes::integrator::integrator(const ODESystem& ode, const std::string& config)
+kodes::integrator::integrator(const ODESystem& ode, const kodes::Config& config)
 :
     odes_(ode),
     sizeOfSystem_(ode.nEqns()),
-    absTol_(sizeOfSystem_, dict.getOrDefault<scalar>("absTol", SMALL)),
-    relTol_(sizeOfSystem_, dict.getOrDefault<scalar>("relTol", 1e-4)),
-    maxSteps_(dict.getOrDefault<label>("maxSteps", 10000))
-{}
+    absTol_(sizeOfSystem_, config.getDouble("absTol", 1e-4)),
+    relTol_(sizeOfSystem_, config.getDouble("relTol", 1e-4)),
+    maxSteps_(config.getInt("maxSteps", 10000))
+{
+}
 
 
 kodes::integrator::integrator

@@ -1,5 +1,4 @@
 
-// #include "seulex.cuh"
 #include <iostream>
 #include "kodes_config.cuh"
 
@@ -10,7 +9,7 @@ int main(){
 
     kodes::Config config(json_path);
 
-    std::cout << config.getInt("maxSteps") << std::endl;
+    std::cout << config.getInt("maxSteps", 1) << std::endl;
     
     return 0;
 }

@@ -14,9 +14,9 @@ const double
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-kodes::seulex::seulex(const ODESystem& ode, const std::string& config)
+kodes::seulex::seulex(const ODESystem& ode, const std::string& config_path)
 :
-    ODESolver(ode, config),
+    integrator(ode, config_path),
     jacRedo_(min(1e-4, min(relTol_))),
     nSeq_(iMaxx_),
     cpu_(iMaxx_),
