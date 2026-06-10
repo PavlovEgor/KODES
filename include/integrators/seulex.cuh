@@ -41,7 +41,7 @@ class seulex
             mutable std::vector<double> dfdx_;
             mutable std::vector<std::vector<double>> dfdy_;
             mutable std::vector<std::vector<double>> a_;
-            mutable labelList pivotIndices_;
+            mutable std::vector<int> pivotIndices_;
 
             // Fields space for "solve" function
             mutable std::vector<double> dxOpt_, temp_;
@@ -78,7 +78,7 @@ public:
     // Constructors
 
         //- Construct from ODESystem
-        seulex(const ODESystem& ode, const dictionary& dict);
+        seulex(const ODESystem& ode, const kodes::Config& config);
 
 
     //- Destructor

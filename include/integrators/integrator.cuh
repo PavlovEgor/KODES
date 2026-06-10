@@ -6,9 +6,9 @@
 
 #include "ODESystem.cuh"
 
-#include "rapidjson/document.h"
-#include "rapidjson/filereadstream.h"
 #include <string>
+#include "kodes_config.cuh"
+
 
 namespace kodes 
 {
@@ -70,7 +70,7 @@ public:
     // Constructors
 
         //- Construct for given ODESystem
-        integrator(const ODESystem& ode, const std::string& config_path);
+        integrator(const ODESystem& ode, const kodes::Config& config);
 
         //- Construct for given ODESystem specifying tolerances
         integrator
@@ -79,16 +79,6 @@ public:
             const std::vector<double>& absTol,
             const std::vector<double>& relTol
         );
-
-    // Selectors
-
-        //- Select null constructed
-        static autoPtr<integrator> New
-        (
-            const ODESystem& ode,
-            const std::string& config_path
-        );
-
 
     //- Destructor
     virtual ~integrator() = default;
@@ -135,7 +125,7 @@ public:
             std::vector<double>& y,
             double& dxEst
         ) const;
-}
+};
 
 }
 

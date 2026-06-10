@@ -14,7 +14,7 @@ double kodes::integrator::normalizeError
 {
     // Calculate the maximum error
     double maxErr = 0.0;
-    forAll(err, i)
+    for (size_t i=0; i < err.size(); ++i)
     {
         double tol = absTol_[i] + relTol_[i]*max(fabs(y0[i]), fabs(y[i]));
         maxErr = max(maxErr, fabs(err[i])/tol);
@@ -30,9 +30,9 @@ kodes::integrator::integrator(const ODESystem& ode, const kodes::Config& config)
 :
     odes_(ode),
     sizeOfSystem_(ode.nEqns()),
-    absTol_(sizeOfSystem_, config.getDouble("absTol", 1e-4)),
-    relTol_(sizeOfSystem_, config.getDouble("relTol", 1e-4)),
-    maxSteps_(config.getInt("maxSteps", 10000))
+    absTol_(sizeOfSystem_, (double)config.getDouble("absTol", 1e-4)),
+    relTol_(sizeOfSystem_, (double)config.getDouble("relTol", 1e-4)),
+    maxSteps_((int)config.getInt("maxSteps", 10000))
 {
 }
 

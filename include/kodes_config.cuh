@@ -29,10 +29,10 @@ public:
     Config(Config&& other) noexcept;
     Config& operator=(Config&& other) noexcept;
 
-    double getDouble(const std::string& name, double default_value);
-    int getInt(const std::string& name, int default_value);
-    std::string getString(const std::string& name, const std::string& default_value);
-    bool getBool(const std::string& name, bool default_value);
+    double getDouble(const std::string& name, double default_value) const;
+    int getInt(const std::string& name, int default_value) const;
+    std::string getString(const std::string& name, const std::string& default_value) const;
+    bool getBool(const std::string& name, bool default_value) const;
     
     bool hasKey(const std::string& name) const;
 };

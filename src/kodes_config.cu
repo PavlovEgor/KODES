@@ -61,7 +61,7 @@ const rapidjson::Value* Config::getValue(const std::string& name) const {
     return &(it->value);
 }
 
-double Config::getDouble(const std::string& name, double default_value) {
+double Config::getDouble(const std::string& name, double default_value) const {
     const rapidjson::Value* val = getValue(name);
     if (val && val->IsDouble()) {
         return val->GetDouble();
@@ -69,7 +69,7 @@ double Config::getDouble(const std::string& name, double default_value) {
     return default_value;
 }
 
-int Config::getInt(const std::string& name, int default_value) {
+int Config::getInt(const std::string& name, int default_value) const {
     const rapidjson::Value* val = getValue(name);
     if (val && val->IsInt()) {
         return val->GetInt();
@@ -77,7 +77,7 @@ int Config::getInt(const std::string& name, int default_value) {
     return default_value;
 }
 
-std::string Config::getString(const std::string& name, const std::string& default_value) {
+std::string Config::getString(const std::string& name, const std::string& default_value) const {
     const rapidjson::Value* val = getValue(name);
     if (val && val->IsString()) {
         return val->GetString();
@@ -85,7 +85,7 @@ std::string Config::getString(const std::string& name, const std::string& defaul
     return default_value;
 }
 
-bool Config::getBool(const std::string& name, bool default_value) {
+bool Config::getBool(const std::string& name, bool default_value) const {
     const rapidjson::Value* val = getValue(name);
     if (val && val->IsBool()) {
         return val->GetBool();

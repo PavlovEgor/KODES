@@ -1,4 +1,35 @@
 #include "seulex.cuh"
+#include <algorithm>
+
+#define SMALL 1e-9
+#define GREAT 1e9
+#define sqr(x) ((x)*(x))
+#define min(a, b) (((a) > (b)) ? (b) : (a) )
+#define max(a, b) (((a) > (b)) ? (a) : (b) )
+
+void LUDecompose
+(
+    std::vector<std::vector<double>>& matrix,
+    //! [out] size is adjusted as required
+    std::vector<int>& pivotIndices
+);
+
+void LUDecompose
+(
+    std::vector<std::vector<double>>& matrix,
+    //! [out] size is adjusted as required
+    std::vector<int>& pivotIndices,
+    //! [out] is -1 for odd number of row interchanges and 1 for even number
+    int& sign
+);
+
+template<class Type>
+void LUBacksubstitute
+(
+    const std::vector<std::vector<double>>& luMatrix,
+    const std::vector<int> pivotIndices,
+    std::vector<Type>& source
+);
 
 namespace kodes 
 {
@@ -14,15 +45,15 @@ const double
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-kodes::seulex::seulex(const ODESystem& ode, const std::string& config_path)
+kodes::seulex::seulex(const ODESystem& ode, const kodes::Config& config)
 :
-    integrator(ode, config_path),
-    jacRedo_(min(1e-4, min(relTol_))),
+    integrator(ode, config),
+    jacRedo_(min(1e-4, static_cast<double>(*std::min_element(relTol_.begin(), relTol_.end())))),
     nSeq_(iMaxx_),
     cpu_(iMaxx_),
-    coeff_(iMaxx_, iMaxx_),
+    coeff_(iMaxx_, std::vector<double>(iMaxx_, 0.0)),
     theta_(2*jacRedo_),
-    table_(kMaxx_, sizeOfSystem_),
+    table_(kMaxx_, std::vector<double>(sizeOfSystem_, 0.0)),
     dfdx_(sizeOfSystem_),
     dfdy_(sizeOfSystem_),
     a_(sizeOfSystem_),
@@ -59,7 +90,7 @@ kodes::seulex::seulex(const ODESystem& ode, const std::string& config_path)
         for (int l=0; l<k; l++)
         {
             double ratio = double(nSeq_[k])/nSeq_[l];
-            coeff_(k, l) = 1/(ratio - 1);
+            coeff_[k][l] = 1/(ratio - 1);
         }
     }
 }
@@ -84,10 +115,10 @@ bool kodes::seulex::seul
     {
         for (size_t j=0; j<sizeOfSystem_; j++)
         {
-            a_(i, j) = -dfdy_(i, j);
+            a_[i][j] = -dfdy_[i][j];
         }
 
-        a_(i, i) += 1/dx;
+        a_[i][i] += 1/dx;
     }
 
     LUDecompose(a_, pivotIndices_);
@@ -100,7 +131,11 @@ bool kodes::seulex::seul
 
     for (size_t nn=1; nn<nSteps; nn++)
     {
-        yTemp_ += dy_;
+        for(size_t i=0; i<sizeOfSystem_; ++i)
+        {
+            yTemp_[i] += dy_[i];
+        }
+
         xnew += dx;
 
         if (nn == 1 && k<=1)
@@ -125,7 +160,7 @@ bool kodes::seulex::seul
             for (size_t i=0; i<sizeOfSystem_; i++)
             {
                 // Test of dy_[i] to avoid overflow
-                if (mag(dy_[i]) > scale[i]*denom)
+                if (fabs(dy_[i]) > scale[i]*denom)
                 {
                     theta_ = 1;
                     return false;
@@ -167,13 +202,13 @@ void kodes::seulex::extrapolate
         for (size_t i=0; i<sizeOfSystem_; i++)
         {
             table[j-1][i] =
-                table(j, i) + coeff_(k, j)*(table(j, i) - table[j-1][i]);
+                table[j][i] + coeff_[k][j]*(table[j][i] - table[j-1][i]);
         }
     }
 
     for (int i=0; i<sizeOfSystem_; i++)
     {
-        y[i] = table(0, i) + coeff_(k, 0)*(table(0, i) - y[i]);
+        y[i] = table[0][i] + coeff_[k][0]*(table[0][i] - y[i]);
     }
 }
 
@@ -188,7 +223,7 @@ void kodes::seulex::solve
     temp_[0] = GREAT;
     double dx = step.dxTry;
     y0_ = y;
-    dxOpt_[0] = mag(0.1*dx);
+    dxOpt_[0] = fabs(0.1*dx);
 
     if (step.first || step.prevReject)
     {
@@ -202,9 +237,9 @@ void kodes::seulex::solve
         kTarg_ = max(1, min(kMaxx_ - 1, int(logTol)));
     }
 
-    forAll(scale_, i)
+    for (size_t i=0; i < sizeOfSystem_; ++i)
     {
-        scale_[i] = absTol_[i] + relTol_[i]*mag(y[i]);
+        scale_[i] = absTol_[i] + relTol_[i]*fabs(y[i]);
     }
 
     bool jacUpdated = false;
@@ -216,7 +251,7 @@ void kodes::seulex::solve
     }
 
     int k;
-    double dxNew = mag(dx);
+    double dxNew = fabs(dx);
     bool firstk = true;
 
     while (firstk || step.reject)
@@ -225,11 +260,11 @@ void kodes::seulex::solve
         firstk = false;
         step.reject = false;
 
-        if (mag(dx) <= mag(x)*sqr(SMALL))
-        {
-             WarningInFunction
-                    << "step size underflow :"  << dx << endl;
-        }
+        // if (fabs(dx) <= fabs(x)*sqr(SMALL))
+        // {
+        //     std::
+        //             << "step size underflow :"  << dx << endl;
+        // }
 
         double errOld = 0;
 
@@ -240,7 +275,7 @@ void kodes::seulex::solve
             if (!success)
             {
                 step.reject = true;
-                dxNew = mag(dx)*stepFactor5_;
+                dxNew = fabs(dx)*stepFactor5_;
                 break;
             }
 
@@ -250,7 +285,7 @@ void kodes::seulex::solve
             }
             else
             {
-                forAll(ySequence_, i)
+                for (size_t i=0; i<sizeOfSystem_; ++i)
                 {
                     table_[k-1][i] = ySequence_[i];
                 }
@@ -260,16 +295,16 @@ void kodes::seulex::solve
             {
                 extrapolate(k, table_, y);
                 double err = 0;
-                forAll(scale_, i)
+                for (size_t i=0; i<sizeOfSystem_; ++i)
                 {
-                    scale_[i] = absTol_[i] + relTol_[i]*mag(y0_[i]);
-                    err += sqr((y[i] - table_(0, i))/scale_[i]);
+                    scale_[i] = absTol_[i] + relTol_[i]*fabs(y0_[i]);
+                    err += sqr((y[i] - table_[0][i])/scale_[i]);
                 }
                 err = sqrt(err/sizeOfSystem_);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
                     step.reject = true;
-                    dxNew = mag(dx)*stepFactor5_;
+                    dxNew = fabs(dx)*stepFactor5_;
                     break;
                 }
                 errOld = min(4*err, 1);
@@ -285,7 +320,7 @@ void kodes::seulex::solve
                     fac = stepFactor2_/pow(err/stepFactor1_, expo);
                     fac = max(facmin/stepFactor4_, min(1/facmin, fac));
                 }
-                dxOpt_[k] = mag(dx*fac);
+                dxOpt_[k] = fabs(dx*fac);
                 temp_[k] = cpu_[k]/dxOpt_[k];
 
                 if ((step.first || step.last) && err <= 1)
@@ -408,7 +443,7 @@ void kodes::seulex::solve
     if (step.prevReject)
     {
         kTarg_ = min(kopt, k);
-        dxNew = min(mag(dx), dxOpt_[kTarg_]);
+        dxNew = min(fabs(dx), dxOpt_[kTarg_]);
         step.prevReject = false;
     }
     else
@@ -436,3 +471,166 @@ void kodes::seulex::solve
 
 
 // ************************************************************************* //
+
+void LUDecompose
+(
+    std::vector<std::vector<double>>& matrix,
+    std::vector<int>& pivotIndices
+)
+{
+    int sign;
+    LUDecompose(matrix, pivotIndices, sign);
+}
+
+void LUDecompose
+(
+    std::vector<std::vector<double>>& matrix,
+    std::vector<int>& pivotIndices,
+    int& sign
+)
+{
+    const size_t size = matrix.size();
+    std::vector<double> vv(size);
+    sign = 1;
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        double largestCoeff = 0.0;
+        double temp;
+        const double* __restrict__ matrixi = matrix[i].data();
+
+        for (size_t j = 0; j < size; ++j)
+        {
+            if ((temp = fabs(matrixi[j])) > largestCoeff)
+            {
+                largestCoeff = temp;
+            }
+        }
+
+        // if (largestCoeff == 0.0)
+        // {
+        //     FatalErrorInFunction
+        //         << "Singular matrix" << exit(FatalError);
+        // }
+
+        vv[i] = 1.0/largestCoeff;
+    }
+
+    for (size_t j = 0; j < size; ++j)
+    {
+        double* __restrict__ matrixj = matrix[j].data();
+
+        for (size_t i = 0; i < j; ++i)
+        {
+            double* __restrict__ matrixi = matrix[i].data();
+
+            double sum = matrixi[j];
+            for (size_t k = 0; k < i; ++k)
+            {
+                sum -= matrixi[k]*matrix[k][j];
+            }
+            matrixi[j] = sum;
+        }
+
+        size_t iMax = 0;
+
+        double largestCoeff = 0.0;
+        for (size_t i = j; i < size; ++i)
+        {
+            double* __restrict__ matrixi = matrix[i].data();
+            double sum = matrixi[j];
+
+            for (size_t k = 0; k < j; ++k)
+            {
+                sum -= matrixi[k]*matrix[k][j];
+            }
+
+            matrixi[j] = sum;
+
+            double temp;
+            if ((temp = vv[i]*fabs(sum)) >= largestCoeff)
+            {
+                largestCoeff = temp;
+                iMax = i;
+            }
+        }
+
+        pivotIndices[j] = iMax;
+
+        if (j != iMax)
+        {
+            double* __restrict__ matrixiMax = matrix[iMax].data();
+
+            for (size_t k = 0; k < size; ++k)
+            {
+                std::swap(matrixj[k], matrixiMax[k]);
+            }
+
+            sign *= -1;
+            vv[iMax] = vv[j];
+        }
+
+        if (matrixj[j] == 0.0)
+        {
+            matrixj[j] = SMALL;
+        }
+
+        if (j != size-1)
+        {
+            double rDiag = 1.0/matrixj[j];
+
+            for (size_t i = j + 1; i < size; ++i)
+            {
+                matrix[i][j] *= rDiag;
+            }
+        }
+    }
+}
+
+template<class Type>
+void LUBacksubstitute
+(
+    const std::vector<std::vector<double>>& luMatrix,
+    const std::vector<int> pivotIndices,
+    std::vector<Type>& sourceSol
+)
+{
+    size_t m = luMatrix.size();
+
+    size_t ii = 0;
+
+    for (size_t i = 0; i < m; ++i)
+    {
+        size_t ip = pivotIndices[i];
+        Type sum = sourceSol[ip];
+        sourceSol[ip] = sourceSol[i];
+        const double* __restrict__ luMatrixi = luMatrix[i].data();
+
+        if (ii != 0)
+        {
+            for (size_t j = ii - 1; j < i; ++j)
+            {
+                sum -= luMatrixi[j]*sourceSol[j];
+            }
+        }
+        else if (sum != Type(0))
+        {
+            ii = i + 1;
+        }
+
+        sourceSol[i] = sum;
+    }
+
+    for (size_t i = m - 1; i >= 0; --i)
+    {
+        Type sum = sourceSol[i];
+        const double* __restrict__ luMatrixi = luMatrix[i].data();
+
+        for (size_t j = i + 1; j < m; ++j)
+        {
+            sum -= luMatrixi[j]*sourceSol[j];
+        }
+
+        sourceSol[i] = sum/luMatrixi[i];
+    }
+}

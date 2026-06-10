@@ -1,0 +1,1 @@
+/usr/bin/g++ @CMakeFiles/hires_example.dir/objects1.rsp CMakeFiles/hires_example.dir/cmake_device_link.o -o hires_example @CMakeFiles/hires_example.dir/linkLibs.rsp -L"/opt/cuda-13.1/targets/x86_64-linux/lib/stubs" -L"/opt/cuda-13.1/targets/x86_64-linux/lib"
