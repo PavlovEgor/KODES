@@ -1,7 +1,7 @@
 
-// HIRESSystem.h
-#ifndef HIRESSystem_H
-#define HIRESSystem_H
+// SimpleSystem.h
+#ifndef SimpleSystem_H
+#define SimpleSystem_H
 
 #pragma once
 
@@ -11,14 +11,14 @@
 namespace kodes 
 {
 
-class HIRESSystem : public ODESystem
+class SimpleSystem : public ODESystem
 {
 public:
     // Constructor
-    HIRESSystem();
+    SimpleSystem();
     
     // Destructor
-    ~HIRESSystem();
+    ~SimpleSystem();
     
     // Return the number of equations in the system
     size_t nEqns() const;
@@ -44,9 +44,9 @@ public:
     static std::vector<double> getInitialConditions();
     
     // Output points of interest
-    static std::vector<double> getOutputPoints();
+    static std::vector<double> getGroundSolution(double);
 };
 
 } // namespace kodes
 
-#endif // HIRESSystem_H
+#endif // SimpleSystem_H

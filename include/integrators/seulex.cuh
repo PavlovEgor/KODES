@@ -87,13 +87,15 @@ public:
 
     // Member Functions
 
+        using integrator::solve;
+
         //- Solve the ODE system and the update the state
-        virtual void solve
+        void solve 
         (
             double& x,
             std::vector<double>& y,
             stepState& step
-        ) const;
+        ) const override;
 }; 
 }
 

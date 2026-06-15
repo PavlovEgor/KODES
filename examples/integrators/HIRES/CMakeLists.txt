@@ -18,13 +18,14 @@ add_executable(hires_example
     ${SRC_DIR}/kodes_config.cu
     ${SRC_DIR}/integrators/integrator.cu
     ${SRC_DIR}/integrators/seulex.cu
-    HIRESSystem.cu 
+    ${ROOT_DIR}/examples/TestSystems/HIRESSystem.cu 
 )
 
 target_include_directories(hires_example PRIVATE
     ${INC_DIR}
     ${INC_DIR}/integrators
     ${ROOT_DIR}/external/rapidjson/include
+    ${ROOT_DIR}/examples/TestSystems
 )
 
 # Дополнительные рекомендации:

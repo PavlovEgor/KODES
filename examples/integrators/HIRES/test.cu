@@ -14,12 +14,27 @@ int main(){
 
     kodes::seulex solver(ode, config);
 
-    kodes::integrator::stepState ss(321.8122);
+    double xEnd(321.8122);
+
+    kodes::integrator::stepState ss(xEnd);
 
     double x = 0;
     std::vector<double> y = ode.getInitialConditions();
 
-    solver.solve(x, y, ss);
+    do {
+        solver.solve(x, y, ss);
+    } while (x < xEnd);
+
+    std::vector<double> yG = ode.getGroundSolution();
+
+
+    for (const auto& element : y) {
+        std::cout << element << " ";
+    } std::cout << std::endl;
+
+    for (const auto& element : yG) {
+        std::cout << element << " ";
+    } std::cout << std::endl;
 
     return 0;
 }

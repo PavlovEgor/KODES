@@ -1,5 +1,6 @@
 #include "seulex.cuh"
 #include <algorithm>
+#include <iostream>
 
 #define SMALL 1e-9
 #define GREAT 1e9
@@ -55,8 +56,8 @@ kodes::seulex::seulex(const ODESystem& ode, const kodes::Config& config)
     theta_(2*jacRedo_),
     table_(kMaxx_, std::vector<double>(sizeOfSystem_, 0.0)),
     dfdx_(sizeOfSystem_),
-    dfdy_(sizeOfSystem_),
-    a_(sizeOfSystem_),
+    dfdy_(sizeOfSystem_, std::vector<double>(sizeOfSystem_, 0.0)),
+    a_(sizeOfSystem_, std::vector<double>(sizeOfSystem_, 0.0)),
     pivotIndices_(sizeOfSystem_),
     dxOpt_(iMaxx_),
     temp_(iMaxx_),
@@ -621,7 +622,7 @@ void LUBacksubstitute
         sourceSol[i] = sum;
     }
 
-    for (size_t i = m - 1; i >= 0; --i)
+    for (int i = m - 1; i >= 0; --i)
     {
         Type sum = sourceSol[i];
         const double* __restrict__ luMatrixi = luMatrix[i].data();

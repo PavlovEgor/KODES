@@ -55,7 +55,7 @@ void HIRESSystem::derivatives
     dydx[6] = 280.0 * y6 * y8 - 1.81 * y7;
     
     // y8' = -y7
-    dydx[7] = -y7;
+    dydx[7] = -280 * y6 * y8 + 1.81 * y7;
 }
 
 void HIRESSystem::jacobian
@@ -123,7 +123,11 @@ void HIRESSystem::jacobian
     dfdy[6][7] = 280.0 * y6;
     
     // Row 7: derivatives of y8'
-    dfdy[7][6] = -1.0;
+    dfdy[7][5] = -280*y8;
+    dfdy[7][6] = 1.81;
+    dfdy[7][7] = -280 * y6;
+
+
 }
 
 std::vector<double> HIRESSystem::getInitialConditions()
@@ -135,12 +139,15 @@ std::vector<double> HIRESSystem::getInitialConditions()
     return y0;
 }
 
-std::vector<double> HIRESSystem::getOutputPoints()
+std::vector<double> HIRESSystem::getGroundSolution()
 {
-    std::vector<double> points(2);
-    points[0] = 321.8122;
-    points[1] = 421.8122;
-    return points;
+    std::vector<double> yGround(8, 0.0);
+    yGround[0] = 0.7371312573325668e-3, yGround[1] = 0.1442485726316185e-3;
+    yGround[2] = 0.5888729740967575e-4, yGround[3] = 0.1175651343283149e-2;
+    yGround[4] = 0.2386356198831331e-2, yGround[5] = 0.6238968252742796e-2;
+    yGround[6] = 0.2849998395185769e-2, yGround[7] = 0.2850001604814231e-2;
+
+    return yGround;
 }
 
 } // namespace kodes

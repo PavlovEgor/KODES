@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/hires_example.dir/HIRESSystem.cu.o"
-  "CMakeFiles/hires_example.dir/HIRESSystem.cu.o.d"
   "CMakeFiles/hires_example.dir/cmake_device_link.o"
+  "CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o"
+  "CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o.d"
   "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o"
   "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o.d"
   "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o"

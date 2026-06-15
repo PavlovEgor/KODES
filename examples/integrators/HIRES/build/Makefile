@@ -129,29 +129,29 @@ hires_example/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/build
 .PHONY : hires_example/fast
 
-HIRESSystem.o: HIRESSystem.cu.o
-.PHONY : HIRESSystem.o
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o
 
 # target to build an object file
-HIRESSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/HIRESSystem.cu.o
-.PHONY : HIRESSystem.cu.o
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
 
-HIRESSystem.i: HIRESSystem.cu.i
-.PHONY : HIRESSystem.i
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i
 
 # target to preprocess a source file
-HIRESSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/HIRESSystem.cu.i
-.PHONY : HIRESSystem.cu.i
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
 
-HIRESSystem.s: HIRESSystem.cu.s
-.PHONY : HIRESSystem.s
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s
 
 # target to generate assembly for a file
-HIRESSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/HIRESSystem.cu.s
-.PHONY : HIRESSystem.cu.s
+home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
+.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
 
 home/pavlovep/KODES/src/integrators/integrator.o: home/pavlovep/KODES/src/integrators/integrator.cu.o
 .PHONY : home/pavlovep/KODES/src/integrators/integrator.o
@@ -258,9 +258,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... hires_example"
-	@echo "... HIRESSystem.o"
-	@echo "... HIRESSystem.i"
-	@echo "... HIRESSystem.s"
+	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o"
+	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i"
+	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.o"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.i"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.s"
