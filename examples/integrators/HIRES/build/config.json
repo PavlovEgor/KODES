@@ -1,5 +1,5 @@
 {
-    "absTol": 1e-3,
-    "relTol": 1e-1,
+    "absTol": 1e-5,
+    "relTol": 1e-5,
     "maxSteps": 1000
 }

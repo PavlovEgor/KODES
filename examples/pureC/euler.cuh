@@ -1,6 +1,6 @@
 #pragma once
 
-typedef double scalar;
+typedef float scalar;
 typedef int    label;
 
 __constant__ scalar safeScale_ = 0.9;

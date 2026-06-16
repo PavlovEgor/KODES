@@ -339,4 +339,10 @@ CMakeFiles/hires_example.dir/test.cu.o : /home/pavlovep/KODES/examples/integrato
     /usr/include/c++/13/bits/ostream.tcc \
     /usr/include/c++/13/istream \
     /usr/include/c++/13/bits/istream.tcc \
-    /home/pavlovep/KODES/examples/integrators/HIRES/../../../examples/TestSystems/HIRESSystem.cuh
+    /home/pavlovep/KODES/examples/integrators/HIRES/../../../examples/TestSystems/HIRESSystem.cuh \
+    /usr/include/c++/13/chrono \
+    /usr/include/c++/13/bits/chrono.h \
+    /usr/include/c++/13/ratio \
+    /usr/include/c++/13/cstdint \
+    /usr/include/c++/13/ctime \
+    /usr/include/c++/13/bits/parse_numbers.h

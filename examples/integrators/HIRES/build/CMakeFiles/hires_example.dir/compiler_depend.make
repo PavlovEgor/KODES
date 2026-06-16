@@ -1672,6 +1672,7 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
   /usr/include/c++/13/bits/basic_string.tcc \
   /usr/include/c++/13/bits/char_traits.h \
   /usr/include/c++/13/bits/charconv.h \
+  /usr/include/c++/13/bits/chrono.h \
   /usr/include/c++/13/bits/concept_check.h \
   /usr/include/c++/13/bits/cpp_type_traits.h \
   /usr/include/c++/13/bits/cxxabi_forced.h \
@@ -1697,6 +1698,7 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
   /usr/include/c++/13/bits/new_allocator.h \
   /usr/include/c++/13/bits/ostream.tcc \
   /usr/include/c++/13/bits/ostream_insert.h \
+  /usr/include/c++/13/bits/parse_numbers.h \
   /usr/include/c++/13/bits/postypes.h \
   /usr/include/c++/13/bits/predefined_ops.h \
   /usr/include/c++/13/bits/ptr_traits.h \
@@ -1734,13 +1736,16 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
   /usr/include/c++/13/cassert \
   /usr/include/c++/13/cctype \
   /usr/include/c++/13/cerrno \
+  /usr/include/c++/13/chrono \
   /usr/include/c++/13/climits \
   /usr/include/c++/13/clocale \
   /usr/include/c++/13/cmath \
   /usr/include/c++/13/cstddef \
+  /usr/include/c++/13/cstdint \
   /usr/include/c++/13/cstdio \
   /usr/include/c++/13/cstdlib \
   /usr/include/c++/13/cstring \
+  /usr/include/c++/13/ctime \
   /usr/include/c++/13/cwchar \
   /usr/include/c++/13/cwctype \
   /usr/include/c++/13/debug/assertions.h \
@@ -1767,6 +1772,7 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
   /usr/include/c++/13/pstl/execution_defs.h \
   /usr/include/c++/13/pstl/glue_memory_defs.h \
   /usr/include/c++/13/pstl/pstl_config.h \
+  /usr/include/c++/13/ratio \
   /usr/include/c++/13/stdexcept \
   /usr/include/c++/13/stdlib.h \
   /usr/include/c++/13/streambuf \
@@ -1911,6 +1917,10 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
 
+
+/usr/include/c++/13/ctime:
+
+/usr/include/c++/13/cstdint:
 
 /home/pavlovep/KODES/examples/integrators/HIRES/test.cu:
 
@@ -2086,9 +2096,13 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
 
 /usr/include/c++/13/stdlib.h:
 
+/usr/include/c++/13/chrono:
+
 /home/pavlovep/KODES/external/rapidjson/include/rapidjson/document.h:
 
 /usr/include/c++/13/bits/uses_allocator.h:
+
+/usr/include/c++/13/bits/parse_numbers.h:
 
 /usr/include/c++/13/bits/std_abs.h:
 
@@ -2105,6 +2119,8 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
 /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/device_atomic_functions.h:
 
 /usr/include/c++/13/tr1/poly_laguerre.tcc:
+
+/usr/include/c++/13/bits/chrono.h:
 
 /usr/include/x86_64-linux-gnu/bits/endianness.h:
 
@@ -2415,6 +2431,8 @@ CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrator
 /usr/include/features-time64.h:
 
 /usr/include/features.h:
+
+/usr/include/c++/13/ratio:
 
 /usr/include/linux/limits.h:
 

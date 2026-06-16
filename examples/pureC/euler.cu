@@ -2,50 +2,89 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cuda/cmath>
 #include <cuda_runtime.h>
 #include "euler.cuh"
 #include <iostream>
+#include <chrono> 
+
 
 int main(){
+
+    auto start_total = std::chrono::high_resolution_clock::now();
 
     scalar xEnd = 321.8122;
     scalar xStart = 0.0;
 
     ODEVectors vectors;
     vectors.sizeOfSystem = 8;
-    vectors.numOfSystems = 1 << 5;
+    vectors.numOfSystems = 1 << 13;
     size_t sizeOfData = vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar);
 
+    auto start_alloc = std::chrono::high_resolution_clock::now();
     cudaMallocManaged(&vectors.data, sizeOfData);
+    auto end_alloc = std::chrono::high_resolution_clock::now();
 
+    auto duration_alloc = std::chrono::duration_cast<std::chrono::microseconds>(end_alloc - start_alloc);
+    std::cout << "Время выделения памяти: " << duration_alloc.count() << " мкс" << std::endl;
+
+    auto start_init = std::chrono::high_resolution_clock::now();
     init(&vectors);
+    auto end_init = std::chrono::high_resolution_clock::now();
+    auto duration_init = std::chrono::duration_cast<std::chrono::microseconds>(end_init - start_init);
+    std::cout << "Время инициализации: " << duration_init.count() << " мкс" << std::endl;
 
-    for (int i=0; i < 5; ++i){
+    std::cout << std::endl;
     for (int j=0; j < vectors.sizeOfSystem; j++)
     {
-        std::cout << vectors.data[i * vectors.sizeOfSystem + j] << " ";
-    } std::cout << std::endl; 
-    }std::cout << std::endl;
+        std::cout << vectors.data[0 * vectors.sizeOfSystem + j] << " ";
+    } std::cout << std::endl; std::cout << std::endl;
 
     int threads = 256;
-    int blocks = (vectors.numOfSystems + threads - 1) / threads;
+    int blocks = cuda::ceil_div(vectors.numOfSystems, threads);
     
+    cudaEvent_t start_kernel, stop_kernel;
+    cudaEventCreate(&start_kernel);
+    cudaEventCreate(&stop_kernel);
+    
+    cudaEventRecord(start_kernel);
     euler_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, xStart, xEnd);
+    cudaEventRecord(stop_kernel);
+
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         printf("Kernel launch error: %s\n", cudaGetErrorString(err));
     }
-    cudaDeviceSynchronize();
+    
+    
+    cudaEventSynchronize(stop_kernel);
+    float kernel_time_ms = 0;
+    cudaEventElapsedTime(&kernel_time_ms, start_kernel, stop_kernel);
+    std::cout << "Время выполнения ядра: " << kernel_time_ms << " мс" << std::endl;
+    
+    cudaEventDestroy(start_kernel);
+    cudaEventDestroy(stop_kernel);
 
     for (int i=0; i < 5; ++i){
     for (int j=0; j < vectors.sizeOfSystem; j++)
     {
         std::cout << vectors.data[i * vectors.sizeOfSystem + j] << " ";
     } std::cout << std::endl;
-    }
+    } std::cout << std::endl;
 
     std::cout << "0.000737131 0.000144249 5.88873e-05 0.00117565 0.00238636 0.00623897 0.00285 0.00285" <<std::endl;
+    
+    
+    auto start_free = std::chrono::high_resolution_clock::now();
     cudaFree(vectors.data);
+    auto end_free = std::chrono::high_resolution_clock::now();
+    auto duration_free = std::chrono::duration_cast<std::chrono::microseconds>(end_free - start_free);
+    std::cout << "Время освобождения памяти: " << duration_free.count() << " мкс" << std::endl;
+
+    // Общее время выполнения
+    auto end_total = std::chrono::high_resolution_clock::now();
+    auto duration_total = std::chrono::duration_cast<std::chrono::milliseconds>(end_total - start_total);
+    std::cout << "Общее время выполнения: " << duration_total.count() << " мс" << std::endl;
 
     return 0;
 }
