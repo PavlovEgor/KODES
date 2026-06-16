@@ -1,7 +1,7 @@
 CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /home/pavlovep/KODES/src/integrators/seulex.cu \
     /usr/include/stdc-predef.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/cuda_runtime.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/host_config.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/cuda_runtime.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/host_config.h \
     /usr/include/features.h \
     /usr/include/features-time64.h \
     /usr/include/x86_64-linux-gnu/bits/wordsize.h \
@@ -10,9 +10,9 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/x86_64-linux-gnu/bits/long-double.h \
     /usr/include/x86_64-linux-gnu/gnu/stubs.h \
     /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/builtin_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/device_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/host_defines.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/builtin_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/device_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/host_defines.h \
     /usr/include/ctype.h \
     /usr/include/x86_64-linux-gnu/bits/types.h \
     /usr/include/x86_64-linux-gnu/bits/typesizes.h \
@@ -21,8 +21,8 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/x86_64-linux-gnu/bits/endianness.h \
     /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
     /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/driver_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/vector_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/driver_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/vector_types.h \
     /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
     /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
     /usr/include/limits.h \
@@ -35,12 +35,12 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
     /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
     /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/surface_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/texture_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/library_types.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/channel_descriptor.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/cuda_runtime_api.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/cuda_device_runtime_api.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/surface_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/texture_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/library_types.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/channel_descriptor.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/cuda_runtime_api.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/cuda_device_runtime_api.h \
     /usr/include/c++/13/stdlib.h \
     /usr/include/c++/13/cstdlib \
     /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
@@ -76,10 +76,10 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/alloca.h \
     /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
     /usr/include/c++/13/bits/std_abs.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/driver_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/vector_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/vector_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/common_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/driver_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/vector_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/vector_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/common_functions.h \
     /usr/include/string.h \
     /usr/include/strings.h \
     /usr/include/time.h \
@@ -100,7 +100,7 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
     /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
     /usr/include/assert.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/math_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/math_functions.h \
     /usr/include/c++/13/math.h \
     /usr/include/c++/13/cmath \
     /usr/include/c++/13/bits/requires_hosted.h \
@@ -147,41 +147,41 @@ CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o : /
     /usr/include/c++/13/tr1/poly_hermite.tcc \
     /usr/include/c++/13/tr1/poly_laguerre.tcc \
     /usr/include/c++/13/tr1/riemann_zeta.tcc \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/math_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/device_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/device_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/device_atomic_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/device_atomic_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/device_double_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/device_double_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_20_atomic_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_20_atomic_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_32_atomic_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_32_atomic_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_35_atomic_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_60_atomic_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_60_atomic_functions.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_20_intrinsics.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_20_intrinsics.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_30_intrinsics.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_30_intrinsics.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_32_intrinsics.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_32_intrinsics.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_35_intrinsics.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_61_intrinsics.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/sm_61_intrinsics.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_70_rt.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_70_rt.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_80_rt.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_80_rt.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_90_rt.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_90_rt.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_100_rt.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/sm_100_rt.hpp \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/texture_indirect_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/surface_indirect_functions.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/crt/cudacc_ext.h \
-    /opt/cuda-13.1/bin/../targets/x86_64-linux/include/device_launch_parameters.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/math_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/device_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/device_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/device_atomic_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/device_atomic_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/device_double_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/device_double_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_20_atomic_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_20_atomic_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_32_atomic_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_32_atomic_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_35_atomic_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_60_atomic_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_60_atomic_functions.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_20_intrinsics.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_20_intrinsics.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_30_intrinsics.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_30_intrinsics.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_32_intrinsics.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_32_intrinsics.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_35_intrinsics.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_61_intrinsics.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/sm_61_intrinsics.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_70_rt.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_70_rt.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_80_rt.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_80_rt.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_90_rt.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_90_rt.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_100_rt.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/sm_100_rt.hpp \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/texture_indirect_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/surface_indirect_functions.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/crt/cudacc_ext.h \
+    /opt/nvhpc-25.11/Linux_x86_64/25.11/cuda/13.0/include/device_launch_parameters.h \
     /usr/include/c++/13/utility \
     /usr/include/c++/13/bits/stl_relops.h \
     /usr/include/c++/13/initializer_list \

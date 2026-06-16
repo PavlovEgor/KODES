@@ -1,5 +1,6 @@
 
 #include "seulex.cuh"
+#include "euler.cuh"
 #include <iostream>
 #include "kodes_config.cuh"
 #include "HIRESSystem.cuh"
@@ -12,7 +13,7 @@ int main(){
 
     kodes::HIRESSystem ode;
 
-    kodes::seulex solver(ode, config);
+    kodes::euler solver(ode, config);
 
     double xEnd(321.8122);
 
@@ -23,6 +24,9 @@ int main(){
 
     do {
         solver.solve(x, y, ss);
+            for (const auto& element : y) {
+        std::cout << element << " ";
+    } std::cout << std::endl;
     } while (x < xEnd);
 
     std::vector<double> yG = ode.getGroundSolution();

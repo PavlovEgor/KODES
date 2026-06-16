@@ -153,6 +153,30 @@ home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
 .PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
 
+home/pavlovep/KODES/src/integrators/euler.o: home/pavlovep/KODES/src/integrators/euler.cu.o
+.PHONY : home/pavlovep/KODES/src/integrators/euler.o
+
+# target to build an object file
+home/pavlovep/KODES/src/integrators/euler.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o
+.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.o
+
+home/pavlovep/KODES/src/integrators/euler.i: home/pavlovep/KODES/src/integrators/euler.cu.i
+.PHONY : home/pavlovep/KODES/src/integrators/euler.i
+
+# target to preprocess a source file
+home/pavlovep/KODES/src/integrators/euler.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.i
+.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.i
+
+home/pavlovep/KODES/src/integrators/euler.s: home/pavlovep/KODES/src/integrators/euler.cu.s
+.PHONY : home/pavlovep/KODES/src/integrators/euler.s
+
+# target to generate assembly for a file
+home/pavlovep/KODES/src/integrators/euler.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.s
+.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.s
+
 home/pavlovep/KODES/src/integrators/integrator.o: home/pavlovep/KODES/src/integrators/integrator.cu.o
 .PHONY : home/pavlovep/KODES/src/integrators/integrator.o
 
@@ -261,6 +285,9 @@ help:
 	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o"
 	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i"
 	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s"
+	@echo "... home/pavlovep/KODES/src/integrators/euler.o"
+	@echo "... home/pavlovep/KODES/src/integrators/euler.i"
+	@echo "... home/pavlovep/KODES/src/integrators/euler.s"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.o"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.i"
 	@echo "... home/pavlovep/KODES/src/integrators/integrator.s"

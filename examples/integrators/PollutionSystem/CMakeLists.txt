@@ -18,6 +18,7 @@ add_executable(pollution_example
     ${SRC_DIR}/kodes_config.cu
     ${SRC_DIR}/integrators/integrator.cu
     ${SRC_DIR}/integrators/seulex.cu
+    ${SRC_DIR}/integrators/euler.cu
     ${ROOT_DIR}/examples/TestSystems/PollutionSystem.cu 
 )
 
