@@ -1,0 +1,3 @@
+/home/pavlovep/KODES/examples/basic_linalg_test/build/CMakeFiles/basic_linalg_test.dir
+/home/pavlovep/KODES/examples/basic_linalg_test/build/CMakeFiles/edit_cache.dir
+/home/pavlovep/KODES/examples/basic_linalg_test/build/CMakeFiles/rebuild_cache.dir

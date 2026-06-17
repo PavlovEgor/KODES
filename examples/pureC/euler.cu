@@ -65,7 +65,7 @@ int main(){
     cudaEventDestroy(start_kernel);
     cudaEventDestroy(stop_kernel);
 
-    for (int i=0; i < 5; ++i){
+    for (int i=vectors.numOfSystems-1; i < vectors.numOfSystems; ++i){
     for (int j=0; j < vectors.sizeOfSystem; j++)
     {
         std::cout << vectors.data[i * vectors.sizeOfSystem + j] << " ";
@@ -103,7 +103,7 @@ void init(ODEVectors* vectors)
 }
 
 __device__
-void derivatives(scalar x, scalar* y, scalar* dydx)
+void derivatives(const scalar x, const scalar* y, scalar* dydx)
 {
     scalar y1 = y[0];
     scalar y2 = y[1];
@@ -125,7 +125,7 @@ void derivatives(scalar x, scalar* y, scalar* dydx)
 }
 
 __device__
-void jacobian(scalar x, scalar* y, scalar* dfdx, scalar* dfdy)
+void jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy)
 {
     size_t sizeOfSystem = 8;
     
@@ -190,7 +190,7 @@ void jacobian(scalar x, scalar* y, scalar* dfdx, scalar* dfdy)
 }
 
 __device__
-scalar solve(scalar x0, scalar* y0, scalar* dydx0, scalar dx, scalar* y)
+scalar solve(const scalar x0, const scalar* y0, const scalar* dydx0, scalar dx, scalar* y)
 {
     scalar err_[8];
 
@@ -200,31 +200,11 @@ scalar solve(scalar x0, scalar* y0, scalar* dydx0, scalar dx, scalar* y)
         y[i] = y0[i] + err_[i];
     }
 
-    return normalizeError(y0, y, err_);
+    return normalizeError(y0, y, err_, &sizeOfSystem, &absTol_, &relTol_);
 }
-
-__device__
-scalar normalizeError (scalar* y0, scalar* y, scalar* err)
-{
-    // Calculate the maximum error
-    scalar maxErr = 0.0;
-    for (size_t i=0; i < sizeOfSystem; ++i)
-    {
-        scalar tol = absTol_ + relTol_*max(fabs(y0[i]), fabs(y[i]));
-        maxErr = max(maxErr, fabs(err[i])/tol);
-    }
-
-    return maxErr;
-}
-
-__device__
-scalar clamp (scalar scale, scalar minScale, scalar maxScale)
-{
-    return (scale < minScale) ? minScale : (scale > maxScale) ? maxScale : scale;
-} 
 
 __global__
-void euler_solve(scalar* data, label numOfSystems, scalar xStart, scalar xEnd)
+void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd)
 {
     int workIndex = threadIdx.x + blockIdx.x*blockDim.x;
 

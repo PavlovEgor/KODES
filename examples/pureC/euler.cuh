@@ -1,7 +1,7 @@
 #pragma once
 
-typedef float scalar;
-typedef int    label;
+#include "basic_linalg.cuh"
+
 
 __constant__ scalar safeScale_ = 0.9;
 __constant__ scalar alphaInc_  = 0.2;
@@ -24,19 +24,13 @@ typedef struct
 void init(ODEVectors* vectors);
 
 __device__
-void derivatives(scalar x, scalar* y, scalar* dydx);
+void derivatives(const scalar x, const scalar* y, scalar* dydx);
 
 __device__
-void jacobian(scalar x, scalar* y, scalar* dfdx, scalar* dfdy);
+void jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy);
 
 __device__
-scalar solve(scalar x0, scalar* y0, scalar* dydx0, scalar dx, scalar* y);
-
-__device__
-scalar normalizeError (scalar* y0, scalar* y, scalar* err);
-
-__device__
-scalar clamp (scalar scale, scalar minScale, scalar maxScale);
+scalar solve(const scalar x0, const scalar* y0, const scalar* dydx0, scalar dx, scalar* y);
 
 __global__
-void euler_solve(scalar* data, label numOfSystems, scalar xStart, scalar xEnd);
+void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd);
