@@ -11,7 +11,7 @@ int main(){
 
     auto start_total = std::chrono::high_resolution_clock::now();
 
-    int numOfSystems = 1 << 20;
+    int numOfSystems = 1 << 10;
 
     auto start_config = std::chrono::high_resolution_clock::now();
     std::string json_path = "config.json";
@@ -22,7 +22,7 @@ int main(){
 
     auto start_system = std::chrono::high_resolution_clock::now();
     kodes::HIRESSystem ode;
-    kodes::euler solver(ode, config);
+    kodes::seulex solver(ode, config);
     auto end_system = std::chrono::high_resolution_clock::now();
     auto duration_system = std::chrono::duration_cast<std::chrono::microseconds>(end_system - start_system);
     std::cout << "Время создания системы: " << duration_system.count() << " мкс" << std::endl;

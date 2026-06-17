@@ -99,4 +99,12 @@ public:
 }; 
 }
 
+template <typename T>
+inline
+T sqr(const T& x)
+{
+    return x * x;
+}
+
+
 #endif

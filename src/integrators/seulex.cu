@@ -118,7 +118,6 @@ bool kodes::seulex::seul
         {
             a_[i][j] = -dfdy_[i][j];
         }
-
         a_[i][i] += 1/dx;
     }
 
@@ -158,16 +157,17 @@ bool kodes::seulex::seul
 
             const double denom = min(1, dy1 + SMALL);
             double dy2 = 0;
+            double tmp = 0;
             for (size_t i=0; i<sizeOfSystem_; i++)
             {
                 // Test of dy_[i] to avoid overflow
-                if (fabs(dy_[i]) > scale[i]*denom)
+                if (tmp = fabs(dy_[i]/scale[i]) > denom)
                 {
                     theta_ = 1;
                     return false;
                 }
 
-                dy2 += sqr(dy_[i]/scale[i]);
+                dy2 += sqr(tmp);
             }
             dy2 = sqrt(dy2);
             theta_ = dy2/denom;
