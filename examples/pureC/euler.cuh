@@ -33,4 +33,4 @@ __device__
 scalar solve(const scalar x0, const scalar* y0, const scalar* dydx0, scalar dx, scalar* y);
 
 __global__
-void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd);
+void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd, scalar* resouces);

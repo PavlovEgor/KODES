@@ -11,7 +11,7 @@ int main(){
 
     auto start_total = std::chrono::high_resolution_clock::now();
 
-    int numOfSystems = 1 << 10;
+    int numOfSystems = 1 << 13;
 
     auto start_config = std::chrono::high_resolution_clock::now();
     std::string json_path = "config.json";

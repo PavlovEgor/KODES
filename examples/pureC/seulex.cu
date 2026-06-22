@@ -17,12 +17,37 @@ int main(){
     stepState step(xEnd);
 
     ODEVectors vectors;
+    scalar* dev_data;
     vectors.sizeOfSystem = 8;
-    vectors.numOfSystems = 1 << 13;
+    vectors.numOfSystems = 1 << 15;
     label sizeOfData = vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar);
 
+    scalar* resouces_scalar = NULL;
+    label* resouces_label = NULL;
+
+    cudaError_t err1 = cudaMalloc(&resouces_scalar, 
+        (
+        kMaxx_ * vectors.sizeOfSystem +                    // table_
+        vectors.sizeOfSystem +                             // dfdx_
+        vectors.sizeOfSystem * vectors.sizeOfSystem +      // dfdy_
+        vectors.sizeOfSystem * vectors.sizeOfSystem +      // a_
+        vectors.sizeOfSystem +                             // dxOpt_
+        vectors.sizeOfSystem +                             // temp_
+        vectors.sizeOfSystem +                             // y0_
+        vectors.sizeOfSystem +                             // ySequence_
+        vectors.sizeOfSystem +                             // scale_
+        vectors.sizeOfSystem +                             // dy_
+        vectors.sizeOfSystem +                             // yTemp_
+        vectors.sizeOfSystem                               // dydx_
+    ) * vectors.numOfSystems*sizeof(scalar));
+
+    cudaMalloc(&resouces_label, vectors.sizeOfSystem * vectors.numOfSystems*sizeof(label));
+    cudaMemset(resouces_label, 0, vectors.sizeOfSystem * vectors.numOfSystems*sizeof(label));
+
     auto start_alloc = std::chrono::high_resolution_clock::now();
-    cudaMallocManaged(&vectors.data, sizeOfData);
+    // cudaMallocManaged(&vectors.data, sizeOfData);
+    cudaMallocHost(&vectors.data, sizeOfData);
+    cudaMalloc(&dev_data, sizeOfData);
     auto end_alloc = std::chrono::high_resolution_clock::now();
 
     auto duration_alloc = std::chrono::duration_cast<std::chrono::microseconds>(end_alloc - start_alloc);
@@ -30,6 +55,7 @@ int main(){
 
     auto start_init = std::chrono::high_resolution_clock::now();
     init(&vectors);
+    cudaMemcpy(dev_data, vectors.data, sizeOfData, cudaMemcpyDefault);
     auto end_init = std::chrono::high_resolution_clock::now();
     auto duration_init = std::chrono::duration_cast<std::chrono::microseconds>(end_init - start_init);
     std::cout << "Время инициализации: " << duration_init.count() << " мкс" << std::endl;
@@ -48,7 +74,7 @@ int main(){
     cudaEventCreate(&stop_kernel);
     
     cudaEventRecord(start_kernel);
-    seulex_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, step, xEnd);
+    seulex_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, step, xEnd, resouces_scalar, resouces_label);
     cudaEventRecord(stop_kernel);
 
     cudaError_t err = cudaGetLastError();
@@ -76,7 +102,10 @@ int main(){
     
     
     auto start_free = std::chrono::high_resolution_clock::now();
-    cudaFree(vectors.data);
+    cudaFreeHost(vectors.data);
+    cudaFree(dev_data);
+    cudaFree(resouces_scalar);
+    cudaFree(resouces_label);
     auto end_free = std::chrono::high_resolution_clock::now();
     auto duration_free = std::chrono::duration_cast<std::chrono::microseconds>(end_free - start_free);
     std::cout << "Время освобождения памяти: " << duration_free.count() << " мкс" << std::endl;
@@ -289,7 +318,7 @@ bool seul (
 
 
 __global__
-void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd)
+void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd, scalar* resouces_scalar, label* resouces_label)
 {
     label workIndex = threadIdx.x + blockIdx.x*blockDim.x;
 
@@ -298,25 +327,38 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd)
         scalar theta_, logTol;
         label kTarg_;
 
-        scalar* table_  = (scalar*)malloc(kMaxx_ * sizeOfSystem_ * sizeof(scalar));
-        scalar* dfdx_   = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
-        scalar* dfdy_   = (scalar*)malloc(sizeOfSystem_ * sizeOfSystem_ * sizeof(scalar));
-        scalar* a_      = (scalar*)malloc(sizeOfSystem_ * sizeOfSystem_ * sizeof(scalar));
-        label* pivotIndices_ = (label*)malloc(sizeOfSystem_ * sizeof(scalar));
+        label resouces_scalar_size = kMaxx_ * sizeOfSystem_ +    // table_
+            sizeOfSystem_ +                                      // dfdx_
+            sizeOfSystem_ * sizeOfSystem_ +                      // dfdy_
+            sizeOfSystem_ * sizeOfSystem_ +                      // a_
+            sizeOfSystem_ +                                      // dxOpt_
+            sizeOfSystem_ +                                      // temp_
+            sizeOfSystem_ +                                      // y0_
+            sizeOfSystem_ +                                      // ySequence_
+            sizeOfSystem_ +                                      // scale_
+            sizeOfSystem_ +                                      // dy_
+            sizeOfSystem_ +                                      // yTemp_
+            sizeOfSystem_;                                       // dydx_
 
-        scalar* dxOpt_  = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
-        scalar* temp_   = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));   
-        scalar* y0_     = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
-        scalar* ySequence_  = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
-        scalar* scale_  = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar)); 
+        scalar* table_  = (resouces_scalar + workIndex * resouces_scalar_size);
+        scalar* dfdx_   = (table_ + kMaxx_ * sizeOfSystem_);
+        scalar* dfdy_   = (dfdx_ + sizeOfSystem_);
+        scalar* a_      = (dfdy_ + sizeOfSystem_ * sizeOfSystem_);
+        label* pivotIndices_ = (label*)resouces_label + workIndex * sizeOfSystem_;
 
-        scalar* dy_     = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
-        scalar* yTemp_  = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));   
-        scalar* dydx_   = (scalar*)malloc(sizeOfSystem_ * sizeof(scalar));
+        scalar* dxOpt_  = (a_ + sizeOfSystem_ * sizeOfSystem_);
+        scalar* temp_   = (dxOpt_ + sizeOfSystem_); 
+        scalar* y0_     = (temp_ + sizeOfSystem_);
+        scalar* ySequence_  = (y0_ + sizeOfSystem_);
+        scalar* scale_  = (ySequence_ + sizeOfSystem_); 
+
+        scalar* dy_     = (scale_ + sizeOfSystem_);
+        scalar* yTemp_  = (dy_ + sizeOfSystem_); 
+        scalar* dydx_   = (yTemp_ + sizeOfSystem_);
 
         scalar x = 0;
         scalar dx = xEnd;
-        scalar* y   = (scalar*)(data + workIndex * sizeOfSystem_);
+        scalar* y   = (data + workIndex * sizeOfSystem_);
 
         do
         {
@@ -327,8 +369,6 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd)
             copyVec(y0_, y, sizeOfSystem_);
 
             dxOpt_[0] = fabs(0.1*dx);
-
-            
 
             if (step.first || step.prevReject)
             {
@@ -359,7 +399,7 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd)
             scalar dxNew = fabs(dx);
             bool firstk = true;
 
-            break;
+            
 
             while (firstk || step.reject)
             {
@@ -519,7 +559,7 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd)
                     }
                 }
             }
-
+            
             jacUpdated = false;
 
             step.dxDid = dx;

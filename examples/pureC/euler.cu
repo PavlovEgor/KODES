@@ -18,8 +18,11 @@ int main(){
 
     ODEVectors vectors;
     vectors.sizeOfSystem = 8;
-    vectors.numOfSystems = 1 << 13;
+    vectors.numOfSystems = 1 << 14;
     size_t sizeOfData = vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar);
+
+    scalar* resouces = NULL;
+    cudaMalloc(&resouces, 2 * vectors.sizeOfSystem * vectors.numOfSystems*sizeof(scalar));
 
     auto start_alloc = std::chrono::high_resolution_clock::now();
     cudaMallocManaged(&vectors.data, sizeOfData);
@@ -48,7 +51,7 @@ int main(){
     cudaEventCreate(&stop_kernel);
     
     cudaEventRecord(start_kernel);
-    euler_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, xStart, xEnd);
+    euler_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, xStart, xEnd, resouces);
     cudaEventRecord(stop_kernel);
 
     cudaError_t err = cudaGetLastError();
@@ -204,14 +207,14 @@ scalar solve(const scalar x0, const scalar* y0, const scalar* dydx0, scalar dx, 
 }
 
 __global__
-void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd)
+void euler_solve(scalar* data, const label numOfSystems, const scalar xStart, const scalar xEnd, scalar* resouces)
 {
     int workIndex = threadIdx.x + blockIdx.x*blockDim.x;
 
     if (workIndex < numOfSystems)
     {
-        scalar dydx0_[8];
-        scalar yTemp_[8];
+        scalar* dydx0_ = (scalar*)(resouces + workIndex * 2 * sizeOfSystem);
+        scalar* yTemp_ = (scalar*)(resouces + workIndex * 2 * sizeOfSystem + sizeOfSystem);
         scalar* y = (scalar*)(data + workIndex * 8);
 
         scalar dx = xEnd;

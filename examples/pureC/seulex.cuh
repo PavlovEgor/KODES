@@ -22,7 +22,7 @@ typedef struct
     label       n;
 } scalarSquareMatrix;
 
-typedef struct
+typedef struct stepState
 {
     bool forward;
     scalar dxTry;
@@ -132,4 +132,4 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 }
 
 __global__
-void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd);
+void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd, scalar* resouces_scalar, label* resouces_label);
