@@ -28,7 +28,7 @@ public:
     // Constructors
 
         //- Construct from ODESystem
-    __host__ __device__
+    
     euler
     (
         const ODESystem& ode, 

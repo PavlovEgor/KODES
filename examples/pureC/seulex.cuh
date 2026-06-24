@@ -1,6 +1,8 @@
 #pragma once
 
 #include "basic_linalg.cuh"
+#include "SeulexDeviceResources.cuh"
+#include "HIRESSystem.cuh"
 
 typedef struct
 {
@@ -91,11 +93,11 @@ __constant__ scalar coeff_[iMaxx_][iMaxx_] = {
 
 void init(ODEVectors* vectors);
 
-__device__
-void derivatives(const scalar x, const scalar* y, scalar* dydx);
+// __device__
+// void derivatives(const scalar x, const scalar* y, scalar* dydx);
 
-__device__
-void jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy);
+// __device__
+// void jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy);
 
 
 
@@ -109,7 +111,8 @@ bool seul (
     scalar* y,
     const scalar* scale,
     scalar** a_,
-    scalar** dfdy_
+    scalar** dfdy_,
+    kodes::HIRESSystem* ode
 );
 
 
@@ -132,4 +135,4 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 }
 
 __global__
-void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd, scalar* resouces_scalar, label* resouces_label);
+void seulex_solve(kodes::HIRESSystem* d_ode, scalar* data, label numOfSystems, stepState step, scalar xEnd, scalar* resouces_scalar, label* resouces_label);
