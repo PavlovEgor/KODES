@@ -4,7 +4,7 @@
 
 typedef struct
 {
-    scalar*     data;
+    scalar**     data;
     label       sizeOfSystem;
     label       numOfSystems;
 } ODEVectors;

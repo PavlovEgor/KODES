@@ -20,7 +20,6 @@ int main(){
     scalar* dev_data;
     vectors.sizeOfSystem = 8;
     vectors.numOfSystems = 1 << 13;
-    label sizeOfData = vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar);
 
     scalar* resouces_scalar = NULL;
     label* resouces_label = NULL;
@@ -38,15 +37,22 @@ int main(){
         vectors.sizeOfSystem +                             // scale_
         vectors.sizeOfSystem +                             // dy_
         vectors.sizeOfSystem +                             // yTemp_
-        vectors.sizeOfSystem                               // dydx_
+        vectors.sizeOfSystem +                             // dydx_
+        vectors.sizeOfSystem                               // y
     ) * vectors.numOfSystems*sizeof(scalar));
 
     cudaMalloc(&resouces_label, vectors.sizeOfSystem * vectors.numOfSystems*sizeof(label));
 
     auto start_alloc = std::chrono::high_resolution_clock::now();
-    // cudaMallocManaged(&vectors.data, sizeOfData);
-    cudaMallocHost(&vectors.data, sizeOfData);
-    cudaMalloc(&dev_data, sizeOfData);
+
+    vectors.data = (scalar**)malloc(vectors.sizeOfSystem * sizeof(scalar*));
+    cudaMalloc(&dev_data, vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar));
+
+    for (int i=0; i < vectors.sizeOfSystem; i++)
+    {
+        vectors.data[i] = (scalar*)malloc(vectors.numOfSystems * sizeof(scalar));
+    }
+
     auto end_alloc = std::chrono::high_resolution_clock::now();
 
     auto duration_alloc = std::chrono::duration_cast<std::chrono::microseconds>(end_alloc - start_alloc);
@@ -54,7 +60,11 @@ int main(){
 
     auto start_init = std::chrono::high_resolution_clock::now();
     init(&vectors);
-    cudaMemcpy(dev_data, vectors.data, sizeOfData, cudaMemcpyDefault);
+    for (int i=0; i < vectors.sizeOfSystem; i++)
+    {
+        cudaMemcpy(dev_data + i * vectors.numOfSystems, vectors.data[i], vectors.numOfSystems * sizeof(scalar), cudaMemcpyHostToDevice);
+    }
+
     auto end_init = std::chrono::high_resolution_clock::now();
     auto duration_init = std::chrono::duration_cast<std::chrono::microseconds>(end_init - start_init);
     std::cout << "Время инициализации: " << duration_init.count() << " мкс" << std::endl;
@@ -62,7 +72,7 @@ int main(){
     std::cout << std::endl;
     for (label j=0; j < vectors.sizeOfSystem; j++)
     {
-        std::cout << vectors.data[0 * vectors.sizeOfSystem + j] << " ";
+        std::cout << vectors.data[j][0] << " ";
     } std::cout << std::endl; std::cout << std::endl;
 
     label threads = 256;
@@ -73,7 +83,7 @@ int main(){
     cudaEventCreate(&stop_kernel);
     
     cudaEventRecord(start_kernel);
-    seulex_solve<<<blocks, threads>>>(vectors.data, vectors.numOfSystems, step, xEnd, resouces_scalar, resouces_label);
+    seulex_solve<<<blocks, threads>>>(dev_data, vectors.numOfSystems, step, xEnd, resouces_scalar, resouces_label);
     cudaEventRecord(stop_kernel);
 
     cudaError_t err = cudaGetLastError();
@@ -93,7 +103,7 @@ int main(){
     for (label i=0; i < 5; ++i){
     for (label j=0; j < vectors.sizeOfSystem; j++)
     {
-        std::cout << vectors.data[i * vectors.sizeOfSystem + j] << " ";
+        std::cout << vectors.data[j][i] << " ";
     } std::cout << std::endl;
     } std::cout << std::endl;
 
@@ -101,7 +111,12 @@ int main(){
     
     
     auto start_free = std::chrono::high_resolution_clock::now();
-    cudaFreeHost(vectors.data);
+    for (int i=0; i < vectors.sizeOfSystem; i++)
+    {
+        cudaFree(vectors.data[i]);
+        // cudaFree(dev_data[i]);
+    }
+    free(vectors.data);
     cudaFree(dev_data);
     cudaFree(resouces_scalar);
     cudaFree(resouces_label);
@@ -123,10 +138,10 @@ void init(ODEVectors* vectors)
     {
         for (label j=0; j<vectors -> sizeOfSystem; ++j)
         {
-            vectors -> data[i * vectors -> sizeOfSystem+ j] = 0;
+            vectors -> data[j][i] = 0;
         }
-        vectors -> data[i * vectors -> sizeOfSystem + 0] = 1.0;
-        vectors -> data[i * vectors -> sizeOfSystem + 7] = 0.0057;
+        vectors -> data[0][i] = 1.0;
+        vectors -> data[7][i] = 0.0057;
     }
 }
 
@@ -337,7 +352,7 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd,
             sizeOfSystem_ +                                      // scale_
             sizeOfSystem_ +                                      // dy_
             sizeOfSystem_ +                                      // yTemp_
-            sizeOfSystem_;                                       // dydx_
+            sizeOfSystem_ + sizeOfSystem_;                                       // dydx_
 
         scalar* table_  = (resouces_scalar + workIndex * resouces_scalar_size);
         scalar* dfdx_   = (table_ + kMaxx_ * sizeOfSystem_);
@@ -354,10 +369,15 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd,
         scalar* dy_     = (scale_ + sizeOfSystem_);
         scalar* yTemp_  = (dy_ + sizeOfSystem_); 
         scalar* dydx_   = (yTemp_ + sizeOfSystem_);
+        scalar* y       = (dydx_ + sizeOfSystem_);
 
         scalar x = 0;
         scalar dx = xEnd;
-        scalar* y   = (data + workIndex * sizeOfSystem_);
+
+        for (int i=0; i<sizeOfSystem_; ++i)
+        {
+            y[i] = *(data + workIndex + i * numOfSystems);
+        }
 
         do
         {
@@ -624,6 +644,10 @@ void seulex_solve(scalar* data, label numOfSystems, stepState step, scalar xEnd,
         } 
         while (x < xEnd);
 
+        for (int i=0; i<sizeOfSystem_; ++i)
+        {
+            *(data + workIndex + i * numOfSystems) = y[i];
+        }
     }
 }
 
