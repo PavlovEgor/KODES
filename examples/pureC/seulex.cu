@@ -19,7 +19,7 @@ int main(){
     ODEVectors vectors;
     scalar* dev_data;
     vectors.sizeOfSystem = 8;
-    vectors.numOfSystems = 1 << 15;
+    vectors.numOfSystems = 1 << 13;
     label sizeOfData = vectors.sizeOfSystem * vectors.numOfSystems * sizeof(scalar);
 
     scalar* resouces_scalar = NULL;
@@ -42,7 +42,6 @@ int main(){
     ) * vectors.numOfSystems*sizeof(scalar));
 
     cudaMalloc(&resouces_label, vectors.sizeOfSystem * vectors.numOfSystems*sizeof(label));
-    cudaMemset(resouces_label, 0, vectors.sizeOfSystem * vectors.numOfSystems*sizeof(label));
 
     auto start_alloc = std::chrono::high_resolution_clock::now();
     // cudaMallocManaged(&vectors.data, sizeOfData);

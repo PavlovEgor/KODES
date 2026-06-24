@@ -12,7 +12,7 @@ __device__
 void LUDecompose (scalar* matrix, label* pivotIndices, const label size, int* sign)
 {
     // scalar* vv = (scalar*)malloc(size * sizeof(scalar));
-    scalar vv[256];
+    scalar vv[MAX_VEC_SIZE];
     *sign = 1;
 
     for (label i = 0; i < size; ++i)

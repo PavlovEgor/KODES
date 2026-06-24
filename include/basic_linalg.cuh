@@ -5,6 +5,7 @@
 
 #define SMALL 1e-9
 #define GREAT 1e9
+#define MAX_VEC_SIZE 128
 
 typedef double scalar;
 typedef int    label;
