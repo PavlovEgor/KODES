@@ -100,6 +100,11 @@ int main(){
     cudaEventDestroy(start_kernel);
     cudaEventDestroy(stop_kernel);
 
+    for (int i=0; i < vectors.sizeOfSystem; i++)
+    {
+        cudaMemcpy(vectors.data[i], dev_data + i * vectors.numOfSystems, vectors.numOfSystems * sizeof(scalar), cudaMemcpyDeviceToHost);
+    }
+
     for (label i=0; i < 5; ++i){
     for (label j=0; j < vectors.sizeOfSystem; j++)
     {
