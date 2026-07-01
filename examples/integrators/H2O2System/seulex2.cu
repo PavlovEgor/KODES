@@ -24,7 +24,7 @@ int main(){
 
     initialize_gpu_memory(host_res.numOfSystems(), &h_mem, &d_mem);
 
-    kodes::GRIMESHSystem* ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
+    kodes::H2O2System* ode_prt = kodes::H2O2System::createGPU(d_mem);
 
     kodes::SeulexDeviceResources   host_res_dev(host_res.numOfSystems(), host_res.sizeOfSystem(), host_res.numOfParameters());
 
@@ -47,7 +47,7 @@ int main(){
 
     host_res.printVectori(0);
 
-    kodes::GRIMESHSystem::destroyGPU(ode_prt);
+    kodes::H2O2System::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 
     return 0;
@@ -68,7 +68,7 @@ bool seul (
     scalar* yTemp_,
     scalar* dydx_,
     scalar theta_,
-    kodes::GRIMESHSystem* ode,
+    kodes::H2O2System* ode,
     kodes::SeulexDeviceResources* res
 )
 {
@@ -148,7 +148,7 @@ bool seul (
 
 
 __global__
-void seulex_solve(kodes::GRIMESHSystem* ode, kodes::SeulexDeviceResources* res, stepState step)
+void seulex_solve(kodes::H2O2System* ode, kodes::SeulexDeviceResources* res, stepState step)
 {
     label workIndex = threadIdx.x + blockIdx.x*blockDim.x;
 
@@ -192,7 +192,7 @@ void seulex_solve(kodes::GRIMESHSystem* ode, kodes::SeulexDeviceResources* res, 
             for (label j = 0; j < sizeOfSystem_; ++j) {
                  printf("%0.2f ", y[INDEX(j)]);
             }
-            printf("\n dx=%0.16f \n", dx);
+            printf("\n dx=%0.16f x=%0.16f\n", dx, x);
             }
             temp_[INDEX(0)] = GREAT;
             dx = step.dxTry;

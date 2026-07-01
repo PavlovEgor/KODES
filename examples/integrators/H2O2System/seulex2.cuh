@@ -2,7 +2,7 @@
 
 #include "basic_linalg.cuh"
 #include "SeulexDeviceResources.cuh"
-#include "GRIMESHSystem.cuh"
+#include "H2O2System.cuh"
 #include "HostResources.cuh"
 #include "Operator.cuh"
 #include "gpu_memory.cuh"
@@ -86,7 +86,7 @@ bool seul (
     const scalar* scale,
     scalar** a_,
     scalar** dfdy_,
-    kodes::GRIMESHSystem* ode,
+    kodes::H2O2System* ode,
     kodes::SeulexDeviceResources* res
 );
 
@@ -110,4 +110,4 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 }
 
 __global__
-void seulex_solve(kodes::GRIMESHSystem* d_ode, kodes::SeulexDeviceResources* res, stepState step);
+void seulex_solve(kodes::H2O2System* d_ode, kodes::SeulexDeviceResources* res, stepState step);
