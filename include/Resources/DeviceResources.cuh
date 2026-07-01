@@ -29,6 +29,9 @@ public:
 
     __host__ static void
     destroy(DeviceResources* devRes);
+
+    __host__ __device__ void 
+    printVectori(const label i) const;
 };
 
 }

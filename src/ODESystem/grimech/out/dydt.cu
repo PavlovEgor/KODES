@@ -172,14 +172,14 @@ __device__ void dydt (const double t, const double pres, const double * __restri
 
 #elif defined(CONV)
 
-__device__ void dydt (const double t, const double rho, const double * __restrict__ y, double * __restrict__ dy, mechanism_memory * __restrict__ d_mem) {
+__device__ void dydt (const double t, const double rho, const double * __restrict__ y, double * __restrict__ dy, const mechanism_memory * __restrict__ d_mem) {
 
   // species molar concentrations
   double * __restrict__ conc = d_mem->conc;
   double y_N;
   double mw_avg;
   double pres;
-  eval_conc_rho (y[INDEX(0)]rho, &y[GRID_DIM], &y_N, &mw_avg, &pres, conc);
+  eval_conc_rho (y[INDEX(0)], rho, &y[GRID_DIM], &y_N, &mw_avg, &pres, conc);
 
   double * __restrict__ fwd_rates = d_mem->fwd_rates;
   double * __restrict__ rev_rates = d_mem->rev_rates;
@@ -188,6 +188,8 @@ __device__ void dydt (const double t, const double rho, const double * __restric
   // get pressure modifications to reaction rates
   double * __restrict__ pres_mod = d_mem->pres_mod;
   get_rxn_pres_mod (y[INDEX(0)], pres, conc, pres_mod);
+
+  double * __restrict__ spec_rates = d_mem->spec_rates;
 
   // evaluate species molar net production rates
   double dy_N;  eval_spec_rates (fwd_rates, rev_rates, pres_mod, &dy[GRID_DIM], &dy_N);
@@ -221,7 +223,7 @@ __device__ void dydt (const double t, const double rho, const double * __restric
               + (cv[INDEX(44)] * y[INDEX(45)]) + (cv[INDEX(45)] * y[INDEX(46)])
               + (cv[INDEX(46)] * y[INDEX(47)]) + (cv[INDEX(47)] * y[INDEX(48)])
               + (cv[INDEX(48)] * y[INDEX(49)]) + (cv[INDEX(49)] * y[INDEX(50)])
-              + (cv[INDEX(50)] * y[INDEX(51)]) + (cv[INDEX(51)] * y[INDEX(52)])(cv[INDEX(52)] * y_N);
+              + (cv[INDEX(50)] * y[INDEX(51)]) + (cv[INDEX(51)] * y[INDEX(52)]) + (cv[INDEX(52)] * y_N);
 
   // local array for species internal energies
   double * __restrict__ u = d_mem->h;

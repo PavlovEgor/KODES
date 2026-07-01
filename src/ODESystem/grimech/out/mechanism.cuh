@@ -94,7 +94,7 @@ struct mechanism_memory {
 #define PRES_MOD_RATES 41
 
 //Must be implemented by user on a per mechanism basis in mechanism.cu
-void set_same_initial_conditions(int, double**, double*);
+void set_same_initial_conditions(int, double**, double**);
 
 #if defined (RATES_TEST) || defined (PROFILER)
     void write_jacobian_and_rates_output(int NUM);

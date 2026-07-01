@@ -9,10 +9,6 @@
 #define T_ID (threadIdx.x + blockIdx.x * blockDim.x)
 #define INDEX(i) (T_ID + (i) * GRID_DIM)
 
-// #define GRID_DIM (blockDim.x * gridDim.x)
-// #define T_ID 0
-// #define INDEX(i) (T_ID + i)
-
 #define cudaErrorCheck(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {

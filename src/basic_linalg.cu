@@ -12,46 +12,34 @@ __device__
 void LUDecompose (scalar* matrix, label* pivotIndices, const label size, int* sign)
 {
     // scalar* vv = (scalar*)malloc(size * sizeof(scalar));
-    scalar vv[MAX_VEC_SIZE];
+    scalar vv[NSP];
     *sign = 1;
 
     for (label i = 0; i < size; ++i)
     {
         scalar largestCoeff = 0.0;
         scalar temp;
-        const scalar* matrixi = (matrix + i * size);
 
         for (label j = 0; j < size; ++j)
         {
-            if ((temp = fabs(matrixi[j])) > largestCoeff)
+            if ((temp = fabs(matrix[INDEX(i * size + j)])) > largestCoeff)
             {
                 largestCoeff = temp;
             }
         }
-
-        // if (largestCoeff == 0.0)
-        // {
-        //     FatalErrorInFunction
-        //         << "Singular matrix" << exit(FatalError);
-        // }
-
         vv[i] = 1.0/largestCoeff;
     }
 
     for (label j = 0; j < size; ++j)
     {
-        scalar* matrixj = matrix + j * size;
-
         for (label i = 0; i < j; ++i)
         {
-            scalar* matrixi = matrix + i * size;
-
-            scalar sum = matrixi[j];
+            scalar sum = matrix[INDEX(i*size + j)];
             for (label k = 0; k < i; ++k)
             {
-                sum -= matrixi[k]*matrix[k* size + j];
+                sum -= matrix[INDEX(i*size + k)]*matrix[INDEX(k*size + j)];
             }
-            matrixi[j] = sum;
+            matrix[INDEX(i*size + j)] = sum;
         }
 
         label iMax = 0;
@@ -59,15 +47,14 @@ void LUDecompose (scalar* matrix, label* pivotIndices, const label size, int* si
         scalar largestCoeff = 0.0;
         for (label i = j; i < size; ++i)
         {
-            scalar* matrixi = matrix + i * size;
-            scalar sum = matrixi[j];
+            scalar sum = matrix[INDEX(i*size + j)];
 
             for (label k = 0; k < j; ++k)
             {
-                sum -= matrixi[k]*matrix[k * size + j];
+                sum -= matrix[INDEX(i*size + k)]*matrix[INDEX(k * size + j)];
             }
 
-            matrixi[j] = sum;
+            matrix[INDEX(i * size + j)] = sum;
 
             scalar temp;
             if ((temp = vv[i]*fabs(sum)) >= largestCoeff)
@@ -77,33 +64,31 @@ void LUDecompose (scalar* matrix, label* pivotIndices, const label size, int* si
             }
         }
 
-        pivotIndices[j] = iMax;
+        pivotIndices[INDEX(j)] = iMax;
 
         if (j != iMax)
         {
-            scalar*  matrixiMax = matrix + iMax * size;
-
             for (label k = 0; k < size; ++k)
             {
-                swap(matrixj[k], matrixiMax[k]);
+                swap(matrix[INDEX(j*size + k)], matrix[INDEX(iMax*size + k)]);
             }
 
             *sign *= -1;
             vv[iMax] = vv[j];
         }
 
-        if (matrixj[j] == 0.0)
+        if (matrix[INDEX(j * size + j)] == 0.0)
         {
-            matrixj[j] = SMALL;
+            matrix[INDEX(j * size + j)] = SMALL;
         }
 
         if (j != size-1)
         {
-            scalar rDiag = 1.0/matrixj[j];
+            scalar rDiag = 1.0/matrix[INDEX(j * size + j)];
 
             for (label i = j + 1; i < size; ++i)
             {
-                matrix[i*size + j] *= rDiag;
+                matrix[INDEX(i*size + j)] *= rDiag;
             }
         }
     }
@@ -116,16 +101,15 @@ void LUBacksubstitute (const scalar* luMatrix, const label* pivotIndices, scalar
 
     for (label i = 0; i < size; ++i)
     {
-        label ip = pivotIndices[i];
-        scalar sum = source[ip];
-        source[ip] = source[i];
-        const scalar* luMatrixi = luMatrix + i * size;
+        label ip = pivotIndices[INDEX(i)];
+        scalar sum = source[INDEX(ip)];
+        source[INDEX(ip)] = source[INDEX(i)];
 
         if (ii != 0)
         {
             for (label j = ii - 1; j < i; ++j)
             {
-                sum -= luMatrixi[j]*source[j];
+                sum -= luMatrix[INDEX(i*size + j)]*source[INDEX(j)];
             }
         }
         else if (sum != 0.0)
@@ -133,19 +117,18 @@ void LUBacksubstitute (const scalar* luMatrix, const label* pivotIndices, scalar
             ii = i + 1;
         }
 
-        source[i] = sum;
+        source[INDEX(i)] = sum;
     }
 
     for (int i = size - 1; i >= 0; --i)
     {
-        scalar sum = source[i];
-        const scalar* luMatrixi = luMatrix + i * size;
+        scalar sum = source[INDEX(i)];
 
         for (label j = i + 1; j < size; ++j)
         {
-            sum -= luMatrixi[j]*source[j];
+            sum -= luMatrix[INDEX(i * size + j)]*source[INDEX(j)];
         }
 
-        source[i] = sum/luMatrixi[i];
+        source[INDEX(i)] = sum/luMatrix[INDEX(i * size + i)];
     }
 }

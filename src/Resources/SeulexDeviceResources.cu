@@ -9,7 +9,7 @@ constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label
 
 __global__ void 
 destructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes) {
-    delete devRes;
+    devRes->~SeulexDeviceResources();
 }
 
 __host__  kodes::SeulexDeviceResources* 

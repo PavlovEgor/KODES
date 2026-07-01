@@ -40,4 +40,13 @@ kodes::DeviceResources::destroy(kodes::DeviceResources* devRes) {
     }
 }
 
+__host__ __device__ void 
+DeviceResources::printVectori(const label i) const
+{
+    for (label j = 0; j < sizeOfSystem_; ++j) {
+        printf("%0.2f ", this->vectors[(j)]);
+    }
+    printf("\n");
+}
+
 }

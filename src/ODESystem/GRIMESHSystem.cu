@@ -1,4 +1,3 @@
-// GRIMESHSystem.cpp
 #include "GRIMESHSystem.cuh"
 
 
@@ -10,7 +9,7 @@ constructGPU(kodes::GRIMESHSystem* system, mechanism_memory *d_mem)
 
 __global__ void 
 destructGPU(kodes::GRIMESHSystem* system) {
-    delete system;
+    system->~GRIMESHSystem();
 }
 
 __host__  kodes::GRIMESHSystem* 
@@ -34,11 +33,11 @@ kodes::GRIMESHSystem::destroyGPU(kodes::GRIMESHSystem* system) {
 __device__
 void kodes::GRIMESHSystem::derivatives(const scalar x, const scalar* y, scalar* dydx) const
 {
-    dydt(x, 101325.0, y, dydx, device_memory);
+    dydt(x, 0.25781, y, dydx, device_memory);
 }
 
 __device__
 void kodes::GRIMESHSystem::jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy) const
 {
-    eval_jacob(x, 101325.0, y, dfdy, device_memory);
+    eval_jacob(x, 0.25781, y, dfdy, device_memory);
 }

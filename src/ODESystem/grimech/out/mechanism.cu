@@ -118,14 +118,15 @@
         y_specs[51] = temp[50];
         y_specs[52] = temp[51];
     }
-void set_same_initial_conditions(int NUM, double** y_host, double* var_host) 
+void set_same_initial_conditions(int NUM, double** y_host, double** var_host) 
 {
     double Xi [NSP] = {0.0};
     //set initial mole fractions here
 
-    Xi[13]  =   0.091;
-    Xi[3]   =   0.182;
-    Xi[47]  =   0.727;
+    Xi[0]   =   2;  // H2
+    Xi[13]  =   0;  // CH4
+    Xi[3]   =   1;  // O2
+    Xi[47]  =   4;  // N2
 
     //Normalize mole fractions to sum to one
     double Xsum = 0.0;
@@ -147,16 +148,24 @@ void set_same_initial_conditions(int NUM, double** y_host, double* var_host)
     //set initial pressure, units [PA]
     double P = 101325.0;
     // set intial temperature, units [K]
-    double T0 = 1600;
+    double T0 = 1000;
 
     // (*y_host) = (double*)malloc(NUM * NSP * sizeof(double));
-    // (*var_host) = (double*)malloc(NUM * sizeof(double));
+    var_host[0] = (double*)malloc(NUM * sizeof(double));
     //load temperature and mass fractions for all threads (cells)
-    for (int i = 0; i < NUM; ++i) {
-        y_host[0][i] = T0;
-        //loop through species
-        for (int j = 1; j < NSP; ++j) {
-            y_host[j][i] = Yi[j - 1];
+    for (int i = 0; i < NSP; ++i) {
+        y_host[i] = (double*)malloc(NUM * sizeof(double));
+        
+        for (int j=0; j<NUM; ++j)
+        {
+            if (i == 0)
+            {
+                y_host[i][j] = T0;
+            }
+            else
+            {
+                y_host[i][j] = Yi[i-1];
+            }
         }
     }
 
@@ -167,9 +176,9 @@ void set_same_initial_conditions(int NUM, double** y_host, double* var_host)
 
     for (int i = 0; i < NUM; ++i) {
 #ifdef CONV
-        var_host[i] = rho;
+        var_host[0][i] = rho;
 #elif defined(CONP)
-        var_host[i] = P;
+        var_host[0][i] = P;
 #endif
     }
 }
