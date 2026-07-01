@@ -1,40 +1,35 @@
-#include "basic_types.cuh"
+#include "Resources.cuh"
+
 
 namespace kodes 
 {
 
 class DeviceResources 
+    :
+    public Resources
 {
-protected:
-    label numOfSystems_;
-    label sizeOfSystem_;
-    label numOfParameters_;
-
-    scalar* resources_scalar;
-    label*  resources_label;
-
-    scalar* data_device;
-    scalar* params_device;
-
 public:
 
-    __device__ __host__
-    DeviceResources(const label numOfSystems, const label sizeOfSystem) 
-        : numOfSystems_(numOfSystems), sizeOfSystem_(sizeOfSystem) {}
-        
-    __device__ __host__
-    virtual ~DeviceResources() = default;
+    scalar*        vectors;
+    scalar*        parameters;
 
-    virtual void cpyHostToDevice(scalar** in_data_host) =0;
-    virtual void cpyDeviceToHost(scalar** out_data_host) const =0;
+    __device__
+    DeviceResources(const label numOfSystems, const label sizeOfSystem, const label numOfParameters) 
+        : Resources(numOfSystems, sizeOfSystem, numOfParameters) {}
 
     __device__ __host__
-    scalar* getDataPrt() {return data_device; }
-    scalar* getParamPrt(){return params_device;}
+    ~DeviceResources() = default;
 
+    __device__ static void* operator new(size_t size, void* ptr) {
+        return ptr;
+    }
     
-    template<typename T>
-    T* getResources();
+    __host__ static DeviceResources* 
+    create(const label numOfSystems, const label sizeOfSystem, const label numOfParameters);
+
+    __host__ static void
+    destroy(DeviceResources* devRes);
 };
 
 }
+

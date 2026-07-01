@@ -1,1 +1,0 @@
-/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler  "--generate-code=arch=compute_120,code=[compute_120,sm_120]" -Xcompiler=-fPIC -Wno-deprecated-gpu-targets -shared -dlink --options-file CMakeFiles/seulex2.dir/deviceObjects1.rsp -o CMakeFiles/seulex2.dir/cmake_device_link.o --options-file CMakeFiles/seulex2.dir/deviceLinkLibs.rsp

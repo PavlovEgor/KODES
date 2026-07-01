@@ -1,0 +1,1 @@
+/usr/bin/g++ @CMakeFiles/seulex.dir/objects1.rsp CMakeFiles/seulex.dir/cmake_device_link.o -o seulex @CMakeFiles/seulex.dir/linkLibs.rsp -L"/opt/cuda-13.1/targets/x86_64-linux/lib/stubs" -L"/opt/cuda-13.1/targets/x86_64-linux/lib"

@@ -1,54 +1,77 @@
 #include "SeulexDeviceResources.cuh"
 
-__device__ __host__
-kodes::SeulexDeviceResources::SeulexDeviceResources(const label numOfSystems, const label sizeOfSystem)
-:
-    DeviceResources(numOfSystems, sizeOfSystem)
+
+__global__ void 
+constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label numOfSystems, const label sizeOfSystem, const label numOfParameters)
 {
-    cudaMalloc(&resources_scalar, 
-        (
-        12 * sizeOfSystem_ +                    // table_
-        sizeOfSystem_ +                             // dfdx_
-        sizeOfSystem_ * sizeOfSystem_ +             // dfdy_
-        sizeOfSystem_ * sizeOfSystem_ +             // a_
-        sizeOfSystem_ +                             // dxOpt_
-        sizeOfSystem_ +                             // temp_
-        sizeOfSystem_ +                             // y0_
-        sizeOfSystem_ +                             // ySequence_
-        sizeOfSystem_ +                             // scale_
-        sizeOfSystem_ +                             // dy_
-        sizeOfSystem_ +                             // yTemp_
-        sizeOfSystem_ +                             // dydx_
-        sizeOfSystem_                               // y
-    ) * numOfSystems_*sizeof(scalar));
-
-    cudaMalloc(&resources_label, sizeOfSystem_ * numOfSystems_*sizeof(label));
-
-    cudaMalloc(&data_device, sizeOfSystem_ * numOfSystems_ * sizeof(scalar));
+    new (devRes) kodes::SeulexDeviceResources(numOfSystems, sizeOfSystem, numOfParameters);
 }
 
-__device__ __host__
-kodes::SeulexDeviceResources::~SeulexDeviceResources()
-{
-    cudaFree(data_device);
-    cudaFree(resources_scalar);
-    cudaFree(resources_label);
+__global__ void 
+destructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes) {
+    delete devRes;
 }
 
-__host__ void
-kodes::SeulexDeviceResources::cpyHostToDevice(scalar** in_data_host)
-{
-    for (label i=0; i < sizeOfSystem_; i++)
-    {
-        cudaMemcpy(data_device + i * numOfSystems_, in_data_host[i], numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
-    }
+__host__  kodes::SeulexDeviceResources* 
+kodes::SeulexDeviceResources::create(const label numOfSystems, const label sizeOfSystem, const label numOfParameters, kodes::SeulexDeviceResources* hostStub) {
+    SeulexDeviceResources* devPtr;
+    
+    cudaMalloc(&devPtr, sizeof(SeulexDeviceResources));
+    
+    cudaMalloc(&hostStub->vectors, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->parameters, numOfParameters * numOfSystems * sizeof(scalar));
+
+    cudaMalloc(&hostStub->table_, 12 * sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->dfdx_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->dfdy_, sizeOfSystem * sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->a_, sizeOfSystem * sizeOfSystem * numOfSystems * sizeof(scalar));
+
+    cudaMalloc(&hostStub->pivotIndices_, sizeOfSystem * numOfSystems * sizeof(label));
+
+    cudaMalloc(&hostStub->dxOpt_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->temp_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->y0_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->ySequence_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->scale_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->dy_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->yTemp_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->dydx_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    cudaMalloc(&hostStub->y_, sizeOfSystem * numOfSystems * sizeof(scalar));
+    
+    cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice);
+    
+    constructSeulexDeviceResources<<<1, 1>>>(devPtr, numOfSystems, sizeOfSystem, numOfParameters);
+    cudaDeviceSynchronize();
+    
+    return devPtr;
 }
 
-__host__ void
-kodes::SeulexDeviceResources::cpyDeviceToHost(scalar** out_data_host) const
-{
-    for (label i=0; i < sizeOfSystem_; i++)
-    {
-        cudaMemcpy(out_data_host[i], data_device + i * numOfSystems_, numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
+__host__  void
+kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kodes::SeulexDeviceResources* hostStub) {
+    if (hostStub) {
+
+        cudaFree(hostStub->vectors);
+        cudaFree(hostStub->parameters);
+
+        cudaFree(hostStub->table_);
+        cudaFree(hostStub->dfdx_);
+        cudaFree(hostStub->dfdy_);
+        cudaFree(hostStub->a_);
+
+        cudaFree(hostStub->pivotIndices_);
+
+        cudaFree(hostStub->dxOpt_);
+        cudaFree(hostStub->temp_);
+        cudaFree(hostStub->y0_);
+        cudaFree(hostStub->ySequence_);
+        cudaFree(hostStub->scale_);
+        cudaFree(hostStub->dy_);
+        cudaFree(hostStub->yTemp_);
+        cudaFree(hostStub->dydx_);
+        cudaFree(hostStub->y_);
+
+        destructSeulexDeviceResources<<<1, 1>>>(devRes);
+        cudaDeviceSynchronize();
+        cudaFree(devRes);
     }
 }

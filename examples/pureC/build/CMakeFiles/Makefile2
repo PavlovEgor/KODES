@@ -63,7 +63,7 @@ CMAKE_BINARY_DIR = /home/pavlovep/KODES/examples/pureC/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/seulex3.dir/all
+all: CMakeFiles/seulex4.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -71,34 +71,34 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/seulex3.dir/clean
+clean: CMakeFiles/seulex4.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/seulex3.dir
+# Target rules for target CMakeFiles/seulex4.dir
 
 # All Build rule for target.
-CMakeFiles/seulex3.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/pavlovep/KODES/examples/pureC/build/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target seulex3"
-.PHONY : CMakeFiles/seulex3.dir/all
+CMakeFiles/seulex4.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/pavlovep/KODES/examples/pureC/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8 "Built target seulex4"
+.PHONY : CMakeFiles/seulex4.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/seulex3.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pavlovep/KODES/examples/pureC/build/CMakeFiles 7
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/seulex3.dir/all
+CMakeFiles/seulex4.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/pavlovep/KODES/examples/pureC/build/CMakeFiles 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/seulex4.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/pavlovep/KODES/examples/pureC/build/CMakeFiles 0
-.PHONY : CMakeFiles/seulex3.dir/rule
+.PHONY : CMakeFiles/seulex4.dir/rule
 
 # Convenience name for target.
-seulex3: CMakeFiles/seulex3.dir/rule
-.PHONY : seulex3
+seulex4: CMakeFiles/seulex4.dir/rule
+.PHONY : seulex4
 
 # clean rule for target.
-CMakeFiles/seulex3.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/clean
-.PHONY : CMakeFiles/seulex3.dir/clean
+CMakeFiles/seulex4.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/clean
+.PHONY : CMakeFiles/seulex4.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named seulex3
+# Target rules for targets named seulex4
 
 # Build rule for target.
-seulex3: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 seulex3
-.PHONY : seulex3
+seulex4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 seulex4
+.PHONY : seulex4
 
 # fast build rule for target.
-seulex3/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/build
-.PHONY : seulex3/fast
+seulex4/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/build
+.PHONY : seulex4/fast
 
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.o: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
 .PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.o
 
 # target to build an object file
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
 .PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
 
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.i: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
@@ -142,7 +142,7 @@ home/pavlovep/KODES/src/ODESystem/HIRESSystem.i: home/pavlovep/KODES/src/ODESyst
 
 # target to preprocess a source file
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
 .PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
 
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.s: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
@@ -150,7 +150,7 @@ home/pavlovep/KODES/src/ODESystem/HIRESSystem.s: home/pavlovep/KODES/src/ODESyst
 
 # target to generate assembly for a file
 home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
 .PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
 
 home/pavlovep/KODES/src/Resources/DeviceResources.o: home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
@@ -158,7 +158,7 @@ home/pavlovep/KODES/src/Resources/DeviceResources.o: home/pavlovep/KODES/src/Res
 
 # target to build an object file
 home/pavlovep/KODES/src/Resources/DeviceResources.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 .PHONY : home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 
 home/pavlovep/KODES/src/Resources/DeviceResources.i: home/pavlovep/KODES/src/Resources/DeviceResources.cu.i
@@ -166,7 +166,7 @@ home/pavlovep/KODES/src/Resources/DeviceResources.i: home/pavlovep/KODES/src/Res
 
 # target to preprocess a source file
 home/pavlovep/KODES/src/Resources/DeviceResources.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.i
 .PHONY : home/pavlovep/KODES/src/Resources/DeviceResources.cu.i
 
 home/pavlovep/KODES/src/Resources/DeviceResources.s: home/pavlovep/KODES/src/Resources/DeviceResources.cu.s
@@ -174,15 +174,39 @@ home/pavlovep/KODES/src/Resources/DeviceResources.s: home/pavlovep/KODES/src/Res
 
 # target to generate assembly for a file
 home/pavlovep/KODES/src/Resources/DeviceResources.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.s
 .PHONY : home/pavlovep/KODES/src/Resources/DeviceResources.cu.s
+
+home/pavlovep/KODES/src/Resources/HostResources.o: home/pavlovep/KODES/src/Resources/HostResources.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.o
+
+# target to build an object file
+home/pavlovep/KODES/src/Resources/HostResources.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.cu.o
+
+home/pavlovep/KODES/src/Resources/HostResources.i: home/pavlovep/KODES/src/Resources/HostResources.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.i
+
+# target to preprocess a source file
+home/pavlovep/KODES/src/Resources/HostResources.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.cu.i
+
+home/pavlovep/KODES/src/Resources/HostResources.s: home/pavlovep/KODES/src/Resources/HostResources.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.s
+
+# target to generate assembly for a file
+home/pavlovep/KODES/src/Resources/HostResources.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/HostResources.cu.s
 
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o
 
 # target to build an object file
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
@@ -190,7 +214,7 @@ home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i: home/pavlovep/KODES/s
 
 # target to preprocess a source file
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
 
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
@@ -198,7 +222,7 @@ home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s: home/pavlovep/KODES/s
 
 # target to generate assembly for a file
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
 
 home/pavlovep/KODES/src/basic_linalg.o: home/pavlovep/KODES/src/basic_linalg.cu.o
@@ -206,7 +230,7 @@ home/pavlovep/KODES/src/basic_linalg.o: home/pavlovep/KODES/src/basic_linalg.cu.
 
 # target to build an object file
 home/pavlovep/KODES/src/basic_linalg.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
 .PHONY : home/pavlovep/KODES/src/basic_linalg.cu.o
 
 home/pavlovep/KODES/src/basic_linalg.i: home/pavlovep/KODES/src/basic_linalg.cu.i
@@ -214,7 +238,7 @@ home/pavlovep/KODES/src/basic_linalg.i: home/pavlovep/KODES/src/basic_linalg.cu.
 
 # target to preprocess a source file
 home/pavlovep/KODES/src/basic_linalg.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/basic_linalg.cu.i
 .PHONY : home/pavlovep/KODES/src/basic_linalg.cu.i
 
 home/pavlovep/KODES/src/basic_linalg.s: home/pavlovep/KODES/src/basic_linalg.cu.s
@@ -222,32 +246,32 @@ home/pavlovep/KODES/src/basic_linalg.s: home/pavlovep/KODES/src/basic_linalg.cu.
 
 # target to generate assembly for a file
 home/pavlovep/KODES/src/basic_linalg.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/basic_linalg.cu.s
 .PHONY : home/pavlovep/KODES/src/basic_linalg.cu.s
 
-seulex3.o: seulex3.cu.o
-.PHONY : seulex3.o
+seulex4.o: seulex4.cu.o
+.PHONY : seulex4.o
 
 # target to build an object file
-seulex3.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/seulex3.cu.o
-.PHONY : seulex3.cu.o
+seulex4.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/seulex4.cu.o
+.PHONY : seulex4.cu.o
 
-seulex3.i: seulex3.cu.i
-.PHONY : seulex3.i
+seulex4.i: seulex4.cu.i
+.PHONY : seulex4.i
 
 # target to preprocess a source file
-seulex3.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/seulex3.cu.i
-.PHONY : seulex3.cu.i
+seulex4.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/seulex4.cu.i
+.PHONY : seulex4.cu.i
 
-seulex3.s: seulex3.cu.s
-.PHONY : seulex3.s
+seulex4.s: seulex4.cu.s
+.PHONY : seulex4.s
 
 # target to generate assembly for a file
-seulex3.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/seulex3.cu.s
-.PHONY : seulex3.cu.s
+seulex4.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/seulex4.cu.s
+.PHONY : seulex4.cu.s
 
 # Help Target
 help:
@@ -257,22 +281,25 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... seulex3"
+	@echo "... seulex4"
 	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.s"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.s"
+	@echo "... home/pavlovep/KODES/src/Resources/HostResources.o"
+	@echo "... home/pavlovep/KODES/src/Resources/HostResources.i"
+	@echo "... home/pavlovep/KODES/src/Resources/HostResources.s"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.o"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.i"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.s"
-	@echo "... seulex3.o"
-	@echo "... seulex3.i"
-	@echo "... seulex3.s"
+	@echo "... seulex4.o"
+	@echo "... seulex4.i"
+	@echo "... seulex4.s"
 .PHONY : help
 
 
