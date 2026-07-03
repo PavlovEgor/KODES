@@ -7,6 +7,7 @@
 -------------------------------------------------------------------------------
     Copyright (C) 2011-2017 OpenFOAM Foundation
     Copyright (C) 2020-2023 OpenCFD Ltd.
+    Copyright (c) 2026 Egor Pavlov
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.

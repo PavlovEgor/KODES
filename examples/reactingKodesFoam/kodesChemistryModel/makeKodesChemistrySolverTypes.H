@@ -6,6 +6,7 @@
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
     Copyright (C) 2011-2017 OpenFOAM Foundation
+    Copyright (c) 2026 Egor Pavlov
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
