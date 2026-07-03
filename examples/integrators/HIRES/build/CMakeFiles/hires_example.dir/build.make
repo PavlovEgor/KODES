@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pavlovep/KODES/examples/integrators/HIRES
+CMAKE_SOURCE_DIR = /home/gomerpavyk/KODES/examples/integrators/HIRES
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pavlovep/KODES/examples/integrators/HIRES/build
+CMAKE_BINARY_DIR = /home/gomerpavyk/KODES/examples/integrators/HIRES/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/hires_example.dir/depend.make
@@ -69,149 +69,111 @@ include CMakeFiles/hires_example.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/hires_example.dir/flags.make
 
-CMakeFiles/hires_example.dir/test.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/test.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/test.cu.o: /home/pavlovep/KODES/examples/integrators/HIRES/test.cu
-CMakeFiles/hires_example.dir/test.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/hires_example.dir/test.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/test.cu.o -MF CMakeFiles/hires_example.dir/test.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/examples/integrators/HIRES/test.cu -o CMakeFiles/hires_example.dir/test.cu.o
+CMakeFiles/hires_example.dir/test.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/test.cpp.o: /home/gomerpavyk/KODES/examples/integrators/HIRES/test.cpp
+CMakeFiles/hires_example.dir/test.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/hires_example.dir/test.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/test.cpp.o -MF CMakeFiles/hires_example.dir/test.cpp.o.d -o CMakeFiles/hires_example.dir/test.cpp.o -c /home/gomerpavyk/KODES/examples/integrators/HIRES/test.cpp
 
-CMakeFiles/hires_example.dir/test.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/test.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/test.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/examples/integrators/HIRES/test.cpp > CMakeFiles/hires_example.dir/test.cpp.i
 
-CMakeFiles/hires_example.dir/test.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/test.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/test.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/examples/integrators/HIRES/test.cpp -o CMakeFiles/hires_example.dir/test.cpp.s
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o: /home/pavlovep/KODES/src/kodes_config.cu
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CUDA object CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o -MF CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/kodes_config.cu -o CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o: /home/gomerpavyk/KODES/src/kodes_config.cpp
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o -MF CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o.d -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o -c /home/gomerpavyk/KODES/src/kodes_config.cpp
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/src/kodes_config.cpp > CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.i
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/src/kodes_config.cpp -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.s
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o: /home/pavlovep/KODES/src/integrators/integrator.cu
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o -MF CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/integrators/integrator.cu -o CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o: /home/gomerpavyk/KODES/src/integrators/integrator.cpp
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o -MF CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o.d -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o -c /home/gomerpavyk/KODES/src/integrators/integrator.cpp
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/src/integrators/integrator.cpp > CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.i
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/src/integrators/integrator.cpp -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.s
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o: /home/pavlovep/KODES/src/integrators/seulex.cu
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CUDA object CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o -MF CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/integrators/seulex.cu -o CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o: /home/gomerpavyk/KODES/src/integrators/seulex.cpp
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o -MF CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o.d -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o -c /home/gomerpavyk/KODES/src/integrators/seulex.cpp
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/src/integrators/seulex.cpp > CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.i
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/src/integrators/seulex.cpp -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.s
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o: /home/pavlovep/KODES/src/integrators/euler.cu
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o -MF CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/integrators/euler.cu -o CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o: /home/gomerpavyk/KODES/src/integrators/euler.cpp
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o -MF CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o.d -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o -c /home/gomerpavyk/KODES/src/integrators/euler.cpp
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/src/integrators/euler.cpp > CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.i
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/src/integrators/euler.cpp -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.s
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o: CMakeFiles/hires_example.dir/flags.make
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o: CMakeFiles/hires_example.dir/includes_CUDA.rsp
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o: /home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o: CMakeFiles/hires_example.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o"
-	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o -MF CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu -o CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o: CMakeFiles/hires_example.dir/flags.make
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o: /home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o: CMakeFiles/hires_example.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o -MF CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o.d -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o -c /home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp > CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i
 
-CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp -o CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s
 
 # Object files for target hires_example
 hires_example_OBJECTS = \
-"CMakeFiles/hires_example.dir/test.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o"
+"CMakeFiles/hires_example.dir/test.cpp.o" \
+"CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o" \
+"CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o" \
+"CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o" \
+"CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o" \
+"CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o"
 
 # External object files for target hires_example
 hires_example_EXTERNAL_OBJECTS =
 
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/test.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/build.make
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/deviceLinkLibs.rsp
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/deviceObjects1.rsp
-CMakeFiles/hires_example.dir/cmake_device_link.o: CMakeFiles/hires_example.dir/dlink.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CUDA device code CMakeFiles/hires_example.dir/cmake_device_link.o"
-	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hires_example.dir/dlink.txt --verbose=$(VERBOSE)
-
-# Rule to build all files generated by this target.
-CMakeFiles/hires_example.dir/build: CMakeFiles/hires_example.dir/cmake_device_link.o
-.PHONY : CMakeFiles/hires_example.dir/build
-
-# Object files for target hires_example
-hires_example_OBJECTS = \
-"CMakeFiles/hires_example.dir/test.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o" \
-"CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o"
-
-# External object files for target hires_example
-hires_example_EXTERNAL_OBJECTS =
-
-hires_example: CMakeFiles/hires_example.dir/test.cu.o
-hires_example: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o
-hires_example: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o
-hires_example: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o
-hires_example: CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o
-hires_example: CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
+hires_example: CMakeFiles/hires_example.dir/test.cpp.o
+hires_example: CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o
+hires_example: CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o
+hires_example: CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o
+hires_example: CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o
+hires_example: CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o
 hires_example: CMakeFiles/hires_example.dir/build.make
-hires_example: CMakeFiles/hires_example.dir/cmake_device_link.o
-hires_example: CMakeFiles/hires_example.dir/linkLibs.rsp
-hires_example: CMakeFiles/hires_example.dir/objects1.rsp
 hires_example: CMakeFiles/hires_example.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CUDA executable hires_example"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable hires_example"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/hires_example.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -223,6 +185,6 @@ CMakeFiles/hires_example.dir/clean:
 .PHONY : CMakeFiles/hires_example.dir/clean
 
 CMakeFiles/hires_example.dir/depend:
-	cd /home/pavlovep/KODES/examples/integrators/HIRES/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/pavlovep/KODES/examples/integrators/HIRES /home/pavlovep/KODES/examples/integrators/HIRES /home/pavlovep/KODES/examples/integrators/HIRES/build /home/pavlovep/KODES/examples/integrators/HIRES/build /home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles/hires_example.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/gomerpavyk/KODES/examples/integrators/HIRES/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/gomerpavyk/KODES/examples/integrators/HIRES /home/gomerpavyk/KODES/examples/integrators/HIRES /home/gomerpavyk/KODES/examples/integrators/HIRES/build /home/gomerpavyk/KODES/examples/integrators/HIRES/build /home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles/hires_example.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/hires_example.dir/depend
 

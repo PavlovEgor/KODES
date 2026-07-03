@@ -9,6 +9,9 @@
 #include <string>
 #include "kodes_config.cuh"
 
+#include <cmath>
+using std::max;
+using std::fabs;
 
 namespace kodes 
 {

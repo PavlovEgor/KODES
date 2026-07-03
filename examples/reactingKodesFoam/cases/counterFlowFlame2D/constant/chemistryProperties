@@ -14,9 +14,12 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+type            kodesChemistryModel;
+
 chemistryType
 {
     solver            ode;
+    method            kodesChemistryModel;
 }
 
 chemistry       on;

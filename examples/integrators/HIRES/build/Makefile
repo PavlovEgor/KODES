@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pavlovep/KODES/examples/integrators/HIRES
+CMAKE_SOURCE_DIR = /home/gomerpavyk/KODES/examples/integrators/HIRES
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pavlovep/KODES/examples/integrators/HIRES/build
+CMAKE_BINARY_DIR = /home/gomerpavyk/KODES/examples/integrators/HIRES/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles /home/pavlovep/KODES/examples/integrators/HIRES/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles /home/gomerpavyk/KODES/examples/integrators/HIRES/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pavlovep/KODES/examples/integrators/HIRES/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/gomerpavyk/KODES/examples/integrators/HIRES/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -129,149 +129,149 @@ hires_example/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/build
 .PHONY : hires_example/fast
 
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.o: home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.o
 
 # target to build an object file
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o
 
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.i: home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.i
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.i
 
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s: home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.s: home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.s
+home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s
+.PHONY : home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.s
 
-home/pavlovep/KODES/src/integrators/euler.o: home/pavlovep/KODES/src/integrators/euler.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/euler.o
+home/gomerpavyk/KODES/src/integrators/euler.o: home/gomerpavyk/KODES/src/integrators/euler.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.o
 
 # target to build an object file
-home/pavlovep/KODES/src/integrators/euler.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.o
+home/gomerpavyk/KODES/src/integrators/euler.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.cpp.o
 
-home/pavlovep/KODES/src/integrators/euler.i: home/pavlovep/KODES/src/integrators/euler.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/euler.i
+home/gomerpavyk/KODES/src/integrators/euler.i: home/gomerpavyk/KODES/src/integrators/euler.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/integrators/euler.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.i
+home/gomerpavyk/KODES/src/integrators/euler.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.cpp.i
 
-home/pavlovep/KODES/src/integrators/euler.s: home/pavlovep/KODES/src/integrators/euler.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/euler.s
+home/gomerpavyk/KODES/src/integrators/euler.s: home/gomerpavyk/KODES/src/integrators/euler.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/integrators/euler.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/euler.cu.s
+home/gomerpavyk/KODES/src/integrators/euler.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/euler.cpp.s
 
-home/pavlovep/KODES/src/integrators/integrator.o: home/pavlovep/KODES/src/integrators/integrator.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.o
+home/gomerpavyk/KODES/src/integrators/integrator.o: home/gomerpavyk/KODES/src/integrators/integrator.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.o
 
 # target to build an object file
-home/pavlovep/KODES/src/integrators/integrator.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.cu.o
+home/gomerpavyk/KODES/src/integrators/integrator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.cpp.o
 
-home/pavlovep/KODES/src/integrators/integrator.i: home/pavlovep/KODES/src/integrators/integrator.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.i
+home/gomerpavyk/KODES/src/integrators/integrator.i: home/gomerpavyk/KODES/src/integrators/integrator.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/integrators/integrator.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.cu.i
+home/gomerpavyk/KODES/src/integrators/integrator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.cpp.i
 
-home/pavlovep/KODES/src/integrators/integrator.s: home/pavlovep/KODES/src/integrators/integrator.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.s
+home/gomerpavyk/KODES/src/integrators/integrator.s: home/gomerpavyk/KODES/src/integrators/integrator.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/integrators/integrator.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/integrator.cu.s
+home/gomerpavyk/KODES/src/integrators/integrator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/integrator.cpp.s
 
-home/pavlovep/KODES/src/integrators/seulex.o: home/pavlovep/KODES/src/integrators/seulex.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.o
+home/gomerpavyk/KODES/src/integrators/seulex.o: home/gomerpavyk/KODES/src/integrators/seulex.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.o
 
 # target to build an object file
-home/pavlovep/KODES/src/integrators/seulex.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.cu.o
+home/gomerpavyk/KODES/src/integrators/seulex.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.cpp.o
 
-home/pavlovep/KODES/src/integrators/seulex.i: home/pavlovep/KODES/src/integrators/seulex.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.i
+home/gomerpavyk/KODES/src/integrators/seulex.i: home/gomerpavyk/KODES/src/integrators/seulex.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/integrators/seulex.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.i
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.cu.i
+home/gomerpavyk/KODES/src/integrators/seulex.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.cpp.i
 
-home/pavlovep/KODES/src/integrators/seulex.s: home/pavlovep/KODES/src/integrators/seulex.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.s
+home/gomerpavyk/KODES/src/integrators/seulex.s: home/gomerpavyk/KODES/src/integrators/seulex.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/integrators/seulex.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.s
-.PHONY : home/pavlovep/KODES/src/integrators/seulex.cu.s
+home/gomerpavyk/KODES/src/integrators/seulex.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/integrators/seulex.cpp.s
 
-home/pavlovep/KODES/src/kodes_config.o: home/pavlovep/KODES/src/kodes_config.cu.o
-.PHONY : home/pavlovep/KODES/src/kodes_config.o
+home/gomerpavyk/KODES/src/kodes_config.o: home/gomerpavyk/KODES/src/kodes_config.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.o
 
 # target to build an object file
-home/pavlovep/KODES/src/kodes_config.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o
-.PHONY : home/pavlovep/KODES/src/kodes_config.cu.o
+home/gomerpavyk/KODES/src/kodes_config.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.cpp.o
 
-home/pavlovep/KODES/src/kodes_config.i: home/pavlovep/KODES/src/kodes_config.cu.i
-.PHONY : home/pavlovep/KODES/src/kodes_config.i
+home/gomerpavyk/KODES/src/kodes_config.i: home/gomerpavyk/KODES/src/kodes_config.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/kodes_config.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.i
-.PHONY : home/pavlovep/KODES/src/kodes_config.cu.i
+home/gomerpavyk/KODES/src/kodes_config.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.i
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.cpp.i
 
-home/pavlovep/KODES/src/kodes_config.s: home/pavlovep/KODES/src/kodes_config.cu.s
-.PHONY : home/pavlovep/KODES/src/kodes_config.s
+home/gomerpavyk/KODES/src/kodes_config.s: home/gomerpavyk/KODES/src/kodes_config.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/kodes_config.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.s
-.PHONY : home/pavlovep/KODES/src/kodes_config.cu.s
+home/gomerpavyk/KODES/src/kodes_config.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.s
+.PHONY : home/gomerpavyk/KODES/src/kodes_config.cpp.s
 
-test.o: test.cu.o
+test.o: test.cpp.o
 .PHONY : test.o
 
 # target to build an object file
-test.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cu.o
-.PHONY : test.cu.o
+test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cpp.o
+.PHONY : test.cpp.o
 
-test.i: test.cu.i
+test.i: test.cpp.i
 .PHONY : test.i
 
 # target to preprocess a source file
-test.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cu.i
-.PHONY : test.cu.i
+test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cpp.i
+.PHONY : test.cpp.i
 
-test.s: test.cu.s
+test.s: test.cpp.s
 .PHONY : test.s
 
 # target to generate assembly for a file
-test.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cu.s
-.PHONY : test.cu.s
+test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hires_example.dir/build.make CMakeFiles/hires_example.dir/test.cpp.s
+.PHONY : test.cpp.s
 
 # Help Target
 help:
@@ -282,21 +282,21 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... hires_example"
-	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.o"
-	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.i"
-	@echo "... home/pavlovep/KODES/examples/TestSystems/HIRESSystem.s"
-	@echo "... home/pavlovep/KODES/src/integrators/euler.o"
-	@echo "... home/pavlovep/KODES/src/integrators/euler.i"
-	@echo "... home/pavlovep/KODES/src/integrators/euler.s"
-	@echo "... home/pavlovep/KODES/src/integrators/integrator.o"
-	@echo "... home/pavlovep/KODES/src/integrators/integrator.i"
-	@echo "... home/pavlovep/KODES/src/integrators/integrator.s"
-	@echo "... home/pavlovep/KODES/src/integrators/seulex.o"
-	@echo "... home/pavlovep/KODES/src/integrators/seulex.i"
-	@echo "... home/pavlovep/KODES/src/integrators/seulex.s"
-	@echo "... home/pavlovep/KODES/src/kodes_config.o"
-	@echo "... home/pavlovep/KODES/src/kodes_config.i"
-	@echo "... home/pavlovep/KODES/src/kodes_config.s"
+	@echo "... home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.o"
+	@echo "... home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.i"
+	@echo "... home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.s"
+	@echo "... home/gomerpavyk/KODES/src/integrators/euler.o"
+	@echo "... home/gomerpavyk/KODES/src/integrators/euler.i"
+	@echo "... home/gomerpavyk/KODES/src/integrators/euler.s"
+	@echo "... home/gomerpavyk/KODES/src/integrators/integrator.o"
+	@echo "... home/gomerpavyk/KODES/src/integrators/integrator.i"
+	@echo "... home/gomerpavyk/KODES/src/integrators/integrator.s"
+	@echo "... home/gomerpavyk/KODES/src/integrators/seulex.o"
+	@echo "... home/gomerpavyk/KODES/src/integrators/seulex.i"
+	@echo "... home/gomerpavyk/KODES/src/integrators/seulex.s"
+	@echo "... home/gomerpavyk/KODES/src/kodes_config.o"
+	@echo "... home/gomerpavyk/KODES/src/kodes_config.i"
+	@echo "... home/gomerpavyk/KODES/src/kodes_config.s"
 	@echo "... test.o"
 	@echo "... test.i"
 	@echo "... test.s"

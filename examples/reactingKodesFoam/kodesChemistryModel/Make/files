@@ -1,0 +1,4 @@
+makeKodesChemistryModelTypes.C
+makeKodesChemistrySolverTypes.C
+
+LIB = $(FOAM_USER_LIBBIN)/libkodesChemistryModel

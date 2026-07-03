@@ -5,27 +5,21 @@
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-Build  : 14c47bd1df-20260422 OPENFOAM=2412 version=com
+Build  : _f00230df-20250528 OPENFOAM=2412 patch=250528 version=v2412
 Arch   : "LSB;label=32;scalar=64"
 Exec   : blockMesh
-Date   : Jun 23 2026
-Time   : 14:02:53
-Host   : pc3847
-PID    : 1633885
+Date   : Jul 02 2026
+Time   : 21:15:53
+Host   : DESKTOP-K86V65N
+PID    : 92205
 I/O    : uncollated
-Case   : /home/pavlovep/KODES/examples/reactingKodesFoam/cases/counterFlowFlame2D
+Case   : /home/gomerpavyk/KODES/examples/reactingKodesFoam/cases/counterFlowFlame2D
 nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
 fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
 allowSystemOperations : Allowing user-supplied system call operations
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-Initializing CUDA devices
-
-CUDA Driver Version / Runtime Version:  13.0 / 13.0
-Number of threads per block: 128
-
-Create dummyMemoryPool
- 
 Create time
 
 Creating block mesh from "system/blockMeshDict"
@@ -50,14 +44,14 @@ Creating block offsets
 Creating merge list (topological search)...
 
 Creating polyMesh from blockMesh
+Creating patches
+Creating cells
 Creating points with scale (1 1 1)
     Block 0 cell size :
         i : 0.0002 .. 0.0002
         j : 0.0005 .. 0.0005
         k : 0.02 .. 0.02
 
-Creating cells
-Creating patches
 No patch pairs to merge
 
 Writing polyMesh with 0 cellZones

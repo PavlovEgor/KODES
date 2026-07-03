@@ -1,25 +1,22 @@
 cmake_minimum_required(VERSION 3.15)
-project(ConfigExample LANGUAGES CXX CUDA)
+project(ConfigExample LANGUAGES CXX)  # Убрали CUDA
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Исправлено: использование ${} для подстановки переменных
+# Пути к директориям
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
 set(SRC_DIR ${ROOT_DIR}/src)
 set(INC_DIR ${ROOT_DIR}/include)
 
-# Убираем предупреждение о CUDA архитектуре
-set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
-
-# Исправлено: правильный синтаксис для путей к файлам
+# Теперь используем расширение .cpp вместо .cu
 add_executable(hires_example 
-    test.cu 
-    ${SRC_DIR}/kodes_config.cu
-    ${SRC_DIR}/integrators/integrator.cu
-    ${SRC_DIR}/integrators/seulex.cu
-    ${SRC_DIR}/integrators/euler.cu
-    ${ROOT_DIR}/examples/TestSystems/HIRESSystem.cu 
+    test.cpp  # переименуйте test.cu в test.cpp
+    ${SRC_DIR}/kodes_config.cpp  # переименуйте .cu в .cpp
+    ${SRC_DIR}/integrators/integrator.cpp
+    ${SRC_DIR}/integrators/seulex.cpp
+    ${SRC_DIR}/integrators/euler.cpp
+    ${ROOT_DIR}/examples/TestSystems/HIRESSystem.cpp
 )
 
 target_include_directories(hires_example PRIVATE
@@ -29,23 +26,35 @@ target_include_directories(hires_example PRIVATE
     ${ROOT_DIR}/examples/TestSystems
 )
 
-# Дополнительные рекомендации:
-
-# 1. Для CUDA-оптимизаций при работе с жёсткими ОДУ
-target_compile_options(hires_example PRIVATE 
-    $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-    $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+# Настройки для g++
+target_compile_options(hires_example PRIVATE
+    -O3                    # Оптимизация
+    -Wall -Wextra         # Предупреждения
+    -march=native         # Оптимизация под вашу архитектуру
+    -ffast-math           # Аналог CUDA -use_fast_math
 )
 
-# 2. Если используете double precision (рекомендуется для этой задачи)
-set_target_properties(hires_example PROPERTIES
-    CUDA_ARCHITECTURES "120"
-    CUDA_SEPARABLE_COMPILATION ON
-)
-
-# 3. Для отладки (опционально)
+# Для отладки
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(hires_example PRIVATE 
-        $<$<COMPILE_LANGUAGE:CUDA>:-G -lineinfo>
+    target_compile_options(hires_example PRIVATE
+        -g -O0 -ggdb3      # Отладочная информация
+        -fsanitize=address # Детектор утечек памяти (опционально)
+    )
+    target_link_options(hires_example PRIVATE
+        -fsanitize=address
     )
 endif()
+
+# Для релиза
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(hires_example PRIVATE
+        -O3 -DNDEBUG
+        -flto              # Link-time optimization
+    )
+endif()
+
+# Связывание с математической библиотекой
+target_link_libraries(hires_example PRIVATE
+    m  # математическая библиотека
+    pthread  # если используете многопоточность
+)

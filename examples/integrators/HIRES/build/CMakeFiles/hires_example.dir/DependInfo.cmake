@@ -8,12 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o" "gcc" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/examples/TestSystems/HIRESSystem.cu.o.d"
-  "/home/pavlovep/KODES/src/integrators/euler.cu" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o" "gcc" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/euler.cu.o.d"
-  "/home/pavlovep/KODES/src/integrators/integrator.cu" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o" "gcc" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/integrator.cu.o.d"
-  "/home/pavlovep/KODES/src/integrators/seulex.cu" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o" "gcc" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/integrators/seulex.cu.o.d"
-  "/home/pavlovep/KODES/src/kodes_config.cu" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o" "gcc" "CMakeFiles/hires_example.dir/home/pavlovep/KODES/src/kodes_config.cu.o.d"
-  "/home/pavlovep/KODES/examples/integrators/HIRES/test.cu" "CMakeFiles/hires_example.dir/test.cu.o" "gcc" "CMakeFiles/hires_example.dir/test.cu.o.d"
+  "/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o" "gcc" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/examples/TestSystems/HIRESSystem.cpp.o.d"
+  "/home/gomerpavyk/KODES/src/integrators/euler.cpp" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o" "gcc" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/euler.cpp.o.d"
+  "/home/gomerpavyk/KODES/src/integrators/integrator.cpp" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o" "gcc" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/integrator.cpp.o.d"
+  "/home/gomerpavyk/KODES/src/integrators/seulex.cpp" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o" "gcc" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/integrators/seulex.cpp.o.d"
+  "/home/gomerpavyk/KODES/src/kodes_config.cpp" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o" "gcc" "CMakeFiles/hires_example.dir/home/gomerpavyk/KODES/src/kodes_config.cpp.o.d"
+  "/home/gomerpavyk/KODES/examples/integrators/HIRES/test.cpp" "CMakeFiles/hires_example.dir/test.cpp.o" "gcc" "CMakeFiles/hires_example.dir/test.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

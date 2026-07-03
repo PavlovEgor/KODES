@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
 
     #include "addCheckCaseOptions.H"
     #include "setRootCaseLists.H"
-    #include "initDevice.H"
-    #include "createMemoryPool.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
@@ -129,11 +127,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        #include "poolOccupancy.H"
         runTime.printExecutionTime(Info);
     }
 
-    #include "poolMaxOccupancy.H"
     Info<< "End\n" << endl;
 
     return 0;
