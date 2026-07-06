@@ -19,7 +19,7 @@ HostResources::~HostResources()
 void HostResources::printVectori(const label i) const
 {
     for (label j = 0; j < sizeOfSystem_; ++j) {
-        printf("%0.2f ", this->vectors[j][i]);
+        printf("%0.5f ", this->vectors[j][i]);
     }
     printf("\n");
 }

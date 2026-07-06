@@ -182,8 +182,8 @@ void seulex_solve(kodes::H2O2System* ode, kodes::SeulexDeviceResources* res, ste
 
         scalar x = 0;
         scalar xEnd = step.dxTry;
-        step.dxTry = 1e-7;
-        scalar dx = xEnd/2;
+        // step.dxTry = 1e-7;
+        scalar dx = xEnd;
 
         do
         {

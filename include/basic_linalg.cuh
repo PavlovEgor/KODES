@@ -2,8 +2,9 @@
 
 #include <cuda/cmath>
 #include <cuda_runtime.h>
-#include "gpu_macros.cuh"
-#include "mechanism.cuh"
+#include "basic_types.cuh"
+// #include "gpu_macros.cuh"
+// #include "mechanism.cuh"
 
 #define SMALL 1e-9
 #define GREAT 1e9
@@ -18,7 +19,7 @@ void copyVec(T* result, const T* source, const label size)
 {
     for(label i=0; i<size; ++i)
     {
-        result[INDEX(i)] = source[INDEX(i)];
+        result[INDEXVEC(i)] = source[INDEXVEC(i)];
     }
 }
 
@@ -28,7 +29,7 @@ void sumVec(T* result, const T* source1, const T* source2, const label size)
 {
     for(label i=0; i<size; ++i)
     {
-        result[INDEX(i)] = source1[INDEX(i)] + source2[INDEX(i)];
+        result[INDEXVEC(i)] = source1[INDEXVEC(i)] + source2[INDEXVEC(i)];
     }
 }
 
@@ -66,8 +67,8 @@ scalar normalizeError (
     scalar maxErr = 0.0;
     for (label i=0; i < sizeOfSystem; ++i)
     {
-        scalar tol = absTol + (relTol)*max(fabs(y0[INDEX(i)]), fabs(y[INDEX(i)]));
-        maxErr = max(maxErr, fabs(err[INDEX(i)])/tol);
+        scalar tol = absTol + (relTol)*max(fabs(y0[INDEXVEC(i)]), fabs(y[INDEXVEC(i)]));
+        maxErr = max(maxErr, fabs(err[INDEXVEC(i)])/tol);
     }
 
     return maxErr;

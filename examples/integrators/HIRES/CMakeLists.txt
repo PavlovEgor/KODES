@@ -13,39 +13,44 @@ set(INC_DIR ${ROOT_DIR}/include)
 set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
 
 # Исправлено: правильный синтаксис для путей к файлам
-add_executable(hires_example 
-    test.cu 
-    ${SRC_DIR}/kodes_config.cu
-    ${SRC_DIR}/integrators/integrator.cu
-    ${SRC_DIR}/integrators/seulex.cu
-    ${SRC_DIR}/integrators/euler.cu
-    ${ROOT_DIR}/examples/TestSystems/HIRESSystem.cu 
-)
+add_executable( seulex2
+    seulex2.cu
+    ${SRC_DIR}/basic_linalg.cu
+    ${SRC_DIR}/Resources/SeulexDeviceResources.cu
+    ${SRC_DIR}/Resources/DeviceResources.cu
+    ${SRC_DIR}/ODESystem/HIRESSystem.cu
+    ${SRC_DIR}/Resources/HostResources.cu
+    )
 
-target_include_directories(hires_example PRIVATE
+
+target_include_directories(seulex2 PRIVATE
     ${INC_DIR}
-    ${INC_DIR}/integrators
-    ${ROOT_DIR}/external/rapidjson/include
-    ${ROOT_DIR}/examples/TestSystems
+    ${INC_DIR}/Resources
+    ${INC_DIR}/ODESystem
+    ${SRC_DIR}/ODESystem/h2o2/out
+    ${SRC_DIR}/ODESystem/h2o2/out/jacobs
+    ${SRC_DIR}/ODESystem/h2o2/out/rates
+    # ${ROOT_DIR}/external/rapidjson/include
+    # ${ROOT_DIR}/examples/TestSystems
 )
 
 # Дополнительные рекомендации:
 
 # 1. Для CUDA-оптимизаций при работе с жёсткими ОДУ
-target_compile_options(hires_example PRIVATE 
+target_compile_options(seulex2 PRIVATE 
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
 )
 
 # 2. Если используете double precision (рекомендуется для этой задачи)
-set_target_properties(hires_example PROPERTIES
+set_target_properties(seulex2 PROPERTIES
     CUDA_ARCHITECTURES "120"
     CUDA_SEPARABLE_COMPILATION ON
 )
 
 # 3. Для отладки (опционально)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(hires_example PRIVATE 
+    target_compile_options(seulex2 PRIVATE 
         $<$<COMPILE_LANGUAGE:CUDA>:-G -lineinfo>
     )
 endif()
