@@ -72,7 +72,7 @@ bool seul (
     const scalar x0,
     const scalar dxTot,
     const label k,
-    scalar theta_
+    scalar theta
 )
 {
     scalar* dfdy_  = res->dfdy();
@@ -137,16 +137,16 @@ bool seul (
                 // Test of dy_[i] to avoid overflow
                 if (fabs(dy_[INDEXVEC(i)]) > scale[INDEXVEC(i)]*denom)
                 {
-                    theta_ = 1;
+                    theta = 1;
                     return false;
                 }
 
                 dy2 += sqr(dy_[INDEXVEC(i)]/scale[INDEXVEC(i)]);
             }
             dy2 = sqrt(dy2);
-            theta_ = dy2/denom;
+            theta = dy2/denom;
 
-            if (theta_ > 1)
+            if (theta > 1)
             {
                 return false;
             }

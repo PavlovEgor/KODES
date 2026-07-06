@@ -37,7 +37,7 @@ Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverD
 : ode_(ode), res_(res), step_(step)
 {
     threads = numOfSystems <= 256 ? numOfSystems : 256;
-    blocks = cuda::ceil_div(host_res.numOfSystems(), threads);
+    blocks = cuda::ceil_div(numOfSystems, threads);
     sharedMemSize = (3 * threads + threads) * sizeof(scalar); 
 }
 

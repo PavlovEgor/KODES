@@ -6,16 +6,22 @@ bool seul (
     ODESystem* ode,
     const scalar x0,
     const scalar dxTot,
-    const label k
+    const label k,
+    scalar theta
 )
 {
-
-    scalar* table_ = res->table();
-    scalar* dfdx_  = res->dfdx();
     scalar* dfdy_  = res->dfdy();
     scalar* a_     = res->a();
-
+    label* pivotIndices_ = res->pivotIndices();
     
+    scalar* y0_    = res->y0();
+    scalar* scale = res->scale();
+    
+    scalar* dy_    = res->dy();
+    scalar* yTemp_ = res->yTemp();
+    scalar* dydx_  = res->dydx();
+    scalar* y      = res->ySequence();
+
     label nSteps = nSeq_[k];
     scalar dx = dxTot/nSteps;
     
@@ -23,18 +29,18 @@ bool seul (
     {
         for (label j=0; j<sizeOfSystem_; j++)
         {
-            a_[INDEX(i*sizeOfSystem_ + j)] = -dfdy_[INDEX(i*sizeOfSystem_ + j)];
+            a_[INDEXMAT(i, j, sizeOfSystem_)] = -dfdy_[INDEXMAT(i, j, sizeOfSystem_)];
         }
-        a_[INDEX(i*sizeOfSystem_ + i)] += 1/dx;
+        a_[INDEXMAT(i, i, sizeOfSystem_)] += 1/dx;
     }
 
     LUDecompose(a_, pivotIndices_, sizeOfSystem_);
 
     scalar xnew = x0 + dx;
-    ode->derivatives(xnew, y0, dy_);
+    ode->derivatives(xnew, y0_, dy_);
     LUBacksubstitute(a_, pivotIndices_, dy_, sizeOfSystem_);
 
-    copyVec(yTemp_, y0, sizeOfSystem_);
+    copyVec(yTemp_, y0_, sizeOfSystem_);
 
     for (label nn=1; nn<nSteps; nn++)
     {
@@ -47,14 +53,14 @@ bool seul (
             scalar dy1 = 0;
             for (label i=0; i<sizeOfSystem_; i++)
             {
-                dy1 += sqr(dy_[INDEX(i)]/scale[INDEX(i)]);
+                dy1 += sqr(dy_[INDEXVEC(i)]/scale[INDEXVEC(i)]);
             }
             dy1 = sqrt(dy1);
 
             ode->derivatives(x0 + dx, yTemp_, dydx_);
             for (label i=0; i<sizeOfSystem_; i++)
             {
-                dy_[INDEX(i)] = dydx_[INDEX(i)] - dy_[INDEX(i)]/dx;
+                dy_[INDEXVEC(i)] = dydx_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dx;
             }
 
             LUBacksubstitute(a_, pivotIndices_, dy_, sizeOfSystem_);
@@ -64,18 +70,18 @@ bool seul (
             for (label i=0; i<sizeOfSystem_; i++)
             {
                 // Test of dy_[i] to avoid overflow
-                if (fabs(dy_[INDEX(i)]) > scale[INDEX(i)]*denom)
+                if (fabs(dy_[INDEXVEC(i)]) > scale[INDEXVEC(i)]*denom)
                 {
-                    theta_ = 1;
+                    theta = 1;
                     return false;
                 }
 
-                dy2 += sqr(dy_[INDEX(i)]/scale[INDEX(i)]);
+                dy2 += sqr(dy_[INDEXVEC(i)]/scale[INDEXVEC(i)]);
             }
             dy2 = sqrt(dy2);
-            theta_ = dy2/denom;
+            theta = dy2/denom;
 
-            if (theta_ > 1)
+            if (theta > 1)
             {
                 return false;
             }
@@ -90,17 +96,11 @@ bool seul (
     return true;
 }
 
+template<class ODESystem>
 __global__
-void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, stepState step)
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step)
 {
-    label workIndex = threadIdx.x + blockIdx.x*blockDim.x;
-
-    if (workIndex == 0)
-    {
-        printf("%d \n", GRID_DIM);
-    }
-
-    if (workIndex < res->numOfSystems())
+    if (threadIdx.x + blockIdx.x*blockDim.x < res->numOfSystems())
     {
         scalar theta_, logTol;
         label kTarg_;
@@ -109,8 +109,7 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
         scalar* table_ = res->table();
         scalar* dfdx_  = res->dfdx();
         scalar* dfdy_  = res->dfdy();
-        scalar* a_     = res->a();
-        label* pivotIndices_ = res->pivotIndices();
+        
         
         scalar* dxOpt_ = res->dxOpt();
         scalar* temp_  = res->temp();
@@ -118,9 +117,6 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
         scalar* ySequence_ = res->ySequence();
         scalar* scale_ = res->scale();
         
-        scalar* dy_    = res->dy();
-        scalar* yTemp_ = res->yTemp();
-        scalar* dydx_  = res->dydx();
         scalar* y      = res->vectors;
 
         scalar x = 0;
@@ -129,21 +125,21 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
 
         do
         {
-            if (workIndex == 0)
+            if (INDEXVEC(0) == 0)
             {printf("workIndex == 0 \n");
             for (label j = 0; j < sizeOfSystem_; ++j) {
-                 printf("%0.5f ", y[INDEX(j)]);
+                 printf("%0.5f ", y[INDEXVEC(j)]);
             }
             printf("\n dx=%0.16f x=%0.16f\n", dx, x);
             }
 
 
-            temp_[INDEX(0)] = GREAT;
+            temp_[INDEXVEC(0)] = GREAT;
             dx = step.dxTry;
 
             copyVec(y0_, y, sizeOfSystem_);
 
-            dxOpt_[INDEX(0)] = fabs(0.1*dx);
+            dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
 
             if (step.first || step.prevReject)
             {
@@ -158,7 +154,7 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
 
             for (label i=0; i < sizeOfSystem_; ++i)
             {
-                scale_[INDEX(i)] = absTol_ + relTol_*fabs(y[INDEX(i)]);
+                scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
             }
 
             bool jacUpdated = false;
@@ -183,23 +179,7 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
 
                 for (k=0; k<=kTarg_+1; k++)
                 {
-                    bool success = seul(
-                        x, 
-                        y0_, 
-                        dx, 
-                        k, 
-                        ySequence_, 
-                        scale_, 
-                        a_, 
-                        dfdy_,
-                        pivotIndices_,
-                        dy_,
-                        yTemp_,
-                        dydx_,
-                        theta_,
-                        ode,
-                        res
-                    );
+                    bool success = seul(res, ode, x, dx, k, theta_);
 
                     if (!success)
                     {
@@ -216,7 +196,7 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                     {
                         for (label i=0; i<sizeOfSystem_; ++i)
                         {
-                            table_[INDEX((k-1) * sizeOfSystem_ + i)] = ySequence_[INDEX(i)];
+                            table_[INDEXVEC((k-1) * sizeOfSystem_ + i)] = ySequence_[INDEXVEC(i)];
                         }
                     }
 
@@ -226,8 +206,8 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                         scalar err = 0;
                         for (label i=0; i<sizeOfSystem_; ++i)
                         {
-                            scale_[INDEX(i)] = absTol_ + relTol_*fabs(y0_[INDEX(i)]);
-                            err += sqr((y[INDEX(i)] - table_[INDEX(i)])/scale_[INDEX(i)]);
+                            scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
+                            err += sqr((y[INDEXVEC(i)] - table_[INDEXVEC(i)])/scale_[INDEXVEC(i)]);
                         }
                         err = sqrt(err/sizeOfSystem_);
                         if (err > 1/SMALL || (k > 1 && err >= errOld))
@@ -249,8 +229,8 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                             fac = stepFactor2_/pow(err/stepFactor1_, expo);
                             fac = max(facmin/stepFactor4_, min(1/facmin, fac));
                         }
-                        dxOpt_[INDEX(k)] = fabs(dx*fac);
-                        temp_[INDEX(k)] = cpu_[k]/dxOpt_[INDEX(k)];
+                        dxOpt_[INDEXVEC(k)] = fabs(dx*fac);
+                        temp_[INDEXVEC(k)] = cpu_[k]/dxOpt_[INDEXVEC(k)];
 
                         if ((step.first || step.last) && err <= 1)
                         {
@@ -272,11 +252,11 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                             {
                                 step.reject = true;
                                 kTarg_ = k;
-                                if (kTarg_>1 && temp_[INDEX(k-1)] < kFactor1_*temp_[INDEX(k)])
+                                if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                                 {
                                     kTarg_--;
                                 }
-                                dxNew = dxOpt_[INDEX(kTarg_)];
+                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
                                 break;
                             }
                         }
@@ -290,11 +270,11 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                             else if (err > nSeq_[k + 1]*2)
                             {
                                 step.reject = true;
-                                if (kTarg_>1 && temp_[INDEX(k-1)] < kFactor1_*temp_[INDEX(k)])
+                                if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                                 {
                                     kTarg_--;
                                 }
-                                dxNew = dxOpt_[INDEX(kTarg_)];
+                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
                                 break;
                             }
                         }
@@ -307,12 +287,12 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
                                 if
                                 (
                                     kTarg_ > 1
-                                && temp_[INDEX(kTarg_-1)] < kFactor1_*temp_[INDEX(kTarg_)]
+                                && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
                                 )
                                 {
                                     kTarg_--;
                                 }
-                                dxNew = dxOpt_[INDEX(kTarg_)];
+                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
                             }
                             break;
                         }
@@ -347,11 +327,11 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
             else if (k <= kTarg_)
             {
                 kopt=k;
-                if (temp_[INDEX(k-1)] < kFactor1_*temp_[INDEX(k)])
+                if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                 {
                     kopt = k - 1;
                 }
-                else if (temp_[INDEX(k)] < kFactor2_*temp_[INDEX(k - 1)])
+                else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
                 {
                     kopt = min(k + 1, kMaxx_ - 1);
                 }
@@ -359,11 +339,11 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
             else
             {
                 kopt = k - 1;
-                if (k > 2 && temp_[INDEX(k-2)] < kFactor1_*temp_[INDEX(k - 1)])
+                if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
                 {
                     kopt = k - 2;
                 }
-                if (temp_[INDEX(k)] < kFactor2_*temp_[INDEX(kopt)])
+                if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
                 {
                     kopt = min(k, kMaxx_ - 1);
                 }
@@ -372,24 +352,24 @@ void seulex_solve(kodes::HIRESSystem* ode, kodes::SeulexDeviceResources* res, st
             if (step.prevReject)
             {
                 kTarg_ = min(kopt, k);
-                dxNew = min(fabs(dx), dxOpt_[INDEX(kTarg_)]);
+                dxNew = min(fabs(dx), dxOpt_[INDEXVEC(kTarg_)]);
                 step.prevReject = false;
             }
             else
             {
                 if (kopt <= k)
                 {
-                    dxNew = dxOpt_[INDEX(kopt)];
+                    dxNew = dxOpt_[INDEXVEC(kopt)];
                 }
                 else
                 {
-                    if (k < kTarg_ && temp_[INDEX(k)] < kFactor2_*temp_[INDEX(k - 1)])
+                    if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
                     {
-                        dxNew = dxOpt_[INDEX(k)]*cpu_[kopt + 1]/cpu_[k];
+                        dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
                     }
                     else
                     {
-                        dxNew = dxOpt_[INDEX(k)]*cpu_[kopt]/cpu_[k];
+                        dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
                     }
                 }
                 kTarg_ = kopt;
@@ -408,6 +388,6 @@ kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, ste
 template<class ODESystem>
 void kodes::Seulex<ODESystem>::solve()
 {
-    seulex_solve<ODESystem><<<blocks, threads, sharedMemSize>>>(this->ode_, this->res_, this->stepState_);
+    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, this->step_);
 }
 

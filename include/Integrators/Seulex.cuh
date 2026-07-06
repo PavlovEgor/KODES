@@ -5,7 +5,27 @@
 #ifndef Seulex_H
 #define Seulex_H
 
+#include <cuda/cmath>
+#include <cuda_runtime.h>
+
+#include "basic_linalg.cuh"
+// #include "SeulexDeviceResources.cuh"
+#include "Integrator.cuh"
+
 #pragma once
+
+__constant__ scalar absTol_    = 1e-7;
+__constant__ scalar relTol_    = 1e-7;
+
+__constant__ label sizeOfSystem_    = 8;
+
+__constant__ scalar stepFactor1_ = 0.6,
+                    stepFactor2_ = 0.93,
+                    stepFactor3_ = 0.1,
+                    stepFactor4_ = 4,
+                    stepFactor5_ = 0.5,
+                    kFactor1_ = 0.7,
+                    kFactor2_ = 0.9;
 
 #define kMaxx_ 12
 #define iMaxx_ (kMaxx_ + 1)
@@ -71,8 +91,9 @@ namespace kodes
 {
 template<class ODESystem>
 class Seulex
+: public Integrator<ODESystem, SeulexDeviceResources>
 {
-    public Integrator<ODESystem, SeulexDeviceResources>;
+    
 private:
 
 public:
@@ -85,17 +106,8 @@ public:
 
 };
 
-
-template<class ODESystem>
-Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, stepState step, label numOfSystems)
-: Integrator<ODESystem, SeulexDeviceResources>(ode, res, step, numOfSystems) {}
-
-template<class ODESystem>
-void Seulex<ODESystem>::solve()
-{
-    seulex_solve<ODESystem><<<blocks, threads, sharedMemSize>>>(this->ode_, this->res_, this->stepState_);
 }
 
-}
+#include "Seulex.cu"
 
 #endif
