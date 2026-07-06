@@ -5,13 +5,18 @@ int main(){
 
     label numOfSystems = 1 << 5;
 
-    kodes::HostResources            host_res(numOfSystems, 8, 0);
+    kodes::HostResources            host_res(numOfSystems, NSP, 1);
 
-    init(&host_res);
+    set_same_initial_conditions(host_res.numOfSystems(), host_res.vectors, host_res.parameters);
 
     host_res.printVectori(0);
 
-    kodes::HIRESSystem* ode_prt = kodes::HIRESSystem::createGPU(numOfSystems);
+    mechanism_memory *h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
+    mechanism_memory *d_mem = nullptr;
+
+    initialize_gpu_memory(host_res.numOfSystems(), &h_mem, &d_mem);
+
+    kodes::GRIMESHSystem* ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
 
     kodes::SeulexDeviceResources   host_res_dev(host_res.numOfSystems(), host_res.sizeOfSystem(), host_res.numOfParameters());
 
@@ -21,10 +26,10 @@ int main(){
 
     op.cpyHostToDevice();
 
-    scalar xEnd = 321.8122;
+    scalar xEnd = 1.0;
     stepState step(xEnd);
 
-    kodes::Seulex<kodes::HIRESSystem> solver(ode_prt, res_prt, step, host_res.numOfSystems());
+    kodes::Seulex<kodes::GRIMESHSystem> solver(ode_prt, res_prt, step, host_res.numOfSystems());
 
     solver.solve();
     
@@ -32,25 +37,8 @@ int main(){
 
     host_res.printVectori(0);
 
-    kodes::HIRESSystem::destroyGPU(ode_prt);
+    kodes::GRIMESHSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 
     return 0;
-}
-
-void init(kodes::HostResources* host_res)
-{
-    for (label i=0; i < host_res -> sizeOfSystem(); ++i)
-    {
-        host_res -> vectors[i] = (scalar*)malloc(host_res -> numOfSystems() * sizeof(scalar));
-        for (label j=0; j<host_res -> numOfSystems(); ++j)
-        {
-            host_res -> vectors[i][j] = 0;
-        }
-    }
-    for (label j=0; j<host_res -> numOfSystems(); ++j)
-    {
-        host_res -> vectors[0][j] = 1.0;
-        host_res -> vectors[7][j] = 0.0057;
-    }
 }

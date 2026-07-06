@@ -14,10 +14,8 @@
 
 #pragma once
 
-__constant__ scalar absTol_    = 1e-7;
-__constant__ scalar relTol_    = 1e-7;
-
-__constant__ label sizeOfSystem_    = 8;
+__constant__ scalar absTol_    = 1e-12;
+__constant__ scalar relTol_    = 1e-1;
 
 __constant__ scalar stepFactor1_ = 0.6,
                     stepFactor2_ = 0.93,

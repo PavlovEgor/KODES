@@ -26,6 +26,10 @@ void LUDecompose (scalar* __restrict__ matrix, label* __restrict__ pivotIndices,
                 largestCoeff = temp;
             }
         }
+        if (largestCoeff == 0.0)
+        {
+            printf("Singular matrix");
+        }
         vv[i] = 1.0/largestCoeff;
     }
 

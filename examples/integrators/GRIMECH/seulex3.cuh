@@ -2,7 +2,7 @@
 
 #include "basic_linalg.cuh"
 #include "SeulexDeviceResources.cuh"
-#include "HIRESSystem.cuh"
+#include "GRIMESHSystem.cuh"
 #include "HostResources.cuh"
 #include "Operator.cuh"
 #include "Seulex.cuh"
@@ -13,5 +13,6 @@
 #include <cuda_runtime.h>
 #include <iostream>
 #include <chrono> 
+#include "gpu_memory.cuh"
+#include "mechanism.cuh"
 
-void init(kodes::HostResources* vectors);
