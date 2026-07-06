@@ -1,0 +1,17 @@
+# Общее состояние для сравнения pyJac (pyjac_probe) и Cantera (cantera_reference.py).
+# Меняйте только эти два файла с данными — оба скрипта читают один и тот же формат,
+# так что расхождения не будут вызваны опечаткой при переносе чисел вручную.
+#
+# Строка 1: T[K]  P[Pa]
+# Строка 2: 53 мольные доли в порядке видов pyJac для GRIMech3.0 (см. список ниже),
+#           не обязательно нормированные — обе программы сами нормируют сумму к 1.
+#
+# Порядок видов (индексы 0..52), как в src/ODESystem/grimech/out/mechanism.cuh:
+# H2 H O O2 OH H2O HO2 H2O2 C CH CH2 CH2(S) CH3 CH4 CO CO2 HCO CH2O CH2OH CH3O
+# CH3OH C2H C2H2 C2H3 C2H4 C2H5 C2H6 HCCO CH2CO HCCOH N NH NH2 NH3 NNH NO NO2
+# N2O HNO CN HCN H2CN HCNN HCNO HOCN HNCO NCO AR C3H7 C3H8 CH2CHO CH3CHO N2
+#
+# Ниже — то же состояние, которое сейчас используется в set_same_initial_conditions
+# (H2:2, O2:1, N2:4 по молям), T=1000K, P=1atm — то, что вы уже тестировали.
+1000.0 101325.0
+2 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 4
