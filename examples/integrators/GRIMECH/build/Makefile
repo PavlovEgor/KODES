@@ -153,30 +153,6 @@ home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s
 .PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s
 
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.o: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.o
-
-# target to build an object file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.i: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.i
-
-# target to preprocess a source file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.s: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.s
-
-# target to generate assembly for a file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-
 home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o: home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
 .PHONY : home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o
 
@@ -861,9 +837,6 @@ help:
 	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.s"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.o"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.i"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.s"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.s"

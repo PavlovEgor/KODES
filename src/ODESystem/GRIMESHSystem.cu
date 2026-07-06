@@ -31,13 +31,13 @@ kodes::GRIMESHSystem::destroyGPU(kodes::GRIMESHSystem* system) {
 }
 
 __device__
-void kodes::GRIMESHSystem::derivatives(const scalar x, const scalar* y, scalar* dydx) const
+void kodes::GRIMESHSystem::derivatives(const scalar x, const scalar rho, const scalar* y, scalar* dydx) const
 {
-    dydt(x, 0.25781, y, dydx, device_memory);
+    dydt(x, rho, y, dydx, device_memory);
 }
 
 __device__
-void kodes::GRIMESHSystem::jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy) const
+void kodes::GRIMESHSystem::jacobian(const scalar x, const scalar rho, const scalar* y, scalar* dfdx, scalar* dfdy) const
 {
-    eval_jacob(x, 0.25781, y, dfdy, device_memory);
+    eval_jacob(x, rho, y, dfdy, device_memory);
 }

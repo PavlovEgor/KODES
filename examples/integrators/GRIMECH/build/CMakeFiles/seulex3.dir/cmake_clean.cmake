@@ -2,8 +2,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/seulex3.dir/cmake_device_link.o"
   "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o"
   "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o.d"
-  "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o"
-  "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o.d"
   "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o"
   "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o.d"
   "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o"

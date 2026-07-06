@@ -18,7 +18,6 @@ add_executable( seulex3
     ${SRC_DIR}/basic_linalg.cu
     ${SRC_DIR}/Resources/SeulexDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
-    ${SRC_DIR}/ODESystem/HIRESSystem.cu
     ${SRC_DIR}/Resources/HostResources.cu
     ${SRC_DIR}/ODESystem/GRIMESHSystem.cu
     ${SRC_DIR}/ODESystem/grimech/out/chem_utils.cu

@@ -126,7 +126,7 @@ void set_same_initial_conditions(int NUM, double** y_host, double** var_host)
     Xi[0]   =   2;  // H2
     Xi[13]  =   0;  // CH4
     Xi[3]   =   1;  // O2
-    Xi[47]  =   4;  // N2
+    Xi[52]  =   4;  // N2
 
     //Normalize mole fractions to sum to one
     double Xsum = 0.0;

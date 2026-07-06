@@ -37,7 +37,7 @@ bool seul (
     LUDecompose(a_, pivotIndices_, res->sizeOfSystem());
 
     scalar xnew = x0 + dx;
-    ode->derivatives(xnew, y0_, dy_);
+    ode->derivatives(xnew, res->parameters[INDEXVEC(0)], y0_, dy_);
 
     if (INDEXVEC(0) == 0)
     {printf("workIndex == 0 derivatives\n");
@@ -66,7 +66,7 @@ bool seul (
             }
             dy1 = sqrt(dy1);
 
-            ode->derivatives(x0 + dx, yTemp_, dydx_);
+            ode->derivatives(x0 + dx, res->parameters[INDEXVEC(0)], yTemp_, dydx_);
             for (label i=0; i<res->sizeOfSystem(); i++)
             {
                 dy_[INDEXVEC(i)] = dydx_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dx;
@@ -96,7 +96,7 @@ bool seul (
             }
         }
 
-        ode->derivatives(xnew, yTemp_, dy_);
+        ode->derivatives(xnew, res->parameters[INDEXVEC(0)], yTemp_, dy_);
         LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
     }
 
@@ -169,7 +169,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
             bool jacUpdated = false;
             if (theta_ > jacRedo_)
             {
-                ode->jacobian(x, y, dfdx_, dfdy_);
+                ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
                 jacUpdated = true;
             }
 
@@ -315,7 +315,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
                         if (theta_ > jacRedo_ && !jacUpdated)
                         {
-                            ode->jacobian(x, y, dfdx_, dfdy_);
+                            ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
                             jacUpdated = true;
                         }
                     }

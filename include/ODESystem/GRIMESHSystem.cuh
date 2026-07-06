@@ -39,13 +39,13 @@ public:
     __device__ void 
     derivatives
     (
-        const scalar x, const scalar* y, scalar* dydx
+        const scalar x, const scalar rho, const scalar* y, scalar* dydx
     ) const override;
 
     __device__ void 
     jacobian
     (
-        const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy
+        const scalar x, const scalar rho, const scalar* y, scalar* dfdx, scalar* dfdy
     ) const override;
 };
 }

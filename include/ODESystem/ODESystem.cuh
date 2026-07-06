@@ -31,13 +31,13 @@ public:
     __device__ virtual void 
     derivatives
     (
-        const scalar x, const scalar* y, scalar* dydx
+        const scalar x, const scalar param, const scalar* y, scalar* dydx
     ) const = 0;
 
     __device__ virtual void 
     jacobian
     (
-        const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy
+        const scalar x, const scalar param, const scalar* y, scalar* dfdx, scalar* dfdy
     ) const = 0;
 };
 }

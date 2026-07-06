@@ -219,197 +219,6 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o: /ho
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
 
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o: /home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu \
-  /home/pavlovep/KODES/include/ODESystem/HIRESSystem.cuh \
-  /home/pavlovep/KODES/include/ODESystem/ODESystem.cuh \
-  /home/pavlovep/KODES/include/basic_types.cuh \
-  /opt/cuda-13.1/targets/x86_64-linux/include/builtin_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/channel_descriptor.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/common_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/cudacc_ext.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/device_double_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/device_double_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/device_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/device_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/host_config.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/host_defines.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/math_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/math_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_100_rt.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_100_rt.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_70_rt.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_70_rt.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_80_rt.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_80_rt.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_90_rt.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/crt/sm_90_rt.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/cuda_device_runtime_api.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/cuda_runtime.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/cuda_runtime_api.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/device_atomic_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/device_atomic_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/device_launch_parameters.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/device_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/driver_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/driver_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/library_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_20_atomic_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_20_atomic_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_20_intrinsics.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_20_intrinsics.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_30_intrinsics.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_30_intrinsics.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_32_atomic_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_32_atomic_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_32_intrinsics.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_32_intrinsics.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_35_atomic_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_35_intrinsics.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_60_atomic_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_60_atomic_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_61_intrinsics.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/sm_61_intrinsics.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/surface_indirect_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/surface_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/texture_indirect_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/texture_types.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/vector_functions.h \
-  /opt/cuda-13.1/targets/x86_64-linux/include/vector_functions.hpp \
-  /opt/cuda-13.1/targets/x86_64-linux/include/vector_types.h \
-  /usr/include/alloca.h \
-  /usr/include/assert.h \
-  /usr/include/c++/13/bit \
-  /usr/include/c++/13/bits/concept_check.h \
-  /usr/include/c++/13/bits/cpp_type_traits.h \
-  /usr/include/c++/13/bits/exception.h \
-  /usr/include/c++/13/bits/exception_defines.h \
-  /usr/include/c++/13/bits/functexcept.h \
-  /usr/include/c++/13/bits/move.h \
-  /usr/include/c++/13/bits/predefined_ops.h \
-  /usr/include/c++/13/bits/ptr_traits.h \
-  /usr/include/c++/13/bits/requires_hosted.h \
-  /usr/include/c++/13/bits/specfun.h \
-  /usr/include/c++/13/bits/std_abs.h \
-  /usr/include/c++/13/bits/stl_algobase.h \
-  /usr/include/c++/13/bits/stl_iterator.h \
-  /usr/include/c++/13/bits/stl_iterator_base_funcs.h \
-  /usr/include/c++/13/bits/stl_iterator_base_types.h \
-  /usr/include/c++/13/bits/stl_pair.h \
-  /usr/include/c++/13/bits/stl_relops.h \
-  /usr/include/c++/13/bits/utility.h \
-  /usr/include/c++/13/cmath \
-  /usr/include/c++/13/cstdlib \
-  /usr/include/c++/13/debug/assertions.h \
-  /usr/include/c++/13/debug/debug.h \
-  /usr/include/c++/13/ext/numeric_traits.h \
-  /usr/include/c++/13/ext/type_traits.h \
-  /usr/include/c++/13/initializer_list \
-  /usr/include/c++/13/limits \
-  /usr/include/c++/13/math.h \
-  /usr/include/c++/13/new \
-  /usr/include/c++/13/pstl/pstl_config.h \
-  /usr/include/c++/13/stdlib.h \
-  /usr/include/c++/13/tr1/bessel_function.tcc \
-  /usr/include/c++/13/tr1/beta_function.tcc \
-  /usr/include/c++/13/tr1/ell_integral.tcc \
-  /usr/include/c++/13/tr1/exp_integral.tcc \
-  /usr/include/c++/13/tr1/gamma.tcc \
-  /usr/include/c++/13/tr1/hypergeometric.tcc \
-  /usr/include/c++/13/tr1/legendre_function.tcc \
-  /usr/include/c++/13/tr1/modified_bessel_func.tcc \
-  /usr/include/c++/13/tr1/poly_hermite.tcc \
-  /usr/include/c++/13/tr1/poly_laguerre.tcc \
-  /usr/include/c++/13/tr1/riemann_zeta.tcc \
-  /usr/include/c++/13/tr1/special_function_util.h \
-  /usr/include/c++/13/type_traits \
-  /usr/include/c++/13/utility \
-  /usr/include/ctype.h \
-  /usr/include/endian.h \
-  /usr/include/features-time64.h \
-  /usr/include/features.h \
-  /usr/include/limits.h \
-  /usr/include/linux/limits.h \
-  /usr/include/math.h \
-  /usr/include/stdc-predef.h \
-  /usr/include/stdio.h \
-  /usr/include/stdlib.h \
-  /usr/include/string.h \
-  /usr/include/strings.h \
-  /usr/include/time.h \
-  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
-  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
-  /usr/include/x86_64-linux-gnu/bits/endian.h \
-  /usr/include/x86_64-linux-gnu/bits/endianness.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
-  /usr/include/x86_64-linux-gnu/bits/floatn.h \
-  /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
-  /usr/include/x86_64-linux-gnu/bits/fp-fast.h \
-  /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
-  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
-  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
-  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/long-double.h \
-  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
-  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
-  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
-  /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
-  /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
-  /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
-  /usr/include/x86_64-linux-gnu/bits/time.h \
-  /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/timesize.h \
-  /usr/include/x86_64-linux-gnu/bits/timex.h \
-  /usr/include/x86_64-linux-gnu/bits/types.h \
-  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
-  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
-  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
-  /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
-  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
-  /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
-  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
-  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
-  /usr/include/x86_64-linux-gnu/bits/wordsize.h \
-  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
-  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
-  /usr/include/x86_64-linux-gnu/c++/13/bits/cpu_defines.h \
-  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
-  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
-  /usr/include/x86_64-linux-gnu/sys/cdefs.h \
-  /usr/include/x86_64-linux-gnu/sys/select.h \
-  /usr/include/x86_64-linux-gnu/sys/types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
-
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu \
   /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cuh \
   /home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_macros.cuh \
@@ -7106,6 +6915,8 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__utility/exchange.h:
 
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__utility/convert_to_integral.h:
+
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__utility/auto_cast.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/void_t.h:
@@ -7174,10 +6985,6 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_scalar.h:
 
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_reference_wrapper.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_reference.h:
-
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__concepts/predicate.h:
 
 /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu:
@@ -7229,10 +7036,6 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu:
 
 /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__utility/convert_to_integral.h:
-
-/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
 
@@ -7297,8 +7100,6 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /usr/include/c++/13/bits/stl_relops.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_core_convertible.h:
-
-/home/pavlovep/KODES/include/ODESystem/HIRESSystem.cuh:
 
 /usr/include/c++/13/bits/nested_exception.h:
 
@@ -7389,6 +7190,8 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__iterator/iter_move.h:
 
 /home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cuh:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_reference.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/sm_20_atomic_functions.hpp:
 
@@ -7505,6 +7308,10 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cuh:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cccl/diagnostic.h:
+
+/usr/include/c++/13/bits/new_allocator.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cuda_bf16.hpp:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/builtin_types.h:
 
@@ -7760,6 +7567,20 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 
 /usr/include/c++/13/tr1/beta_function.tcc:
 
+/usr/include/c++/13/debug/debug.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cuda_fp16.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/remove_cvref.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/add_volatile.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cccl/os.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_implicitly_default_constructible.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_integral.h:
+
 /usr/include/x86_64-linux-gnu/bits/uio_lim.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/integral_constant.h:
@@ -7831,24 +7652,6 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /usr/include/c++/13/bits/cpp_type_traits.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cuda_bf16.h:
-
-/usr/include/c++/13/bits/new_allocator.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cuda_bf16.hpp:
-
-/usr/include/c++/13/debug/debug.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cuda_fp16.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/remove_cvref.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/add_volatile.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cccl/os.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_implicitly_default_constructible.h:
-
-/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_integral.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h:
 
@@ -8135,6 +7938,8 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/G
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__concepts/constructible.h:
 
 /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__concepts/derived_from.h:
+
+/opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/is_reference_wrapper.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
 
