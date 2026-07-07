@@ -44,13 +44,21 @@ static const char* SPECIES_NAMES[NSP] = {
     } \
 } while (0)
 
-// dydt/eval_jacob сами не читают/пишут ничего, кроме переданных указателей и
-// mechanism_memory (conc, fwd_rates, rev_rates, pres_mod, spec_rates, cp/h, jac) -
-// поэтому после одного вызова все промежуточные массивы можно скопировать на host.
+// ВАЖНО: раньше здесь ещё вызывался eval_jacob() сразу после dydt(). Он пишет
+// в те же самые d_mem->conc/fwd_rates/rev_rates/pres_mod/spec_rates, что и dydt
+// (см. jacob.cu) - то есть полностью перезаписывал их своими значениями ПОСЛЕ
+// dydt(), и в pyjac_output.txt утекали именно они, а не значения dydt().
+// eval_jacob для GRIMech сгенерирован ТОЛЬКО в CONP-варианте (в jacob.cu нет ни
+// одного #ifdef CONV/CONP - grep по всему файлу пуст), то есть он всегда трактует
+// свой 2-й аргумент как ДАВЛЕНИЕ через eval_conc(), независимо от того, что
+// header.cuh для этого механизма определяет CONV. Мы передаём сюда rho (~0.26
+// кг/м3) - eval_jacob использует её как pres (~0.26 Па, почти вакуум) вместо
+// 101325 Па, из-за чего conc[] получались в ~101325/0.26 ~ 390000 раз меньше
+// правильных. Для чистого сравнения dydt() с Cantera eval_jacob здесь не нужен -
+// он не убирает данные для diff'а, а лишь дописывает результат (см. чуть ниже).
 __global__ void probe_kernel(mechanism_memory* d_mem, double t, double param)
 {
     dydt(t, param, d_mem->y, d_mem->dy, d_mem);
-    eval_jacob(t, param, d_mem->y, d_mem->jac, d_mem);
 }
 
 static bool readState(const std::string& path, double& T0, double& P0, std::vector<double>& Xi)
