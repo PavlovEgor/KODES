@@ -39,13 +39,13 @@ bool seul (
     scalar xnew = x0 + dx;
     ode->derivatives(xnew, res->parameters[INDEXVEC(0)], y0_, dy_);
 
-    if (INDEXVEC(0) == 0)
-    {printf("workIndex == 0 derivatives\n");
-    for (label j = 0; j < res->sizeOfSystem(); ++j) {
-            printf("%0.16f ", dy_[INDEXVEC(j)]);
-    }
-    printf("\n ");
-    }
+    // if (INDEXVEC(0) == 0)
+    // {printf("workIndex == 0 derivatives\n");
+    // for (label j = 0; j < res->sizeOfSystem(); ++j) {
+    //         printf("%0.16f ", dy_[INDEXVEC(j)]);
+    // }
+    // printf("\n ");
+    // }
 
     LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
 
@@ -130,8 +130,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
         scalar x = 0;
         scalar xEnd = step.dxTry;
-        step.dxTry /= 2;
-        scalar dx = xEnd/2;
+        scalar dx = step.dxTry;
 
         do
         {
@@ -146,9 +145,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
             temp_[INDEXVEC(0)] = GREAT;
             dx = step.dxTry;
-
             copyVec(y0_, y, res->sizeOfSystem());
-
             dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
 
             if (step.first || step.prevReject)
@@ -168,6 +165,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
             }
 
             bool jacUpdated = false;
+
             if (theta_ > jacRedo_)
             {
                 ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
@@ -183,6 +181,11 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
                 dx = step.forward ? dxNew : -dxNew;
                 firstk = false;
                 step.reject = false;
+
+                if (fabs(dx) <= fabs(x) * sqr(SMALL))
+                {
+                    printf("step size underflow : %0.16f \n", dx);
+                }
 
                 scalar errOld = 0;
 
@@ -216,7 +219,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
                         for (label i=0; i<res->sizeOfSystem(); ++i)
                         {
                             scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
-                            err += sqr((y[INDEXVEC(i)] - table_[INDEXVEC(i)])/scale_[INDEXVEC(i)]);
+                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(0, i, res->sizeOfSystem())])/scale_[INDEXVEC(i)]);
                         }
                         err = sqrt(err/res->sizeOfSystem());
                         if (err > 1/SMALL || (k > 1 && err >= errOld))
@@ -324,7 +327,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
             }
             jacUpdated = false;
-            // if (INDEXVEC(0) == 0) {printf("x= %0.9f\n", dx);}
+            
             step.dxDid = dx;
             x += dx;
 
