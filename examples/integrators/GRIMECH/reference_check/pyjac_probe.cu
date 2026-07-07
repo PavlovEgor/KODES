@@ -128,11 +128,11 @@ int main(int argc, char** argv)
     mechanism_memory* d_mem = nullptr;
     initialize_gpu_memory(1, &h_mem, &d_mem);
 
-    double y_host[NN];
+    double y_host[NSP];
     y_host[0] = T0;
     for (int i = 0; i < NSP - 1; ++i) y_host[i + 1] = Yi[i];
 
-    CUDA_CHECK(cudaMemcpy(h_mem->y, y_host, NN * sizeof(double), cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(h_mem->y, y_host, NSP * sizeof(double), cudaMemcpyHostToDevice));
 
     // ВАЖНО: это ровно то же значение, которое kodes::GRIMESHSystem::derivatives
     // сейчас передаёт вторым аргументом в dydt()/eval_jacob() (после вашего фикса -
@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     CUDA_CHECK(cudaMemcpy(rev, h_mem->rev_rates, REV_RATES * sizeof(double), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(pmod, h_mem->pres_mod, PRES_MOD_RATES * sizeof(double), cudaMemcpyDeviceToHost));
     CUDA_CHECK(cudaMemcpy(spec, h_mem->spec_rates, NSP * sizeof(double), cudaMemcpyDeviceToHost));
-    CUDA_CHECK(cudaMemcpy(dy, h_mem->dy, NN * sizeof(double), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaMemcpy(dy, h_mem->dy, NSP * sizeof(double), cudaMemcpyDeviceToHost));
 
     printf("=== pyJac: промежуточные величины (param = %.15e) ===\n\n", param);
 

@@ -14,13 +14,13 @@ int main(){
     mechanism_memory *h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
     mechanism_memory *d_mem = nullptr;
 
-    initialize_gpu_memory(host_res.numOfSystems(), &h_mem, &d_mem);
-
-    kodes::GRIMESHSystem* ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
+    initialize_gpu_memory(1, &h_mem, &d_mem);
 
     kodes::SeulexDeviceResources   host_res_dev(host_res.numOfSystems(), host_res.sizeOfSystem(), host_res.numOfParameters());
 
     kodes::SeulexDeviceResources*   res_prt = kodes::SeulexDeviceResources::create(numOfSystems, host_res.sizeOfSystem(), 1, &host_res_dev);
+
+    kodes::GRIMESHSystem* ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
