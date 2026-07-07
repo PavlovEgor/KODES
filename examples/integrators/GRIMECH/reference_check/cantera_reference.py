@@ -88,17 +88,17 @@ def main():
     for name, w in zip(gas.species_names, wdot):
         print(f"  wdot[{name}] = {w:.15e}")
 
-    # Точно те же формулы, что в src/ODESystem/grimech/out/dydt.cu (ветка CONV):
+    # Точно те же формулы, что в src/ODESystem/grimech/out/dydt.cu (ветка CONP):
     #   dY_k/dt = spec_rates_k * MW_k / rho
-    #   dT/dt   = -(1/(rho*cv)) * sum_k(u_k_molar * spec_rates_k)
+    #   dT/dt   = -(1/(rho*cp)) * sum_k(h_k_molar * spec_rates_k)
     MW = gas.molecular_weights                    # kg/kmol
-    u_molar = gas.partial_molar_int_energies       # J/kmol
-    cv_mass = gas.cv_mass                          # J/(kg*K)
+    h_molar = gas.partial_molar_enthalpies         # J/kmol
+    cp_mass = gas.cp_mass                          # J/(kg*K)
 
     dY = wdot * MW / rho
-    dT = -np.sum(u_molar * wdot) / (rho * cv_mass)
+    dT = -np.sum(h_molar * wdot) / (rho * cp_mass)
 
-    print("\n=== Cantera dy/dt по формулам CONV из dydt.cu "
+    print("\n=== Cantera dy/dt по формулам CONP из dydt.cu "
           "(сравнивать с dy/dt из pyjac_probe) ===")
     print(f"  dT/dt = {dT:.15e}")
     for name, dy in zip(gas.species_names, dY):
