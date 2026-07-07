@@ -228,8 +228,16 @@ int main(int argc, char** argv)
         printf("  pres_mod[%d] = %.15e\n", i, pmod[i]);
 
     // ---- якобиан: отдельный запуск ядра, ПОСЛЕ того как все данные dydt()
-    // уже скопированы на host (см. комментарий у probe_jac_kernel) ----
-    probe_jac_kernel<<<1, 1>>>(d_mem, 0.0, param);
+    // уже скопированы на host (см. комментарий у probe_jac_kernel).
+    // ВАЖНО: eval_jacob() (и функции, которые он вызывает внутри - eval_conc,
+    // eval_rxn_rates, get_rxn_pres_mod, eval_spec_rates, jacob_*.cu) читают и
+    // пишут extern volatile __shared__ double shared_temp[] по индексам
+    // threadIdx.x + k*blockDim.x, k=0..3 (grep по всем .cu в out/ и out/jacobs/,
+    // out/rates/ - максимальный множитель k=3), то есть нужно ровно 4 double на
+    // поток динамической shared-памяти - точно как у probe_kernel выше. Без
+    // этого параметра запуска здесь была illegal memory access (обращение к
+    // shared-памяти нулевого размера). ----
+    probe_jac_kernel<<<1, 1, 4 * 1 * sizeof(double)>>>(d_mem, 0.0, param);
     CUDA_CHECK(cudaGetLastError());
     CUDA_CHECK(cudaDeviceSynchronize());
 
