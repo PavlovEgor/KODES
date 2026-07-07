@@ -153,30 +153,6 @@ home/pavlovep/KODES/src/ODESystem/H2O2System.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex2.dir/build.make CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.s
 .PHONY : home/pavlovep/KODES/src/ODESystem/H2O2System.cu.s
 
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.o: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.o
-
-# target to build an object file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex2.dir/build.make CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.i: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.i
-
-# target to preprocess a source file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex2.dir/build.make CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i
-
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.s: home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.s
-
-# target to generate assembly for a file
-home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex2.dir/build.make CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s
-
 home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.o: home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o
 .PHONY : home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.o
 
@@ -549,9 +525,6 @@ help:
 	@echo "... home/pavlovep/KODES/src/ODESystem/H2O2System.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/H2O2System.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/H2O2System.s"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.o"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.i"
-	@echo "... home/pavlovep/KODES/src/ODESystem/HIRESSystem.s"
 	@echo "... home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.s"

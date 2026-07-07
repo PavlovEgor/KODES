@@ -129,26 +129,11 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.s: c
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o: CMakeFiles/seulex2.dir/flags.make
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o: /home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
-
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
-
-CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
-
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: CMakeFiles/seulex2.dir/flags.make
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: /home/pavlovep/KODES/src/Resources/HostResources.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/HostResources.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.i: cmake_force
@@ -163,7 +148,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o: CMakeF
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o: /home/pavlovep/KODES/src/ODESystem/H2O2System.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/H2O2System.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.i: cmake_force
@@ -178,7 +163,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.i: cmake_force
@@ -193,7 +178,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o: CMa
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.i: cmake_force
@@ -208,7 +193,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o: CM
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/jacob.cu.i: cmake_force
@@ -223,7 +208,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/gpu_memory.cu.i: cmake_force
@@ -238,7 +223,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mass_mole.cu.i: cmake_force
@@ -253,7 +238,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/mechanism.cu.i: cmake_force
@@ -268,7 +253,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates_pres_mod.cu.i: cmake_force
@@ -283,7 +268,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/rxn_rates.cu.i: cmake_force
@@ -298,7 +283,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multipl
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/sparse_multiplier.cu.i: cmake_force
@@ -313,7 +298,7 @@ CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o: CMakeFiles/seulex2.dir/includes_CUDA.rsp
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o: /home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o: CMakeFiles/seulex2.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CUDA object CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o"
 	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o -MF CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu -o CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.o
 
 CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/spec_rates.cu.i: cmake_force
@@ -330,7 +315,6 @@ seulex2_OBJECTS = \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/basic_linalg.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o" \
-"CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o" \
@@ -351,7 +335,6 @@ CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/seulex2.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
-CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o
@@ -368,7 +351,7 @@ CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/build.make
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/deviceLinkLibs.rsp
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/deviceObjects1.rsp
 CMakeFiles/seulex2.dir/cmake_device_link.o: CMakeFiles/seulex2.dir/dlink.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Linking CUDA device code CMakeFiles/seulex2.dir/cmake_device_link.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Linking CUDA device code CMakeFiles/seulex2.dir/cmake_device_link.o"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/seulex2.dir/dlink.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -381,7 +364,6 @@ seulex2_OBJECTS = \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/basic_linalg.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o" \
-"CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o" \
 "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o" \
@@ -402,7 +384,6 @@ seulex2: CMakeFiles/seulex2.dir/seulex2.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
-seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o
 seulex2: CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o
@@ -420,7 +401,7 @@ seulex2: CMakeFiles/seulex2.dir/cmake_device_link.o
 seulex2: CMakeFiles/seulex2.dir/linkLibs.rsp
 seulex2: CMakeFiles/seulex2.dir/objects1.rsp
 seulex2: CMakeFiles/seulex2.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Linking CUDA executable seulex2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/pavlovep/KODES/examples/integrators/H2O2System/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Linking CUDA executable seulex2"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/seulex2.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

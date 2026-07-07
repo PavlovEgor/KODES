@@ -185,6 +185,8 @@ CMakeFiles/seulex2.dir/seulex2.cu.o : /home/pavlovep/KODES/examples/integrators/
     /usr/include/c++/13/utility \
     /usr/include/c++/13/bits/stl_relops.h \
     /usr/include/c++/13/initializer_list \
+    /home/pavlovep/KODES/examples/integrators/H2O2System/seulex2.cuh \
+    /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/basic_linalg.cuh \
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/cmath \
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/detail/__config \
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cccl/version.h \
@@ -646,8 +648,6 @@ CMakeFiles/seulex2.dir/seulex2.cu.o : /home/pavlovep/KODES/examples/integrators/
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__type_traits/result_of.h \
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cmath/nvfp16.h \
     /opt/cuda-13.1/targets/x86_64-linux/include/cccl/cuda/std/__cmath/nvbf16.h \
-    /home/pavlovep/KODES/examples/integrators/H2O2System/seulex2.cuh \
-    /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/basic_linalg.cuh \
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/basic_types.cuh \
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Resources/SeulexDeviceResources.cuh \
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Resources/DeviceResources.cuh \
@@ -666,6 +666,9 @@ CMakeFiles/seulex2.dir/seulex2.cu.o : /home/pavlovep/KODES/examples/integrators/
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../src/ODESystem/h2o2/out/rates.cuh \
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Resources/HostResources.cuh \
     /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Resources/Operator.cuh \
+    /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Integrators/Seulex.cuh \
+    /home/pavlovep/KODES/examples/integrators/H2O2System/../../../include/Integrators/Integrator.cuh \
+    /home/pavlovep/KODES/examples/integrators/H2O2System/../../../src/Integrators/Seulex.cu \
     /usr/include/c++/13/iostream \
     /usr/include/c++/13/ostream \
     /usr/include/c++/13/ios \

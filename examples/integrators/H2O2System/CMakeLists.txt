@@ -18,7 +18,6 @@ add_executable( seulex2
     ${SRC_DIR}/basic_linalg.cu
     ${SRC_DIR}/Resources/SeulexDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
-    ${SRC_DIR}/ODESystem/HIRESSystem.cu
     ${SRC_DIR}/Resources/HostResources.cu
     ${SRC_DIR}/ODESystem/H2O2System.cu
     ${SRC_DIR}/ODESystem/h2o2/out/chem_utils.cu
@@ -54,6 +53,8 @@ target_include_directories(seulex2 PRIVATE
     ${SRC_DIR}/ODESystem/h2o2/out
     ${SRC_DIR}/ODESystem/h2o2/out/jacobs
     ${SRC_DIR}/ODESystem/h2o2/out/rates
+    ${SRC_DIR}/Integrators
+    ${INC_DIR}/Integrators
     # ${ROOT_DIR}/external/rapidjson/include
     # ${ROOT_DIR}/examples/TestSystems
 )

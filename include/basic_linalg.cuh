@@ -3,12 +3,7 @@
 #include <cuda/cmath>
 #include <cuda_runtime.h>
 #include "basic_types.cuh"
-// #include "gpu_macros.cuh"
-// #include "mechanism.cuh"
 
-#define SMALL 1e-9
-#define GREAT 1e9
-#define MAX_VEC_SIZE 128
 
 typedef double scalar;
 typedef int    label;

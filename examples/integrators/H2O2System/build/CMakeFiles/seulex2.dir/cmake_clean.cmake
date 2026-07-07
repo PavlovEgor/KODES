@@ -2,8 +2,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/seulex2.dir/cmake_device_link.o"
   "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o"
   "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/H2O2System.cu.o.d"
-  "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o"
-  "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/HIRESSystem.cu.o.d"
   "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o"
   "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/chem_utils.cu.o.d"
   "CMakeFiles/seulex2.dir/home/pavlovep/KODES/src/ODESystem/h2o2/out/dydt.cu.o"

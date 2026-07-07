@@ -31,13 +31,13 @@ kodes::H2O2System::destroyGPU(kodes::H2O2System* system) {
 }
 
 __device__
-void kodes::H2O2System::derivatives(const scalar x, const scalar* y, scalar* dydx) const
+void kodes::H2O2System::derivatives(const scalar x, const scalar rho, const scalar* y, scalar* dydx) const
 {
-    dydt(x, 0.25781, y, dydx, device_memory);
+    dydt(x, rho, y, dydx, device_memory);
 }
 
 __device__
-void kodes::H2O2System::jacobian(const scalar x, const scalar* y, scalar* dfdx, scalar* dfdy) const
+void kodes::H2O2System::jacobian(const scalar x, const scalar rho, const scalar* y, scalar* dfdx, scalar* dfdy) const
 {
-    eval_jacob(x, 0.25781, y, dfdy, device_memory);
+    eval_jacob(x, rho, y, dfdy, device_memory);
 }
