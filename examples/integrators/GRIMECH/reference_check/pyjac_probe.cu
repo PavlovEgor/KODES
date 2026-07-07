@@ -59,6 +59,16 @@ static const char* SPECIES_NAMES[NSP] = {
 __global__ void probe_kernel(mechanism_memory* d_mem, double t, double param)
 {
     dydt(t, param, d_mem->y, d_mem->dy, d_mem);
+
+    // Диагностика: rev_rates[44] заведомо не пренебрежимо мал (~3.67e-7), и по
+    // spec_rates.cu:423 обязан войти в spec_rates[3] (O2) слагаемым
+    // (fwd_rates[44]-rev_rates[44]). Печатаем прямо на GPU, сразу после dydt(),
+    // чтобы понять, доходит ли это значение до d_mem->spec_rates[3] вообще,
+    // или обнуляется ещё до того, как мы скопируем буфер на host.
+    printf("[device] fwd_rates[44]=%.15e rev_rates[44]=%.15e pres_mod[0]=%.15e "
+           "spec_rates[3](O2)=%.15e dy[0](dT/dt)=%.15e\n",
+           d_mem->fwd_rates[44], d_mem->rev_rates[44], d_mem->pres_mod[0],
+           d_mem->spec_rates[3], d_mem->dy[0]);
 }
 
 static bool readState(const std::string& path, double& T0, double& P0, std::vector<double>& Xi)
