@@ -71,6 +71,26 @@ __global__ void probe_kernel(mechanism_memory* d_mem, double t, double param)
            d_mem->spec_rates[3], d_mem->dy[0]);
 }
 
+// eval_jacob() для того же состояния - вызывается ОТДЕЛЬНЫМ запуском ядра,
+// после того как main() уже скопировал на host всё, что писал probe_kernel
+// (conc/fwd_rates/rev_rates/pres_mod/spec_rates/dy). eval_jacob сам пересчитывает
+// conc/fwd_rates/rev_rates/pres_mod/spec_rates из y и pres (см. начало jacob.cu) -
+// то есть не нуждается в предварительном вызове dydt(), но перезаписывает те же
+// буферы d_mem, поэтому запускать его раньше, чем скопированы результаты dydt(),
+// нельзя (см. комментарий выше). d_mem->jac имеет размер NSP*NSP (см.
+// gpu_memory.cu: cudaMalloc(&jac, NSP*NSP*padded*sizeof(double))) и хранится в
+// column-major раскладке: jac[col*NSP+row] = d(d(y_row)/dt) / d(y_col), где
+// индекс 0 - температура T, индексы 1..NSP-1 - массовые доли явных видов
+// (SPECIES_NAMES[col-1]/[row-1]); последний вид (N2) неявный и своего
+// столбца/строки не имеет - см. эквивалентную формулу в jacob.cu (например
+// jac[INDEX(0)] на строке ~331 использует уже посчитанные jac[INDEX(1)],
+// jac[INDEX(2)], ... - то есть значения из ТОГО ЖЕ столбца col=0 (d/dT) для
+// разных строк row=1,2,...).
+__global__ void probe_jac_kernel(mechanism_memory* d_mem, double t, double param)
+{
+    eval_jacob(t, param, d_mem->y, d_mem->jac, d_mem);
+}
+
 static bool readState(const std::string& path, double& T0, double& P0, std::vector<double>& Xi)
 {
     std::ifstream in(path);
@@ -152,11 +172,13 @@ int main(int argc, char** argv)
 
     CUDA_CHECK(cudaMemcpy(h_mem->y, y_host, NSP * sizeof(double), cudaMemcpyHostToDevice));
 
-    // ВАЖНО: это ровно то же значение, которое kodes::GRIMESHSystem::derivatives
-    // сейчас передаёт вторым аргументом в dydt()/eval_jacob() (после вашего фикса -
-    // res->parameters(workIndex), т.е. по построению совпадает с rho из
-    // set_same_initial_conditions). header.cuh для этого механизма определяет
-    // CONV, так что второй аргумент - плотность (кг/м3), не давление.
+    // ВАЖНО: это ровно то же значение, которое kodes::GRIMESHSystem::derivatives/
+    // jacobian сейчас передают вторым аргументом в dydt()/eval_jacob() (после
+    // вашего фикса - res->parameters(workIndex), т.е. по построению совпадает с
+    // P0 из set_same_initial_conditions). header.cuh для этого механизма
+    // определяет CONP (см. #define CONP / закомментированный #define CONV), так
+    // что второй аргумент - давление (Па), а rho внутри dydt()/eval_jacob()
+    // вычисляется через eval_conc() из T, pres и состава.
     double param = P0;
 
     probe_kernel<<<1, 1, 4 * 1 * sizeof(double)>>>(d_mem, 0.0, param);
@@ -204,6 +226,38 @@ int main(int argc, char** argv)
         printf("  rev_rates[%d] = %.15e\n", i, rev[i]);
     for (int i = 0; i < PRES_MOD_RATES; ++i)
         printf("  pres_mod[%d] = %.15e\n", i, pmod[i]);
+
+    // ---- якобиан: отдельный запуск ядра, ПОСЛЕ того как все данные dydt()
+    // уже скопированы на host (см. комментарий у probe_jac_kernel) ----
+    probe_jac_kernel<<<1, 1>>>(d_mem, 0.0, param);
+    CUDA_CHECK(cudaGetLastError());
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    static double jac[NSP * NSP];
+    CUDA_CHECK(cudaMemcpy(jac, h_mem->jac, NSP * NSP * sizeof(double), cudaMemcpyDeviceToHost));
+
+    printf("\n=== pyJac: якобиан eval_jacob (param = %.15e) ===\n\n", param);
+    printf("jac[col*NSP+row] в column-major раскладке (col = переменная\n");
+    printf("дифференцирования, row = уравнение); сравнивать с численным\n");
+    printf("якобианом из cantera_reference.py по МЕТКАМ d(...)/d(...), не по\n");
+    printf("порядку строк - там он вычислен и напечатан в той же раскладке:\n");
+    for (int col = 0; col < NSP; ++col)
+    {
+        const char* colLabelSpecies = (col == 0) ? nullptr : SPECIES_NAMES[col - 1];
+        for (int row = 0; row < NSP; ++row)
+        {
+            const char* rowLabelSpecies = (row == 0) ? nullptr : SPECIES_NAMES[row - 1];
+            int idx = col * NSP + row;
+            if (row == 0 && col == 0)
+                printf("  jac[%d] d(dT/dt)/d(T) = %.15e\n", idx, jac[idx]);
+            else if (row == 0)
+                printf("  jac[%d] d(dT/dt)/d(Y[%s]) = %.15e\n", idx, colLabelSpecies, jac[idx]);
+            else if (col == 0)
+                printf("  jac[%d] d(dY[%s]/dt)/d(T) = %.15e\n", idx, rowLabelSpecies, jac[idx]);
+            else
+                printf("  jac[%d] d(dY[%s]/dt)/d(Y[%s]) = %.15e\n", idx, rowLabelSpecies, colLabelSpecies, jac[idx]);
+        }
+    }
 
     free_gpu_memory(&h_mem, &d_mem);
     free(h_mem);
