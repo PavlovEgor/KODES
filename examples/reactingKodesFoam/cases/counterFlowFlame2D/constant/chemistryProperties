@@ -28,7 +28,11 @@ initialChemicalTimeStep 1e-7;
 
 odeCoeffs
 {
-    solver          seulex;
+    // kodesSeulex is a line-for-line copy of OpenFOAM's own "seulex"
+    // (built in examples/reactingKodesFoam/kodesODESolver) with diagnostic
+    // logging added to compare against the KODES GPU Seulex log. Numerically
+    // identical to "seulex" - swap back any time with no change in results.
+    solver          kodesSeulex;
     absTol          1e-12;
     relTol          1e-1;
 }
