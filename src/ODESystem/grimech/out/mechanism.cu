@@ -153,7 +153,7 @@ void set_same_initial_conditions(int NUM, double** y_host, double** var_host)
     //set initial pressure, units [PA]
     double P = 101325.0;
     // set intial temperature, units [K]
-    double T0 = 1000;
+    double T0 = 1500;
 
     // (*y_host) = (double*)malloc(NUM * NSP * sizeof(double));
     var_host[0] = (double*)malloc(NUM * sizeof(double));

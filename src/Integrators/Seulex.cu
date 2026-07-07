@@ -39,14 +39,6 @@ bool seul (
     scalar xnew = x0 + dx;
     ode->derivatives(xnew, res->parameters[INDEXVEC(0)], y0_, dy_);
 
-    // if (INDEXVEC(0) == 0)
-    // {printf("workIndex == 0 derivatives\n");
-    // for (label j = 0; j < res->sizeOfSystem(); ++j) {
-    //         printf("%0.16f ", dy_[INDEXVEC(j)]);
-    // }
-    // printf("\n ");
-    // }
-
     LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
 
     copyVec(yTemp_, y0_, res->sizeOfSystem());
@@ -130,6 +122,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
         scalar x = 0;
         scalar xEnd = step.dxTry;
+        step.dxTry = 1e-7;
         scalar dx = step.dxTry;
 
         do
