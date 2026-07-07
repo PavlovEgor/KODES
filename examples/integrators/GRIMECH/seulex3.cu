@@ -26,7 +26,7 @@ int main(){
 
     op.cpyHostToDevice();
 
-    scalar xEnd = 1.0e-3;
+    scalar xEnd = 1.0;
     stepState step(xEnd);
 
     kodes::Seulex<kodes::GRIMESHSystem> solver(ode_prt, res_prt, step, host_res.numOfSystems());

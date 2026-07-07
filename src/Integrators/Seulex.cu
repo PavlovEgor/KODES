@@ -208,7 +208,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
                     {
                         for (label i=0; i<res->sizeOfSystem(); ++i)
                         {
-                            table_[INDEXMAT(k-1, i, res->sizeOfSystem())] = ySequence_[INDEXVEC(i)];
+                            table_[INDEXMAT(i, k-1, res->sizeOfSystem())] = ySequence_[INDEXVEC(i)];
                         }
                     }
 
@@ -219,7 +219,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
                         for (label i=0; i<res->sizeOfSystem(); ++i)
                         {
                             scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
-                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(0, i, res->sizeOfSystem())])/scale_[INDEXVEC(i)]);
+                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, res->sizeOfSystem())])/scale_[INDEXVEC(i)]);
                         }
                         err = sqrt(err/res->sizeOfSystem());
                         if (err > 1/SMALL || (k > 1 && err >= errOld))

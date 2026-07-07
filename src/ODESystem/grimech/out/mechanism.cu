@@ -120,7 +120,13 @@
     }
 void set_same_initial_conditions(int NUM, double** y_host, double** var_host) 
 {
-    double Xi [NSP] = {0.1};
+    double Xi [NSP];
+
+    for (int i=0; i< NSP; ++i)
+    {
+        Xi[i] = 0.0;
+    }
+
     //set initial mole fractions here
 
     Xi[0]   =   2;  // H2
