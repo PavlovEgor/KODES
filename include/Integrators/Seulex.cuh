@@ -14,7 +14,7 @@
 
 #pragma once
 
-__constant__ scalar absTol_    = 1e-12;
+__constant__ scalar absTol_    = 1e-5;
 __constant__ scalar relTol_    = 1e-1;
 
 __constant__ scalar stepFactor1_ = 0.6,

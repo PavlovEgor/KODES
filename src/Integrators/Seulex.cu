@@ -26,14 +26,14 @@ bool seul (
     scalar dx = dxTot/nSteps;
     
     for (label i=0; i<res->sizeOfSystem(); i++)
-    {
+    { 
         for (label j=0; j<res->sizeOfSystem(); j++)
         {
             a_[INDEXMAT(i, j, res->sizeOfSystem())] = -dfdy_[INDEXMAT(i, j, res->sizeOfSystem())];
         }
         a_[INDEXMAT(i, i, res->sizeOfSystem())] += 1/dx;
     }
-
+    
     LUDecompose(a_, pivotIndices_, res->sizeOfSystem());
 
     scalar xnew = x0 + dx;
@@ -130,7 +130,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
         scalar x = 0;
         scalar xEnd = step.dxTry;
-        scalar dx = xEnd;
+        step.dxTry /= 2;
+        scalar dx = xEnd/2;
 
         do
         {
