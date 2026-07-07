@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <math.h>
 /** Constant pressure or volume. */
-// #define CONP
-#define CONV
+#define CONP
+// #define CONV
 
 /** Include mechanism header to get NSP and NN **/
 #include "mechanism.cuh"

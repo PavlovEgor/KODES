@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     // res->parameters(workIndex), т.е. по построению совпадает с rho из
     // set_same_initial_conditions). header.cuh для этого механизма определяет
     // CONV, так что второй аргумент - плотность (кг/м3), не давление.
-    double param = rho;
+    double param = P0;
 
     probe_kernel<<<1, 1, 4 * 1 * sizeof(double)>>>(d_mem, 0.0, param);
     CUDA_CHECK(cudaGetLastError());
