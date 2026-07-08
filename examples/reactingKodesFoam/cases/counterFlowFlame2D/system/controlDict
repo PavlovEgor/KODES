@@ -48,5 +48,10 @@ adjustTimeStep  yes;
 
 maxCo           0.4;
 
+// Required by chemFoam (0-D chemistry test utility, see kodesODESolver/)
+// alongside adjustTimeStep above; unused by reactingKodesFoam itself.
+maxDeltaT       1;
+
+libs ( "libkodesChemistryModel.so" "libkodesODESolver.so" );
 
 // ************************************************************************* //
