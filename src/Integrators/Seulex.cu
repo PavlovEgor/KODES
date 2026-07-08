@@ -392,12 +392,12 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 }
 
 template<class ODESystem>
-kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, stepState step, label numOfSystems)
-: Integrator<ODESystem, SeulexDeviceResources>(ode, res, step, numOfSystems) {}
+kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, label numOfSystems)
+: Integrator<ODESystem, SeulexDeviceResources>(ode, res, numOfSystems) {}
 
 template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve()
+void kodes::Seulex<ODESystem>::solve(stepState step)
 {
-    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, this->step_);
+    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, step);
 }
 

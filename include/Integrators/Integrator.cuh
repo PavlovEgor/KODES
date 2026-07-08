@@ -20,21 +20,19 @@ protected:
     ODESystem* ode_;
     SolverDeviceResources* res_;
 
-    stepState step_;
-
 public:
 
-    Integrator(ODESystem* ode, SolverDeviceResources* res, stepState step, label numOfSystems);
+    Integrator(ODESystem* ode, SolverDeviceResources* res, label numOfSystems);
         
     virtual ~Integrator() = default;
 
-    virtual void solve() =0;
+    virtual void solve(stepState step) =0;
 };
 
 
 template<class ODESystem, class SolverDeviceResources>
-Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, stepState step, label numOfSystems)
-: ode_(ode), res_(res), step_(step)
+Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, label numOfSystems)
+: ode_(ode), res_(res)
 {
     threads = numOfSystems <= 256 ? numOfSystems : 256;
     blocks = cuda::ceil_div(numOfSystems, threads);

@@ -96,11 +96,11 @@ private:
 
 public:
 
-    Seulex(ODESystem* ode, SeulexDeviceResources* res, stepState step, label numOfSystems);
+    Seulex(ODESystem* ode, SeulexDeviceResources* res, label numOfSystems);
         
     virtual ~Seulex() = default;
 
-    void solve() override;
+    void solve(stepState step) override;
 
 };
 

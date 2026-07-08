@@ -42,6 +42,20 @@ SourceFiles
 
 #include "StandardChemistryModel.H"
 
+#include "basic_linalg.cuh"
+#include "SeulexDeviceResources.cuh"
+#include "GRIMESHSystem.cuh"
+#include "HostResources.cuh"
+#include "Operator.cuh"
+#include "Seulex.cuh"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <cuda/cmath>
+#include <cuda_runtime.h>
+#include "gpu_memory.cuh"
+#include "mechanism.cuh"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -56,6 +70,20 @@ class kodesChemistryModel
 :
     public StandardChemistryModel<ReactionThermo, ThermoType>
 {
+    // kodes::HostResources host_res;
+
+    // mechanism_memory *h_mem;
+    // mechanism_memory *d_mem = nullptr;
+
+    // kodes::SeulexDeviceResources   host_res_dev;
+    // kodes::SeulexDeviceResources*   res_prt;
+
+    // kodes::GRIMESHSystem* ode_prt;
+
+    // kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op;
+
+    // kodes::Seulex<kodes::GRIMESHSystem> solver;
+
 public:
 
     //- Runtime type information

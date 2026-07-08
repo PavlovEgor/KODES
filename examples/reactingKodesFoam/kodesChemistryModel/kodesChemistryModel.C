@@ -40,8 +40,29 @@ Foam::kodesChemistryModel<ReactionThermo, ThermoType>::kodesChemistryModel
     ReactionThermo& thermo
 )
 :
-    StandardChemistryModel<ReactionThermo, ThermoType>(thermo)
+    StandardChemistryModel<ReactionThermo, ThermoType>(thermo),
+    // host_res(numOfSystems, NSP, 1),
+    // host_res_dev(host_res.numOfSystems(), host_res.sizeOfSystem(), host_res.numOfParameters()),
+    // op(&host_res, &host_res_dev)
 {
+
+    // host_res.vectors[0] = this->thermo().T().prt();
+    // host_res.parameters[0] = this->thermo().p().prt();
+
+    // for (int i=1; i < NSP; ++i)
+    // {
+    //     host_res.vectors[i] = Y_[i].data();
+    // }
+
+    // h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
+    // initialize_gpu_memory(host_res.numOfSystems(), &h_mem, &d_mem);
+
+    // res_prt = kodes::SeulexDeviceResources::create(numOfSystems, host_res.sizeOfSystem(), 1, &host_res_dev);
+
+    // ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
+
+    // solver = kodes::Seulex<kodes::GRIMESHSystem> (ode_prt, res_prt, host_res.numOfSystems());
+
     Info<< "\n========================================" << nl
         << "  kodesChemistryModel: CUSTOM MODEL LOADED!" << nl
         << "  Using custom chemistry model by user" << nl
@@ -59,6 +80,9 @@ template<class ReactionThermo, class ThermoType>
 Foam::kodesChemistryModel<ReactionThermo, ThermoType>::~kodesChemistryModel()
 {
     Info<< "kodesChemistryModel: destructor called" << endl;
+
+    // kodes::GRIMESHSystem::destroyGPU(ode_prt);
+    // kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 }
 
 

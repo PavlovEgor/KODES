@@ -24,14 +24,14 @@ int main(){
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
+    kodes::Seulex<kodes::GRIMESHSystem> solver(ode_prt, res_prt, host_res.numOfSystems());
+
     op.cpyHostToDevice();
 
-    scalar xEnd = 1.0;
+    scalar xEnd = 10.0;
     stepState step(xEnd);
 
-    kodes::Seulex<kodes::GRIMESHSystem> solver(ode_prt, res_prt, step, host_res.numOfSystems());
-
-    solver.solve();
+    solver.solve(step);
     
     op.cpyDeviceToHost();
 
