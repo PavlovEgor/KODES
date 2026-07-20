@@ -16,6 +16,29 @@ HostResources::~HostResources()
     free(this->parameters);
 }
 
+HostResources& HostResources::operator=(const HostResources& other)
+{
+    if (this == &other) {
+        return *this;
+    }
+    
+    Resources::operator=(other);
+    
+    for (label i = 0; i < sizeOfSystem_; ++i) {
+        for (label j = 0; j < numOfSystems_; ++j) {
+            this->vectors[i][j] = other.vectors[i][j];
+        }
+    }
+    
+    for (label i = 0; i < numOfParameters_; ++i) {
+        for (label j = 0; j < numOfSystems_; ++j) {
+            this->parameters[i][j] = other.parameters[i][j];
+        }
+    }
+    
+    return *this;
+}
+
 void HostResources::printVectori(const label i) const
 {
     for (label j = 0; j < sizeOfSystem_; ++j) {

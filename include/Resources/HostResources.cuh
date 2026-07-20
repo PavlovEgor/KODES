@@ -17,6 +17,8 @@ public:
     __device__ __host__
     ~HostResources();
 
+    HostResources& operator=(const HostResources& other);
+
     void printVectori(const label i) const;
     
     void printParameteri(const label i) const;

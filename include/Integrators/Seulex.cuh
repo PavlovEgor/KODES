@@ -14,10 +14,10 @@
 
 #pragma once
 
-__constant__ scalar absTol_    = 1e-5;
-__constant__ scalar relTol_    = 1e-1;
+__constant__ static scalar absTol_    = 1e-5;
+__constant__ static scalar relTol_    = 1e-1;
 
-__constant__ scalar stepFactor1_ = 0.6,
+__constant__ static scalar stepFactor1_ = 0.6,
                     stepFactor2_ = 0.93,
                     stepFactor3_ = 0.1,
                     stepFactor4_ = 4,
@@ -28,13 +28,13 @@ __constant__ scalar stepFactor1_ = 0.6,
 #define kMaxx_ 12
 #define iMaxx_ (kMaxx_ + 1)
 
-__constant__ scalar jacRedo_ = 1e-5;
+__constant__ static scalar jacRedo_ = 1e-5;
 
-__constant__ label nSeq_[iMaxx_] = {1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128};
+__constant__ static label nSeq_[iMaxx_] = {1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128};
 
-__constant__ scalar cpu_[iMaxx_] = {10, 15, 22, 33, 48, 71, 102, 149, 212, 307, 434, 625, 880};
+__constant__ static scalar cpu_[iMaxx_] = {10, 15, 22, 33, 48, 71, 102, 149, 212, 307, 434, 625, 880};
 
-__constant__ scalar coeff_[iMaxx_][iMaxx_] = {
+__constant__ static scalar coeff_[iMaxx_][iMaxx_] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {2.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1.0, 3.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},

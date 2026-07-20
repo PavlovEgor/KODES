@@ -1,7 +1,6 @@
 
-// GRIMESHSystem.h
-#ifndef GRIMESHSystem1_H
-#define GRIMESHSystem1_H
+#ifndef pyJacSystem_H
+#define pyJacSystem_H
 
 #pragma once
 
@@ -11,26 +10,25 @@
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
 
-// __constant__ scalar pressure_  = 101325.0;
-
 namespace kodes 
 {
-class GRIMESHSystem
+class pyJacSystem
     : public ODESystem
 {
     mechanism_memory* device_memory;
 
 public:
     __device__ __host__
-    GRIMESHSystem(mechanism_memory *d_mem) : device_memory(d_mem), ODESystem(NN+1)  {}
+    pyJacSystem(mechanism_memory *d_mem) : ODESystem(), device_memory(d_mem) {}
+
     __device__ __host__
-    virtual ~GRIMESHSystem() = default;
+    virtual ~pyJacSystem() = default;
 
     __host__ static
-    GRIMESHSystem* createGPU(mechanism_memory *d_mem);
+    pyJacSystem* createGPU(mechanism_memory *d_mem);
 
     __host__ static void
-    destroyGPU(GRIMESHSystem* system);
+    destroyGPU(pyJacSystem* system);
 
     __device__ static void* operator new(size_t size, void* ptr) {
         return ptr;

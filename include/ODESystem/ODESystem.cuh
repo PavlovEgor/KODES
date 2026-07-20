@@ -10,23 +10,13 @@ namespace kodes
 {
 class ODESystem
 {
-    label sizeOfSystem_;
-
-    // __global__ void 
-    // constructGPU(kodes::HIRESSystem* system); 
-    // {
-    //     new (system) kodes::HIRESSystem(8);
-    // }
 
 public:
     __device__ __host__
-    ODESystem(const label sizeOfSystem) : sizeOfSystem_(sizeOfSystem) {}
+    ODESystem() {}
 
     __device__ __host__
     virtual ~ODESystem() = default;
-
-    __device__  __host__ label 
-    nEqns() const {return sizeOfSystem_;}
 
     __device__ virtual void 
     derivatives

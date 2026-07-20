@@ -101,7 +101,7 @@ template<class ODESystem>
 __global__
 void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step)
 {
-    if (INDEXVEC(0) < res->numOfSystems())
+    if ((INDEXVEC(0) < res->numOfSystems()) && (res->vectors[INDEXVEC(0)] > 0))
     {
         scalar theta_, logTol;
         label kTarg_;
@@ -122,20 +122,10 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
         scalar x = 0;
         scalar xEnd = step.dxTry;
-        step.dxTry = 1e-7;
         scalar dx = step.dxTry;
 
         do
         {
-            if (INDEXVEC(0) == 0)
-            {printf("workIndex == 0 \n");
-            for (label j = 0; j < res->sizeOfSystem(); ++j) {
-                 printf("%0.10f ", y[INDEXVEC(j)]);
-            }
-            printf("\n dx=%0.16f x=%0.16f\n", dx, x);
-            }
-
-
             temp_[INDEXVEC(0)] = GREAT;
             dx = step.dxTry;
             copyVec(y0_, y, res->sizeOfSystem());
