@@ -1,5 +1,0 @@
-SOURCE = \
-makeKodesChemistryModelTypes.C \
-makeKodesChemistrySolverTypes.C \
-
-# sources

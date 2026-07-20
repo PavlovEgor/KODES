@@ -1,9 +1,108 @@
 # Kinetic Ordinary Differential Equations Solver (KODES)
 
-A library for solving multiple systems of ordinary differential equations on GPUs.
+A CUDA C++ library for solving large ensembles of ordinary differential equations (ODEs) on the
+GPU, aimed at chemical kinetics in CFD.
 
-For CFD calculations with chemical reactions, due to the significant difference in the time scales of chemical and hydrodynamic processes, it is customary to separate chemical reactions into a separate step and solve them as ordinary differential equations (ODEs) in each cell of the computational grid. In this case, systems from neighboring cells do not affect each other, which allows for direct parallelization of the entire calculation process.
+For CFD calculations with chemical reactions, due to the significant difference in the time scales
+of chemical and hydrodynamic processes, it is customary to separate chemical reactions into a
+separate step and solve them as ODEs in each cell of the computational grid. Systems from
+neighboring cells do not affect each other, which allows direct parallelization of the entire
+calculation process.
 
-The approach of parallelizing the solution of the ODE system itself (for example, in SUNDUALS, on which Cantera is based) is quite limited, as its efficiency should increase with the size of the vectors, which in chemical kinetics are the unknown concentrations of the mixture components. However, the number of components is usually determined not by the user in the CFD calculation, but by the creator of the kinetic mechanisms, making it difficult to scale.
+The classical approach of parallelizing the solution of a *single* ODE system (e.g. SUNDIALS,
+which Cantera is built on) is limited here: its efficiency scales with vector size, but the number
+of components (species) in a chemical system is fixed by the kinetic mechanism, not by the CFD
+case, so there is little to parallelize within one system.
 
-Unlike the classical approach, each system will be solved on a small number of CUDA cores, while multiple systems will be solved simultaneously, significantly increasing the calculation speed for regions with a large number of cells.
+KODES takes the opposite approach: each individual ODE system (each mesh cell's chemistry) is
+integrated by a single CUDA thread using a small, unparallelized stiff solver, while thousands of
+systems are integrated **simultaneously**, one per thread, in a single kernel launch. Throughput
+comes from the number of systems (mesh cells), not from parallelizing inside one system — which
+matches how CFD scales (more cells, not bigger mechanisms).
+
+## Core data layout
+
+A "system" is one reactor (one mesh cell): a state vector of length `sizeOfSystem` plus
+`numOfParameters` external parameters held constant over the step (e.g. pressure). A batch is
+`numOfSystems` such systems integrated together. Host-side storage is *component-major* (one
+pointer per state component, each pointing at that component's value across every system) so it
+can alias existing per-species arrays without copying; device-side storage is a flat
+`sizeOfSystem * numOfSystems` buffer indexed as `component*numOfSystems + system` (via the
+`INDEXVEC`/`INDEXMAT` macros), so that all threads in a warp read/write consecutive memory for the
+same component. Converting between the two layouts is the `Operator`'s job (see below).
+
+## Classes
+
+### Basic types and utilities
+
+- **`basic_types.cuh`** — the library's fundamental typedefs: `scalar` (`double`) and `label`
+  (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
+  values, the `GRID_DIM`/`T_ID`/`INDEXVEC`/`INDEXMAT` device-indexing macros used throughout the
+  integrators, and `stepState` — the small struct (forward/backward direction, trial and achieved
+  step size, first/last/reject flags) threaded through an integrator's `solve()` call.
+- **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
+  `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
+  the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
+  `clamp`, `swap`, `normalizeError`).
+- **`kodes::Config`** (`kodes_config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
+  (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE
+  machinery. Requires the `external/rapidjson` submodule.
+
+### `ODESystem` — the equations being integrated
+
+- **`kodes::ODESystem`** (`ODESystem.cuh`) — abstract base every mechanism/test system implements:
+  `derivatives(x, param, y, dydx)` and `jacobian(x, param, y, dfdx, dfdy)`, both `__device__`, plus
+  `nEqns()`. Concrete systems also follow a (not formally enforced) `createGPU`/`destroyGPU` factory
+  convention: a `__global__` placement-new kernel constructs the object directly in device memory,
+  since the integrator kernels need a device-resident `ODESystem*`.
+- **`kodes::GRIMESHSystem`** (`ODESystem/GRIMESHSystem.cuh`/`.cu`) — GRI-Mech 3.0 (53 species, 325
+  reactions), generated by pyJac (`src/ODESystem/grimech/out`). `derivatives`/`jacobian` forward
+  into the generated `dydt`/`eval_jacob` functions against a per-thread `mechanism_memory` scratch
+  block (concentrations, rates, Jacobian workspace — allocated separately via
+  `initialize_gpu_memory`/`free_gpu_memory`, distinct from the state buffers below). Compiled for
+  constant pressure (`CONP`); state is `[T, Y_0..Y_{NSP-2}]` with the mechanism's designated last
+  species (N2) recovered implicitly from mass conservation, pressure passed as the system parameter.
+- **`kodes::H2O2System`** (`ODESystem/H2O2System.cuh`/`.cu`) — the same pattern applied to a
+  smaller pyJac-generated H2/O2 mechanism (`src/ODESystem/h2o2/out`), used as a lighter-weight test
+  case than GRI-Mech.
+- **`kodes::HIRESSystem`** (`ODESystem/HIRESSystem.cuh`/`.cu`) — the HIRES stiff-ODE benchmark
+  problem (8 equations), used to validate the integrator against a standard test case unrelated to
+  chemistry.
+
+### `Resources` — state storage, host and device
+
+- **`kodes::Resources`** (`Resources/Resources.cuh`) — common base: `numOfSystems`,
+  `sizeOfSystem`, `numOfParameters` and their accessors.
+- **`kodes::HostResources`** (`Resources/HostResources.cuh`/`.cu`) — host-side state as an array of
+  `sizeOfSystem` pointers (`vectors`) plus `numOfParameters` pointers (`parameters`); each pointer
+  is caller-owned storage for that component across all systems (`setVector`/`setParameter` assign
+  them directly — no ownership transfer, so callers can point straight at their own arrays).
+- **`kodes::DeviceResources`** (`Resources/DeviceResources.cuh`/`.cu`) — the device-side
+  counterpart: two flat `cudaMalloc`'d buffers (`vectors`, `parameters`), sized
+  `sizeOfSystem*numOfSystems` and `numOfParameters*numOfSystems`. Built via a `create`/`destroy`
+  pair (the object itself lives in device memory, constructed by a placement-new kernel).
+- **`kodes::SeulexDeviceResources`** (`Resources/SeulexDeviceResources.cuh`/`.cu`) — extends
+  `DeviceResources` with the extra device scratch the Seulex integrator needs per system: the
+  polynomial extrapolation table, Jacobian (`dfdy`) and LU work matrix (`a`), pivot indices, and the
+  various temporaries used between the outer step and the inner `seul` sub-stepping. `create` takes
+  a host-allocated `SeulexDeviceResources` "stub" that stages the device pointers before copying the
+  whole struct to the device, and that same stub is later read by `Operator` to know where the
+  device buffers live.
+- **`kodes::Operator`** (`Resources/Operator.cuh`) — copies state between a `HostResources` and a
+  `DeviceResources` (or subclass): `cpyHostToDevice()`/`cpyDeviceToHost()` transfer every component
+  and parameter, translating between the host's per-component pointers and the device's flat
+  layout. Full-state copies each call; no partial/incremental transfer.
+
+### `Integrators` — advancing the ODEs
+
+- **`kodes::Integrator`** (`Integrators/Integrator.cuh`) — abstract base template
+  (`Integrator<ODESystem, SolverDeviceResources>`) that fixes the CUDA launch configuration
+  (threads/blocks/shared memory) from `numOfSystems` at construction time, and declares
+  `solve(stepState)` for subclasses to implement as a kernel launch.
+- **`kodes::Seulex`** (`Integrators/Seulex.cuh`/`.cu`) — a GPU port of the semi-implicit
+  Bulirsch-Stoer extrapolation method (the same algorithm as OpenFOAM's own `seulex` ODE solver),
+  one CUDA thread per system. `solve(stepState)` launches a single kernel that integrates every
+  system in the batch from local time 0 to the step's target end-time, using
+  `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and polynomial extrapolation
+  (`extrapolate`) to control step size and order. Absolute/relative tolerances and the step-control
+  coefficients are compile-time `__constant__`s in this header, not runtime-configurable.
