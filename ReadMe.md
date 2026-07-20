@@ -47,6 +47,15 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
 - **`kodes::Config`** (`kodes_config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
   (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE
   machinery. Requires the `external/rapidjson` submodule.
+- **`kodes::mpiSelectDevice`** (`kodes_mpi.cuh`/`.cu`) — optional MPI device-binding helper for
+  running across an arbitrary number of ranks and an arbitrary number of GPUs (single node or a
+  heterogeneous multi-node cluster). Each rank is assumed to already own its own local slice of
+  systems (e.g. via the host CFD code's own domain decomposition) — this only binds the calling
+  rank's host thread to a CUDA device (round-robin over the GPUs visible on its node), it does not
+  scatter/gather any data. Call it once per rank, right after `MPI_Init`, before creating any
+  device-side `kodes` object; `kodes` never calls `MPI_Init`/`MPI_Finalize` itself. A separate
+  translation unit from the rest of the library, so targets that don't need MPI never link it — see
+  `examples/mpi_device_select`.
 
 ### `ODESystem` — the equations being integrated
 
