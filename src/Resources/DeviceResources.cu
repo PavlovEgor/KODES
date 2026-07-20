@@ -21,8 +21,9 @@ kodes::DeviceResources::create(const label numOfSystems, const label sizeOfSyste
     constructDeviceResources<<<1, 1>>>(ptr, numOfSystems, sizeOfSystem, numOfParameters);
     cudaDeviceSynchronize();
 
-    cudaMalloc(&ptr->vectors, sizeOfSystem * numOfSystems * sizeof(scalar));
-    cudaMalloc(&ptr->parameters, numOfParameters * numOfSystems * sizeof(scalar));
+    const label padded = kodes::paddedNumOfSystems(numOfSystems);
+    cudaMalloc(&ptr->vectors, sizeOfSystem * padded * sizeof(scalar));
+    cudaMalloc(&ptr->parameters, numOfParameters * padded * sizeof(scalar));
 
     return ptr;
 }

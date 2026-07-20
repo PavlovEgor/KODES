@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "basic_types.cuh"
+
 
 namespace kodes 
 {
@@ -34,9 +36,9 @@ template<class ODESystem, class SolverDeviceResources>
 Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, label numOfSystems)
 : ode_(ode), res_(res)
 {
-    threads = numOfSystems <= 256 ? numOfSystems : 256;
-    blocks = cuda::ceil_div(numOfSystems, threads);
-    sharedMemSize = (3 * threads + threads) * sizeof(scalar); 
+    threads = kodes::blockSize(numOfSystems);
+    blocks = kodes::numOfBlocks(numOfSystems);
+    sharedMemSize = (3 * threads + threads) * sizeof(scalar);
 }
 
 }
