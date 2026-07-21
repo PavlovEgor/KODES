@@ -55,7 +55,9 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
   scatter/gather any data. Call it once per rank, right after `MPI_Init`, before creating any
   device-side `kodes` object; `kodes` never calls `MPI_Init`/`MPI_Finalize` itself. A separate
   translation unit from the rest of the library, so targets that don't need MPI never link it — see
-  `examples/mpi_device_select`.
+  `examples/mpi_device_select`. For an end-to-end run combining this with a real solve, see
+  `examples/integrators/GRIMECH_mpi` — the MPI counterpart to `GRIMECH/seulex3`, where each rank
+  binds its own GPU and solves its own independent copy of the 257-system GRIMech 3.0 problem.
 
 ### `ODESystem` — the equations being integrated
 
