@@ -38,8 +38,9 @@ namespace kodes
         return (numOfSystems + threads - 1) / threads;
     }
 
-    __host__ __device__ inline label sharedMemorySize(const label threads)
+    __host__ __device__ inline label sharedMemorySize(const label numOfSystems)
     {
+        const label threads = blockSize(numOfSystems);
         return (3 * threads + threads) * sizeof(scalar);
     }
 
