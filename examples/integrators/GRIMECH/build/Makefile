@@ -129,30 +129,6 @@ seulex3/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/build
 .PHONY : seulex3/fast
 
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.o: home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.o
-
-# target to build an object file
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
-
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.i: home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.i
-
-# target to preprocess a source file
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i
-
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.s: home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.s
-
-# target to generate assembly for a file
-home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s
-.PHONY : home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s
-
 home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o: home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
 .PHONY : home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o
 
@@ -705,6 +681,30 @@ home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.s
 .PHONY : home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.s
 
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.o: home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.o
+
+# target to build an object file
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
+
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.i: home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.i
+
+# target to preprocess a source file
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i
+
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.s: home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.s
+
+# target to generate assembly for a file
+home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex3.dir/build.make CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s
+.PHONY : home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s
+
 home/pavlovep/KODES/src/Resources/DeviceResources.o: home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 .PHONY : home/pavlovep/KODES/src/Resources/DeviceResources.o
 
@@ -834,9 +834,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... seulex3"
-	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.o"
-	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.i"
-	@echo "... home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.s"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.s"
@@ -906,6 +903,9 @@ help:
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.o"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.i"
 	@echo "... home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.s"
+	@echo "... home/pavlovep/KODES/src/ODESystem/pyJacSystem.o"
+	@echo "... home/pavlovep/KODES/src/ODESystem/pyJacSystem.i"
+	@echo "... home/pavlovep/KODES/src/ODESystem/pyJacSystem.s"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/DeviceResources.s"

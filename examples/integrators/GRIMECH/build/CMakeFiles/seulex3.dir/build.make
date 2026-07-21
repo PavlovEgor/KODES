@@ -74,7 +74,7 @@ CMakeFiles/seulex3.dir/seulex3.cu.o: CMakeFiles/seulex3.dir/includes_CUDA.rsp
 CMakeFiles/seulex3.dir/seulex3.cu.o: /home/pavlovep/KODES/examples/integrators/GRIMECH/seulex3.cu
 CMakeFiles/seulex3.dir/seulex3.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/seulex3.dir/seulex3.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/seulex3.cu.o -MF CMakeFiles/seulex3.dir/seulex3.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/examples/integrators/GRIMECH/seulex3.cu -o CMakeFiles/seulex3.dir/seulex3.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/seulex3.cu.o -MF CMakeFiles/seulex3.dir/seulex3.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/examples/integrators/GRIMECH/seulex3.cu -o CMakeFiles/seulex3.dir/seulex3.cu.o
 
 CMakeFiles/seulex3.dir/seulex3.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/seulex3.cu.i"
@@ -89,7 +89,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o: CMakeFiles/seu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o: /home/pavlovep/KODES/src/basic_linalg.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/basic_linalg.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/basic_linalg.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.i"
@@ -104,7 +104,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.c
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o: /home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i"
@@ -119,7 +119,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o: C
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o: /home/pavlovep/KODES/src/Resources/DeviceResources.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/DeviceResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/DeviceResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.i"
@@ -134,7 +134,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: CMa
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: /home/pavlovep/KODES/src/Resources/HostResources.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/HostResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/Resources/HostResources.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.i"
@@ -144,19 +144,19 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.s: cma
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o: CMakeFiles/seulex3.dir/flags.make
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o: CMakeFiles/seulex3.dir/includes_CUDA.rsp
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o: /home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o: CMakeFiles/seulex3.dir/flags.make
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o: CMakeFiles/seulex3.dir/includes_CUDA.rsp
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o: /home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o"
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
 
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.i"
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.i"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
 
-CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.s"
+CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o: CMakeFiles/seulex3.dir/flags.make
@@ -164,7 +164,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.i"
@@ -179,7 +179,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o: 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.i"
@@ -194,7 +194,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o:
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.i"
@@ -209,7 +209,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/gpu_memory.cu.i"
@@ -224,7 +224,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.c
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mass_mole.cu.i"
@@ -239,7 +239,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.c
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/mechanism.cu.i"
@@ -254,7 +254,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_p
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates_pres_mod.cu.i"
@@ -269,7 +269,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.c
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rxn_rates.cu.i"
@@ -284,7 +284,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_mult
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/sparse_multiplier.cu.i"
@@ -299,7 +299,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/spec_rates.cu.i"
@@ -314,7 +314,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_0.cu.i"
@@ -329,7 +329,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_1.cu.i"
@@ -344,7 +344,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_2.cu.i"
@@ -359,7 +359,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_3.cu.i"
@@ -374,7 +374,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_4.cu.i"
@@ -389,7 +389,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_5.cu.i"
@@ -404,7 +404,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_6.cu.i"
@@ -419,7 +419,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_7.cu.i"
@@ -434,7 +434,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_8.cu.i"
@@ -449,7 +449,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_9.cu.i"
@@ -464,7 +464,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jaco
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacobs/jacob_10.cu.i"
@@ -479,7 +479,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_r
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_0.cu.i"
@@ -494,7 +494,7 @@ CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_r
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o: /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o: CMakeFiles/seulex3.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/pavlovep/KODES/examples/integrators/GRIMECH/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building CUDA object CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o"
-	/opt/cuda-13.1/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o
+	/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o -MF CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o.d -x cu -rdc=true -c /home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu -o CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.o
 
 CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/rates/rxn_rates_1.cu.i"
@@ -511,7 +511,7 @@ seulex3_OBJECTS = \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o" \
-"CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o" \
+"CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o" \
@@ -544,7 +544,7 @@ CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
-CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
+CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o
 CMakeFiles/seulex3.dir/cmake_device_link.o: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o
@@ -586,7 +586,7 @@ seulex3_OBJECTS = \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o" \
-"CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o" \
+"CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o" \
 "CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o" \
@@ -619,7 +619,7 @@ seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/basic_linalg.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/DeviceResources.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.o
-seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/GRIMESHSystem.cu.o
+seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/pyJacSystem.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/chem_utils.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/dydt.cu.o
 seulex3: CMakeFiles/seulex3.dir/home/pavlovep/KODES/src/ODESystem/grimech/out/jacob.cu.o

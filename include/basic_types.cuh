@@ -38,6 +38,11 @@ namespace kodes
         return (numOfSystems + threads - 1) / threads;
     }
 
+    __host__ __device__ inline label sharedMemorySize(const label threads)
+    {
+        return (3 * threads + threads) * sizeof(scalar);
+    }
+
     // Smallest multiple of the launch's block size that is >= numOfSystems.
     // Always equal to blockDim.x*gridDim.x for a kernel launched with
     // (numOfBlocks(numOfSystems), blockSize(numOfSystems)), i.e. to GRID_DIM

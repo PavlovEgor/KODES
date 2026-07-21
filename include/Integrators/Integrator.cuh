@@ -38,7 +38,7 @@ Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverD
 {
     threads = kodes::blockSize(numOfSystems);
     blocks = kodes::numOfBlocks(numOfSystems);
-    sharedMemSize = (3 * threads + threads) * sizeof(scalar);
+    sharedMemSize = kodes::sharedMemorySize(threads);
 }
 
 }

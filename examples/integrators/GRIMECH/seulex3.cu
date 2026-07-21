@@ -3,7 +3,7 @@
 
 int main(){
 
-    label numOfSystems = 1 << 5;
+    label numOfSystems = 257;
 
     kodes::HostResources            host_res(numOfSystems, NSP, 1);
 
@@ -14,17 +14,17 @@ int main(){
     mechanism_memory *h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
     mechanism_memory *d_mem = nullptr;
 
-    initialize_gpu_memory(host_res.numOfSystems(), &h_mem, &d_mem);
+    initialize_gpu_memory(kodes::paddedNumOfSystems(numOfSystems), &h_mem, &d_mem);
 
     kodes::SeulexDeviceResources   host_res_dev(host_res.numOfSystems(), host_res.sizeOfSystem(), host_res.numOfParameters());
 
     kodes::SeulexDeviceResources*   res_prt = kodes::SeulexDeviceResources::create(numOfSystems, host_res.sizeOfSystem(), 1, &host_res_dev);
 
-    kodes::GRIMESHSystem* ode_prt = kodes::GRIMESHSystem::createGPU(d_mem);
+    kodes::pyJacSystem* ode_prt = kodes::pyJacSystem::createGPU(d_mem);
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
-    kodes::Seulex<kodes::GRIMESHSystem> solver(ode_prt, res_prt, host_res.numOfSystems());
+    kodes::Seulex<kodes::pyJacSystem> solver(ode_prt, res_prt, host_res.numOfSystems());
 
     op.cpyHostToDevice();
 
@@ -37,7 +37,7 @@ int main(){
 
     host_res.printVectori(0);
 
-    kodes::GRIMESHSystem::destroyGPU(ode_prt);
+    kodes::pyJacSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 
     return 0;

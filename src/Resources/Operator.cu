@@ -24,28 +24,32 @@ Operator<HostResourcesType, DeviceResourcesType>::Operator(HostResourcesType* ho
 template<class HostResourcesType, class DeviceResourcesType>
 void Operator<HostResourcesType, DeviceResourcesType>::cpyHostToDevice()
 {
+    const label padded = kodes::paddedNumOfSystems(hostRes_->numOfSystems_);
+
     for (label i=0; i < hostRes_->sizeOfSystem_; i++)
     {
-        cudaMemcpy(deviceRes_->vectors + i * hostRes_->numOfSystems_, hostRes_->vectors[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
+        cudaMemcpy(deviceRes_->vectors + i * padded, hostRes_->vectors[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
     }
 
     for (label i=0; i < hostRes_->numOfParameters_; i++)
     {
-        cudaMemcpy(deviceRes_->parameters + i * hostRes_->numOfSystems_, hostRes_->parameters[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
+        cudaMemcpy(deviceRes_->parameters + i * padded, hostRes_->parameters[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
     }
 }
 
 template<class HostResourcesType, class DeviceResourcesType>
 void Operator<HostResourcesType, DeviceResourcesType>::cpyDeviceToHost()
 {
+    const label padded = kodes::paddedNumOfSystems(hostRes_->numOfSystems_);
+
     for (label i=0; i < hostRes_->sizeOfSystem_; i++)
     {
-        cudaMemcpy(hostRes_->vectors[i], deviceRes_->vectors + i * hostRes_->numOfSystems_, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
+        cudaMemcpy(hostRes_->vectors[i], deviceRes_->vectors + i * padded, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
     }
 
     for (label i=0; i < hostRes_->numOfParameters_; i++)
     {
-        cudaMemcpy(hostRes_->parameters[i], deviceRes_->parameters + i * hostRes_->numOfSystems_, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
+        cudaMemcpy(hostRes_->parameters[i], deviceRes_->parameters + i * padded, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
     }
 }
 }

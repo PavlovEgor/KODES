@@ -2,7 +2,7 @@
 
 #include "basic_linalg.cuh"
 #include "SeulexDeviceResources.cuh"
-#include "GRIMESHSystem.cuh"
+#include "pyJacSystem.cuh"
 #include "HostResources.cuh"
 #include "Operator.cuh"
 #include "Seulex.cuh"

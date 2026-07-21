@@ -28,7 +28,7 @@ CMAKE_BUILD_TYPE:STRING=
 CMAKE_COLOR_MAKEFILE:BOOL=ON
 
 //CUDA compiler
-CMAKE_CUDA_COMPILER:FILEPATH=/opt/cuda-13.1/bin/nvcc
+CMAKE_CUDA_COMPILER:FILEPATH=/opt/nvhpc-25.11/Linux_x86_64/25.11/compilers/bin/nvcc
 
 //Flags used by the CUDA compiler during all build types.
 CMAKE_CUDA_FLAGS:STRING=
