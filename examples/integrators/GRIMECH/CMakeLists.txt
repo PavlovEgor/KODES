@@ -13,8 +13,8 @@ set(INC_DIR ${ROOT_DIR}/include)
 set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
 
 # Исправлено: правильный синтаксис для путей к файлам
-add_executable( seulex3
-    seulex3.cu
+add_executable( seulex4
+    seulex4.cu
     ${SRC_DIR}/basic_linalg.cu
     ${SRC_DIR}/Resources/SeulexDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
@@ -46,7 +46,7 @@ add_executable( seulex3
     )
 
 
-target_include_directories(seulex3 PRIVATE
+target_include_directories(seulex4 PRIVATE
     ${INC_DIR}
     ${INC_DIR}/Resources
     ${INC_DIR}/ODESystem
@@ -54,26 +54,27 @@ target_include_directories(seulex3 PRIVATE
     ${SRC_DIR}/ODESystem/grimech/out/jacobs
     ${SRC_DIR}/ODESystem/grimech/out/rates
     ${SRC_DIR}/Integrators
+    ${SRC_DIR}/Resources
     ${INC_DIR}/Integrators
 )
 
 # Дополнительные рекомендации:
 
 # 1. Для CUDA-оптимизаций при работе с жёсткими ОДУ
-target_compile_options(seulex3 PRIVATE 
+target_compile_options(seulex4 PRIVATE 
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
 )
 
 # 2. Если используете double precision (рекомендуется для этой задачи)
-set_target_properties(seulex3 PROPERTIES
+set_target_properties(seulex4 PROPERTIES
     CUDA_ARCHITECTURES "120"
     CUDA_SEPARABLE_COMPILATION ON
 )
 
 # 3. Для отладки (опционально)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(seulex3 PRIVATE 
+    target_compile_options(seulex4 PRIVATE 
         $<$<COMPILE_LANGUAGE:CUDA>:-G -lineinfo>
     )
 endif()

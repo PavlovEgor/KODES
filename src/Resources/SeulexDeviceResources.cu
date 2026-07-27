@@ -2,9 +2,9 @@
 
 
 __global__ void 
-constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label numOfSystems, const label sizeOfSystem, const label numOfParameters)
+constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label batchSize, const label systemSize, const label parameterSize)
 {
-    new (devRes) kodes::SeulexDeviceResources(numOfSystems, sizeOfSystem, numOfParameters);
+    new (devRes) kodes::SeulexDeviceResources(batchSize, systemSize, parameterSize);
 }
 
 __global__ void 
@@ -13,41 +13,34 @@ destructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes) {
 }
 
 __host__  kodes::SeulexDeviceResources* 
-kodes::SeulexDeviceResources::create(const label numOfSystems, const label sizeOfSystem, const label numOfParameters, kodes::SeulexDeviceResources* hostStub) {
+kodes::SeulexDeviceResources::create(const label batchSize, const label systemSize, const label parameterSize, kodes::SeulexDeviceResources* hostStub) {
     SeulexDeviceResources* devPtr;
     
     cudaMalloc(&devPtr, sizeof(SeulexDeviceResources));
 
-    // All buffers below are addressed through INDEXVEC/INDEXMAT, whose
-    // stride at runtime is GRID_DIM (blockDim.x*gridDim.x of the launch),
-    // not numOfSystems itself. Allocate with the padded stride so that
-    // stride matches the launch config computed by Integrator for the same
-    // numOfSystems (see kodes::paddedNumOfSystems).
-    const label padded = kodes::paddedNumOfSystems(numOfSystems);
+    cudaMalloc(&hostStub->vectors, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->parameters, parameterSize * batchSize * sizeof(scalar));
 
-    cudaMalloc(&hostStub->vectors, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->parameters, numOfParameters * padded * sizeof(scalar));
+    cudaMalloc(&hostStub->table_, 12 * systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dfdx_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dfdy_, systemSize * systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->a_, systemSize * systemSize * batchSize * sizeof(scalar));
 
-    cudaMalloc(&hostStub->table_, 12 * sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->dfdx_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->dfdy_, sizeOfSystem * sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->a_, sizeOfSystem * sizeOfSystem * padded * sizeof(scalar));
+    cudaMalloc(&hostStub->pivotIndices_, systemSize * batchSize * sizeof(label));
 
-    cudaMalloc(&hostStub->pivotIndices_, sizeOfSystem * padded * sizeof(label));
-
-    cudaMalloc(&hostStub->dxOpt_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->temp_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->y0_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->ySequence_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->scale_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->dy_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->yTemp_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->dydx_, sizeOfSystem * padded * sizeof(scalar));
-    cudaMalloc(&hostStub->y_, sizeOfSystem * padded * sizeof(scalar));
+    cudaMalloc(&hostStub->dxOpt_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->temp_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->y0_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->ySequence_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->scale_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dy_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dydx_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->y_, systemSize * batchSize * sizeof(scalar));
     
     cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice);
     
-    constructSeulexDeviceResources<<<1, 1>>>(devPtr, numOfSystems, sizeOfSystem, numOfParameters);
+    constructSeulexDeviceResources<<<1, 1>>>(devPtr, batchSize, systemSize, parameterSize);
     cudaDeviceSynchronize();
     
     return devPtr;

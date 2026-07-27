@@ -29,14 +29,14 @@ protected:
 public:
 
     __device__ __host__
-    SeulexDeviceResources(const label numOfSystems, const label sizeOfSystem, const label numOfParameters)
-        : DeviceResources(numOfSystems, sizeOfSystem, numOfParameters) {}
+    SeulexDeviceResources(const label numOfSystems, const label systemSize, const label parameterSize)
+        : DeviceResources(numOfSystems, systemSize, parameterSize) {}
 
     __device__ __host__
     ~SeulexDeviceResources() = default;
 
     __host__ static SeulexDeviceResources* 
-    create(const label numOfSystems, const label sizeOfSystem, const label numOfParameters, SeulexDeviceResources* hostStub);
+    create(const label numOfSystems, const label systemSize, const label parameterSize, SeulexDeviceResources* hostStub);
 
     __host__ static void
     destroy(SeulexDeviceResources* devRes, SeulexDeviceResources* hostStub);

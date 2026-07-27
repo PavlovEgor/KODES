@@ -43,15 +43,6 @@ namespace kodes
         const label threads = blockSize(numOfSystems);
         return (3 * threads + threads) * sizeof(scalar);
     }
-
-    // Smallest multiple of the launch's block size that is >= numOfSystems.
-    // Always equal to blockDim.x*gridDim.x for a kernel launched with
-    // (numOfBlocks(numOfSystems), blockSize(numOfSystems)), i.e. to GRID_DIM
-    // as seen from inside that kernel.
-    __host__ __device__ inline label paddedNumOfSystems(const label numOfSystems)
-    {
-        return blockSize(numOfSystems) * numOfBlocks(numOfSystems);
-    }
 }
 
 typedef struct stepState

@@ -3,11 +3,11 @@
 namespace kodes 
 {
 
-HostResources::HostResources(const label numOfSystems, const label sizeOfSystem, const label numOfParameters)
-    : Resources(numOfSystems, sizeOfSystem, numOfParameters)
+HostResources::HostResources(const label numOfSystems, const label systemSize, const label parameterSize)
+    : Resources(numOfSystems, systemSize, parameterSize)
 {
-    this->vectors       = (scalar**)malloc(sizeOfSystem * sizeof(scalar*));
-    this->parameters    = (scalar**)malloc(numOfParameters * sizeof(scalar*));
+    this->vectors       = (scalar**)malloc(systemSize * sizeof(scalar*));
+    this->parameters    = (scalar**)malloc(parameterSize * sizeof(scalar*));
 }
 
 HostResources::~HostResources()
@@ -24,13 +24,13 @@ HostResources& HostResources::operator=(const HostResources& other)
     
     Resources::operator=(other);
     
-    for (label i = 0; i < sizeOfSystem_; ++i) {
+    for (label i = 0; i < systemSize_; ++i) {
         for (label j = 0; j < numOfSystems_; ++j) {
             this->vectors[i][j] = other.vectors[i][j];
         }
     }
     
-    for (label i = 0; i < numOfParameters_; ++i) {
+    for (label i = 0; i < parameterSize_; ++i) {
         for (label j = 0; j < numOfSystems_; ++j) {
             this->parameters[i][j] = other.parameters[i][j];
         }
@@ -41,7 +41,7 @@ HostResources& HostResources::operator=(const HostResources& other)
 
 void HostResources::printVectori(const label i) const
 {
-    for (label j = 0; j < sizeOfSystem_; ++j) {
+    for (label j = 0; j < systemSize_; ++j) {
         printf("%0.5f ", this->vectors[j][i]);
     }
     printf("\n");
@@ -49,7 +49,7 @@ void HostResources::printVectori(const label i) const
 
 void HostResources::printParameteri(const label i) const
 {
-    for (label j = 0; j < sizeOfSystem_; ++j) {
+    for (label j = 0; j < systemSize_; ++j) {
         printf("%f ", this->parameters[j][i]);
     }
     printf("\n");

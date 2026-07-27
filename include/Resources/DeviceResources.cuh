@@ -14,8 +14,8 @@ public:
     scalar*        parameters;
 
     __device__
-    DeviceResources(const label numOfSystems, const label sizeOfSystem, const label numOfParameters) 
-        : Resources(numOfSystems, sizeOfSystem, numOfParameters) {}
+    DeviceResources(const label batchSize, const label systemSize, const label parameterSize) 
+        : Resources(batchSize, systemSize, parameterSize) {}
 
     __device__ __host__
     ~DeviceResources() = default;
@@ -25,13 +25,15 @@ public:
     }
     
     __host__ static DeviceResources* 
-    create(const label numOfSystems, const label sizeOfSystem, const label numOfParameters);
+    create(const label batchSize, const label systemSize, const label parameterSize);
 
     __host__ static void
     destroy(DeviceResources* devRes);
 
     __host__ __device__ void 
     printVectori(const label i) const;
+
+    __device__ __host__ label batchSize() { return this->numOfSystems(); }
 };
 
 }

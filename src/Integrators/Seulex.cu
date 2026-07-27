@@ -25,50 +25,50 @@ bool seul (
     label nSteps = nSeq_[k];
     scalar dx = dxTot/nSteps;
     
-    for (label i=0; i<res->sizeOfSystem(); i++)
+    for (label i=0; i<res->systemSize(); i++)
     { 
-        for (label j=0; j<res->sizeOfSystem(); j++)
+        for (label j=0; j<res->systemSize(); j++)
         {
-            a_[INDEXMAT(i, j, res->sizeOfSystem())] = -dfdy_[INDEXMAT(i, j, res->sizeOfSystem())];
+            a_[INDEXMAT(i, j, res->systemSize())] = -dfdy_[INDEXMAT(i, j, res->systemSize())];
         }
-        a_[INDEXMAT(i, i, res->sizeOfSystem())] += 1/dx;
+        a_[INDEXMAT(i, i, res->systemSize())] += 1/dx;
     }
     
-    LUDecompose(a_, pivotIndices_, res->sizeOfSystem());
+    LUDecompose(a_, pivotIndices_, res->systemSize());
 
     scalar xnew = x0 + dx;
     ode->derivatives(xnew, res->parameters[INDEXVEC(0)], y0_, dy_);
 
-    LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
+    LUBacksubstitute(a_, pivotIndices_, dy_, res->systemSize());
 
-    copyVec(yTemp_, y0_, res->sizeOfSystem());
+    copyVec(yTemp_, y0_, res->systemSize());
 
     for (label nn=1; nn<nSteps; nn++)
     {
-        sumVec(yTemp_, yTemp_, dy_, res->sizeOfSystem());
+        sumVec(yTemp_, yTemp_, dy_, res->systemSize());
 
         xnew += dx;
 
         if (nn == 1 && k<=1)
         {
             scalar dy1 = 0;
-            for (label i=0; i<res->sizeOfSystem(); i++)
+            for (label i=0; i<res->systemSize(); i++)
             {
                 dy1 += sqr(dy_[INDEXVEC(i)]/scale[INDEXVEC(i)]);
             }
             dy1 = sqrt(dy1);
 
             ode->derivatives(x0 + dx, res->parameters[INDEXVEC(0)], yTemp_, dydx_);
-            for (label i=0; i<res->sizeOfSystem(); i++)
+            for (label i=0; i<res->systemSize(); i++)
             {
                 dy_[INDEXVEC(i)] = dydx_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dx;
             }
 
-            LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
+            LUBacksubstitute(a_, pivotIndices_, dy_, res->systemSize());
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
-            for (label i=0; i<res->sizeOfSystem(); i++)
+            for (label i=0; i<res->systemSize(); i++)
             {
                 // Test of dy_[i] to avoid overflow
                 if (fabs(dy_[INDEXVEC(i)]) > scale[INDEXVEC(i)]*denom)
@@ -89,19 +89,19 @@ bool seul (
         }
 
         ode->derivatives(xnew, res->parameters[INDEXVEC(0)], yTemp_, dy_);
-        LUBacksubstitute(a_, pivotIndices_, dy_, res->sizeOfSystem());
+        LUBacksubstitute(a_, pivotIndices_, dy_, res->systemSize());
     }
 
-    sumVec(y, yTemp_, dy_, res->sizeOfSystem());
+    sumVec(y, yTemp_, dy_, res->systemSize());
 
     return true;
 }
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step)
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step, label realBatchSize)
 {
-    if ((INDEXVEC(0) < res->numOfSystems()) && (res->vectors[INDEXVEC(0)] > 0))
+    if ((INDEXVEC(0) < realBatchSize) && (res->vectors[INDEXVEC(0)] > 0))
     {
         scalar theta_, logTol;
         label kTarg_;
@@ -128,7 +128,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
         {
             temp_[INDEXVEC(0)] = GREAT;
             dx = step.dxTry;
-            copyVec(y0_, y, res->sizeOfSystem());
+            copyVec(y0_, y, res->systemSize());
             dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
 
             if (step.first || step.prevReject)
@@ -142,7 +142,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
                 kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
             }
 
-            for (label i=0; i < res->sizeOfSystem(); ++i)
+            for (label i=0; i < res->systemSize(); ++i)
             {
                 scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
             }
@@ -185,26 +185,26 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
 
                     if (k == 0)
                     {
-                        copyVec(y, ySequence_, res->sizeOfSystem());
+                        copyVec(y, ySequence_, res->systemSize());
                     }
                     else
                     {
-                        for (label i=0; i<res->sizeOfSystem(); ++i)
+                        for (label i=0; i<res->systemSize(); ++i)
                         {
-                            table_[INDEXMAT(i, k-1, res->sizeOfSystem())] = ySequence_[INDEXVEC(i)];
+                            table_[INDEXMAT(i, k-1, res->systemSize())] = ySequence_[INDEXVEC(i)];
                         }
                     }
 
                     if (k != 0)
                     {
-                        extrapolate(k, res->sizeOfSystem(), table_, y);
+                        extrapolate(k, res->systemSize(), table_, y);
                         scalar err = 0;
-                        for (label i=0; i<res->sizeOfSystem(); ++i)
+                        for (label i=0; i<res->systemSize(); ++i)
                         {
                             scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
-                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, res->sizeOfSystem())])/scale_[INDEXVEC(i)]);
+                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, res->systemSize())])/scale_[INDEXVEC(i)]);
                         }
-                        err = sqrt(err/res->sizeOfSystem());
+                        err = sqrt(err/res->systemSize());
                         if (err > 1/SMALL || (k > 1 && err >= errOld))
                         {
                             step.reject = true;
@@ -372,7 +372,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
             
             step.dxTry = step.forward ? dxNew : -dxNew;
 
-            for (label i=0; i < res->sizeOfSystem(); ++i)
+            for (label i=0; i < res->systemSize(); ++i)
             {
                 y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
             }
@@ -386,8 +386,8 @@ kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, lab
 : Integrator<ODESystem, SeulexDeviceResources>(ode, res, numOfSystems) {}
 
 template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve(stepState step)
+void kodes::Seulex<ODESystem>::solve(stepState step, label realBatchSize)
 {
-    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, step);
+    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, step, realBatchSize);
 }
 

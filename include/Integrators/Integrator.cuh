@@ -24,21 +24,26 @@ protected:
 
 public:
 
-    Integrator(ODESystem* ode, SolverDeviceResources* res, label numOfSystems);
+    Integrator(ODESystem* ode, SolverDeviceResources* res, label batchSize);
         
     virtual ~Integrator() = default;
 
-    virtual void solve(stepState step) =0;
+    virtual void solve(stepState step, label realBatchSize) =0;
 };
 
 
 template<class ODESystem, class SolverDeviceResources>
-Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, label numOfSystems)
+Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, label batchSize)
 : ode_(ode), res_(res)
 {
-    threads = kodes::blockSize(numOfSystems);
-    blocks = kodes::numOfBlocks(numOfSystems);
-    sharedMemSize = kodes::sharedMemorySize(numOfSystems);
+    threads = kodes::blockSize(batchSize);
+    blocks = kodes::numOfBlocks(batchSize);
+    sharedMemSize = kodes::sharedMemorySize(batchSize);
+
+    if (batchSize != threads * blocks)
+    {
+        printf("batchSize != threads * blocks");
+    }
 }
 
 }

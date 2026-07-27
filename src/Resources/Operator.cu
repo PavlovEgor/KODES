@@ -1,55 +1,63 @@
-#include "Operator.cuh"
-
 namespace kodes 
 {
 
 template<class HostResourcesType, class DeviceResourcesType>
 Operator<HostResourcesType, DeviceResourcesType>::Operator(HostResourcesType* hostRes, DeviceResourcesType* deviceRes)
-: hostRes_(hostRes), deviceRes_(deviceRes) 
+: 
+hostRes_(hostRes), 
+deviceRes_(deviceRes), 
+numOfSystems_(hostRes_->numOfSystems()),
+systemSize_(hostRes_->systemSize()),
+parameterSize_(hostRes_->parameterSize()),
+batchSize_(deviceRes_->numOfSystems())
 {
-    // if (hostRes->numOfSystems_ != deviceRes -> numOfSystems_)
-    // {
-    //     printf("Wrong numOfSystems. hostRes->numOfSystems = %d, deviceRes -> numOfSystems = %d", hostRes->numOfSystems_, deviceRes -> numOfSystems_);
-    // }
-    // if (hostRes->sizeOfSystem_ != deviceRes -> sizeOfSystem_)
-    // {
-    //     printf("Wrong sizeOfSystem. hostRes->sizeOfSystem = %d, deviceRes -> sizeOfSystem = %d", hostRes->sizeOfSystem_, deviceRes -> sizeOfSystem_);
-    // }
-    // if (hostRes->numOfParameters_ != deviceRes -> numOfParameters_)
-    // {
-    //     printf("Wrong numOfParameters. hostRes->numOfParameters = %d, deviceRes -> numOfParameters = %d", hostRes->numOfParameters_, deviceRes -> numOfParameters_);
-    // }
+    lastBatchIndex_ = ((numOfSystems_ + batchSize_ - 1) / batchSize_) - 1;
+
+    if ((numOfSystems_ / batchSize_) == lastBatchIndex_ + 1)
+    {
+        lastBatchSize_ = batchSize_;
+    } else 
+    {
+        lastBatchSize_ = numOfSystems_ - (numOfSystems_ / batchSize_) * batchSize_;
+    }
+
 }
 
 template<class HostResourcesType, class DeviceResourcesType>
-void Operator<HostResourcesType, DeviceResourcesType>::cpyHostToDevice()
+void Operator<HostResourcesType, DeviceResourcesType>::cpyHostToDevice(label batchIndex)
 {
-    const label padded = kodes::paddedNumOfSystems(hostRes_->numOfSystems_);
+    size_t dataSize = ((batchIndex == lastBatchIndex_) ? lastBatchSize_ : batchSize_) * sizeof(scalar);
 
-    for (label i=0; i < hostRes_->sizeOfSystem_; i++)
+    for (label i=0; i < systemSize_; i++)
     {
-        cudaMemcpy(deviceRes_->vectors + i * padded, hostRes_->vectors[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
+        cudaMemcpy(deviceRes_->vectors + i * batchSize_, hostRes_->vectors[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice);
     }
 
-    for (label i=0; i < hostRes_->numOfParameters_; i++)
+    for (label i=0; i < parameterSize_; i++)
     {
-        cudaMemcpy(deviceRes_->parameters + i * padded, hostRes_->parameters[i], hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyHostToDevice);
+        cudaMemcpy(deviceRes_->parameters + i * batchSize_, hostRes_->parameters[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice);
     }
 }
 
 template<class HostResourcesType, class DeviceResourcesType>
-void Operator<HostResourcesType, DeviceResourcesType>::cpyDeviceToHost()
+void Operator<HostResourcesType, DeviceResourcesType>::cpyDeviceToHost(label batchIndex)
 {
-    const label padded = kodes::paddedNumOfSystems(hostRes_->numOfSystems_);
+    size_t dataSize = ((batchIndex == lastBatchIndex_) ? lastBatchSize_ : batchSize_) * sizeof(scalar);
 
-    for (label i=0; i < hostRes_->sizeOfSystem_; i++)
+    for (label i=0; i < systemSize_; i++)
     {
-        cudaMemcpy(hostRes_->vectors[i], deviceRes_->vectors + i * padded, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
+        cudaMemcpy(hostRes_->vectors[i] + batchIndex * batchSize_, deviceRes_->vectors + i * batchSize_, dataSize, cudaMemcpyDeviceToHost);
     }
 
-    for (label i=0; i < hostRes_->numOfParameters_; i++)
+    for (label i=0; i < parameterSize_; i++)
     {
-        cudaMemcpy(hostRes_->parameters[i], deviceRes_->parameters + i * padded, hostRes_->numOfSystems_ * sizeof(scalar), cudaMemcpyDeviceToHost);
+        cudaMemcpy(hostRes_->parameters[i] + batchIndex * batchSize_, deviceRes_->parameters + i * batchSize_, dataSize, cudaMemcpyDeviceToHost);
     }
+}
+
+template<class HostResourcesType, class DeviceResourcesType>
+label Operator<HostResourcesType, DeviceResourcesType>::getRealBatchSize(label batchIndex)
+{
+    return (batchIndex == lastBatchIndex_) ? lastBatchSize_ : batchSize_;
 }
 }

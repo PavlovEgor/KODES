@@ -9,7 +9,6 @@
 #include <cuda_runtime.h>
 
 #include "basic_linalg.cuh"
-// #include "SeulexDeviceResources.cuh"
 #include "Integrator.cuh"
 
 #pragma once
@@ -96,11 +95,11 @@ private:
 
 public:
 
-    Seulex(ODESystem* ode, SeulexDeviceResources* res, label numOfSystems);
+    Seulex(ODESystem* ode, SeulexDeviceResources* res, label batchSize);
         
     virtual ~Seulex() = default;
 
-    void solve(stepState step) override;
+    void solve(stepState step, label realBatchSize) override;
 
 };
 
