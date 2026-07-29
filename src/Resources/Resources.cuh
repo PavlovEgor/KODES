@@ -9,20 +9,20 @@ namespace kodes
 class Resources
 {
 protected:
-    label numOfSystems_;
+    label ensembleSize_;
     label systemSize_;
     label parameterSize_;
 
 public:
     __device__ __host__
-    Resources(const label numOfSystems, const label systemSize, const label parameterSize)
-        : numOfSystems_(numOfSystems), systemSize_(systemSize), parameterSize_(parameterSize)
+    Resources(const label ensembleSize, const label systemSize, const label parameterSize)
+        : ensembleSize_(ensembleSize), systemSize_(systemSize), parameterSize_(parameterSize)
         {}
 
     __device__ __host__
     virtual ~Resources() = default;
 
-    __device__ __host__ label numOfSystems() { return numOfSystems_; }
+    __device__ __host__ label ensembleSize() { return ensembleSize_; }
     __device__ __host__ label systemSize() { return systemSize_; }
     __device__ __host__ label parameterSize() { return parameterSize_; }
 };

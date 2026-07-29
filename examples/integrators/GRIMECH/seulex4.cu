@@ -3,11 +3,11 @@
 
 int main(){
 
-    label numOfSystems = 2050;
+    label ensembleSize = 2050;
 
-    kodes::HostResources            host_res(numOfSystems, NSP, 1);
+    kodes::HostResources            host_res(ensembleSize, NSP, 1);
 
-    set_same_initial_conditions(host_res.numOfSystems(), host_res.vectors, host_res.parameters);
+    set_same_initial_conditions(host_res.ensembleSize(), host_res.vectors, host_res.parameters);
 
     host_res.printVectori(0);
 
@@ -15,7 +15,7 @@ int main(){
     mechanism_memory *d_mem = nullptr;
 
     label batchSize = 1024;
-    label numOfBatches = (numOfSystems + batchSize - 1) / batchSize;
+    label numOfBatches = (ensembleSize + batchSize - 1) / batchSize;
 
     initialize_gpu_memory(batchSize, &h_mem, &d_mem);
 

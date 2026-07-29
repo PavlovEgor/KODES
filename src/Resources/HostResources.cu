@@ -3,8 +3,8 @@
 namespace kodes 
 {
 
-HostResources::HostResources(const label numOfSystems, const label systemSize, const label parameterSize)
-    : Resources(numOfSystems, systemSize, parameterSize)
+HostResources::HostResources(const label ensembleSize, const label systemSize, const label parameterSize)
+    : Resources(ensembleSize, systemSize, parameterSize)
 {
     this->vectors       = (scalar**)malloc(systemSize * sizeof(scalar*));
     this->parameters    = (scalar**)malloc(parameterSize * sizeof(scalar*));
@@ -25,13 +25,13 @@ HostResources& HostResources::operator=(const HostResources& other)
     Resources::operator=(other);
     
     for (label i = 0; i < systemSize_; ++i) {
-        for (label j = 0; j < numOfSystems_; ++j) {
+        for (label j = 0; j < ensembleSize_; ++j) {
             this->vectors[i][j] = other.vectors[i][j];
         }
     }
     
     for (label i = 0; i < parameterSize_; ++i) {
-        for (label j = 0; j < numOfSystems_; ++j) {
+        for (label j = 0; j < ensembleSize_; ++j) {
             this->parameters[i][j] = other.parameters[i][j];
         }
     }

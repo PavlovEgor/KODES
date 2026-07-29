@@ -17,20 +17,20 @@ typedef int    label;
 
 namespace kodes
 {
-    __host__ __device__ inline label blockSize(const label numOfSystems)
+    __host__ __device__ inline label blockSize(const label ensembleSize)
     {
-        return numOfSystems < KODES_BLOCK_SIZE ? numOfSystems : KODES_BLOCK_SIZE;
+        return ensembleSize < KODES_BLOCK_SIZE ? ensembleSize : KODES_BLOCK_SIZE;
     }
 
-    __host__ __device__ inline label numOfBlocks(const label numOfSystems)
+    __host__ __device__ inline label numOfBlocks(const label ensembleSize)
     {
-        const label threads = blockSize(numOfSystems);
-        return (numOfSystems + threads - 1) / threads;
+        const label threads = blockSize(ensembleSize);
+        return (ensembleSize + threads - 1) / threads;
     }
 
-    __host__ __device__ inline label sharedMemorySize(const label numOfSystems)
+    __host__ __device__ inline label sharedMemorySize(const label ensembleSize)
     {
-        const label threads = blockSize(numOfSystems);
+        const label threads = blockSize(ensembleSize);
         return (3 * threads + threads) * sizeof(scalar);
     }
 }

@@ -34,7 +34,7 @@ public:
     __host__ __device__ void 
     printVectori(const label i) const;
 
-    __device__ __host__ label batchSize() { return this->numOfSystems(); }
+    __device__ __host__ label batchSize() { return this->ensembleSize(); }
 };
 
 }

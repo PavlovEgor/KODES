@@ -6,19 +6,19 @@ Operator<HostResourcesType, DeviceResourcesType>::Operator(HostResourcesType* ho
 : 
 hostRes_(hostRes), 
 deviceRes_(deviceRes), 
-numOfSystems_(hostRes_->numOfSystems()),
+ensembleSize_(hostRes_->ensembleSize()),
 systemSize_(hostRes_->systemSize()),
 parameterSize_(hostRes_->parameterSize()),
-batchSize_(deviceRes_->numOfSystems())
+batchSize_(deviceRes_->ensembleSize())
 {
-    lastBatchIndex_ = ((numOfSystems_ + batchSize_ - 1) / batchSize_) - 1;
+    lastBatchIndex_ = ((ensembleSize_ + batchSize_ - 1) / batchSize_) - 1;
 
-    if ((numOfSystems_ / batchSize_) == lastBatchIndex_ + 1)
+    if ((ensembleSize_ / batchSize_) == lastBatchIndex_ + 1)
     {
         lastBatchSize_ = batchSize_;
     } else 
     {
-        lastBatchSize_ = numOfSystems_ - (numOfSystems_ / batchSize_) * batchSize_;
+        lastBatchSize_ = ensembleSize_ - (ensembleSize_ / batchSize_) * batchSize_;
     }
 
 }

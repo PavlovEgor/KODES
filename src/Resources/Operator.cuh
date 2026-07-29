@@ -11,7 +11,7 @@ protected:
     HostResourcesType*       hostRes_;
     DeviceResourcesType*     deviceRes_;
 
-    label                    numOfSystems_;
+    label                    ensembleSize_;
     label                    systemSize_;
     label                    parameterSize_;
 

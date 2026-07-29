@@ -418,8 +418,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
 }
 
 template<class ODESystem>
-kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* resources, label numOfSystems)
-: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, numOfSystems) {}
+kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* resources, label ensembleSize)
+: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize) {}
 
 template<class ODESystem>
 void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)

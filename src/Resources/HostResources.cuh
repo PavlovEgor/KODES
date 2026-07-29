@@ -12,7 +12,7 @@ public:
     scalar**        vectors;
     scalar**        parameters;
 
-    HostResources(const label numOfSystems, const label systemSize, const label parameterSize);
+    HostResources(const label ensembleSize, const label systemSize, const label parameterSize);
     
     __device__ __host__
     ~HostResources();
