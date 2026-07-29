@@ -1,6 +1,8 @@
 #ifndef STEP_STATE
 #define STEP_STATE
 
+#include <cuda_runtime.h>
+
 #include "basic_types.cuh"
 
 namespace kodes
@@ -50,11 +52,19 @@ namespace kodes
         bool* reject;
         bool* prevReject;
 
-        __device__
+        __device__ __host__
         StepState(label batchSize);
 
-        __device__
-        ~StepState();
+        __device__ __host__
+        ~StepState() = default;
+
+        // The per system arrays are allocated from the host, the host side stub
+        // owns them and create() copies the pointers into the device object
+        __host__
+        void allocate(const label batchSize);
+
+        __host__
+        void deallocate();
 
         __device__
         void setDeltaT(const scalar deltaT);

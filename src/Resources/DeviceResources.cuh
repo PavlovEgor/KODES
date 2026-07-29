@@ -14,8 +14,8 @@ public:
     scalar*        vectors;
     scalar*        parameters;
 
-    __device__
-    DeviceResources(const label batchSize, const label systemSize, const label parameterSize) 
+    __device__ __host__
+    DeviceResources(const label batchSize, const label systemSize, const label parameterSize)
         : Resources(batchSize, systemSize, parameterSize), StepState(batchSize) {}
 
     __device__ __host__

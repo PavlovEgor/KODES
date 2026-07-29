@@ -37,7 +37,9 @@ kodes::SeulexDeviceResources::create(const label batchSize, const label systemSi
     cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->dydt_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->y_, systemSize * batchSize * sizeof(scalar));
-    
+
+    hostStub->allocate(batchSize);
+
     cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice);
     
     constructSeulexDeviceResources<<<1, 1>>>(devPtr, batchSize, systemSize, parameterSize);
@@ -69,6 +71,8 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         cudaFree(hostStub->yTemp_);
         cudaFree(hostStub->dydt_);
         cudaFree(hostStub->y_);
+
+        hostStub->deallocate();
 
         destructSeulexDeviceResources<<<1, 1>>>(devRes);
         cudaDeviceSynchronize();

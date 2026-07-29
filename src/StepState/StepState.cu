@@ -1,8 +1,12 @@
 #include "StepState.cuh"
 
-__device__
+__device__ __host__
 kodes::StepState::StepState(label batchSize)
 : batchSize_(batchSize), deltaTMin(GREAT)
+{}
+
+__host__
+void kodes::StepState::allocate(const label batchSize)
 {
     cudaMalloc(&forward, batchSize * sizeof(bool));
     cudaMalloc(&deltaTTry, batchSize * sizeof(scalar));
@@ -13,8 +17,8 @@ kodes::StepState::StepState(label batchSize)
     cudaMalloc(&prevReject, batchSize * sizeof(bool));
 }
 
-__device__
-kodes::StepState::~StepState()
+__host__
+void kodes::StepState::deallocate()
 {
     cudaFree(forward);
     cudaFree(deltaTTry);
