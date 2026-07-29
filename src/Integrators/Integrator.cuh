@@ -20,11 +20,11 @@ protected:
     size_t sharedMemSize;
 
     ODESystem* ode_;
-    SolverDeviceResources* res_;
+    SolverDeviceResources* resources_;
 
 public:
 
-    Integrator(ODESystem* ode, SolverDeviceResources* res, label batchSize);
+    Integrator(ODESystem* ode, SolverDeviceResources* resources, label batchSize);
         
     virtual ~Integrator() = default;
 
@@ -33,8 +33,8 @@ public:
 
 
 template<class ODESystem, class SolverDeviceResources>
-Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* res, label batchSize)
-: ode_(ode), res_(res)
+Integrator<ODESystem, SolverDeviceResources>::Integrator(ODESystem* ode, SolverDeviceResources* resources, label batchSize)
+: ode_(ode), resources_(resources)
 {
     threads = kodes::blockSize(batchSize);
     blocks = kodes::numOfBlocks(batchSize);

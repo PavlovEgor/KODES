@@ -53,7 +53,7 @@ __constant__ static scalar coeff_[iMaxx_][iMaxx_] = {
 template<class ODESystem>
 __device__
 bool seul (
-    kodes::SeulexDeviceResources* res,
+    kodes::SeulexDeviceResources* resources,
     ODESystem* ode,
     const scalar x0,
     const scalar dxTot,
@@ -82,7 +82,7 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, kodes::stepState step);
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes::stepState step);
 
 
 namespace kodes 
@@ -96,7 +96,7 @@ private:
 
 public:
 
-    Seulex(ODESystem* ode, SeulexDeviceResources* res, label batchSize);
+    Seulex(ODESystem* ode, SeulexDeviceResources* resources, label batchSize);
         
     virtual ~Seulex() = default;
 
