@@ -99,7 +99,7 @@ bool seul (
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step, label realBatchSize)
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, kodes::stepState step, label realBatchSize)
 {
     if ((INDEXVEC(0) < realBatchSize) && (res->vectors[INDEXVEC(0)] > 0))
     {
@@ -121,263 +121,300 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState s
         scalar* y      = res->vectors;
 
         scalar x = 0;
+        scalar xStart = 0;
         scalar xEnd = step.dxTry;
         scalar dx = step.dxTry;
+        scalar dxTry = step.dxTry;
 
-        do
+        for (label nStep=0; nStep<maxSteps_; ++nStep)
         {
-            temp_[INDEXVEC(0)] = GREAT;
-            dx = step.dxTry;
-            copyVec(y0_, y, res->systemSize());
-            dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
+            // Store previous iteration dxTry
+            scalar dxTry0 = step.dxTry;
 
-            if (step.first || step.prevReject)
+            step.reject = false;
+
+            // Check if this is a truncated step and set dxTry to integrate to xEnd
+            if ((x + step.dxTry - xEnd)*(x + step.dxTry - xStart) > 0)
             {
-                theta_ = 2*jacRedo_;
+                step.last = true;
+                step.dxTry = xEnd - x;
             }
 
-            if (step.first)
+            // Integrate as far as possible up to step.dxTry
             {
-                logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
-                kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
-            }
+                temp_[INDEXVEC(0)] = GREAT;
+                dx = step.dxTry;
+                copyVec(y0_, y, res->systemSize());
+                dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
 
-            for (label i=0; i < res->systemSize(); ++i)
-            {
-                scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
-            }
-
-            bool jacUpdated = false;
-
-            if (theta_ > jacRedo_)
-            {
-                ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
-                jacUpdated = true;
-            }
-
-            label k;
-            scalar dxNew = fabs(dx);
-            bool firstk = true;
-
-            while (firstk || step.reject)
-            {
-                dx = step.forward ? dxNew : -dxNew;
-                firstk = false;
-                step.reject = false;
-
-                if (fabs(dx) <= fabs(x) * sqr(SMALL))
+                if (step.first || step.prevReject)
                 {
-                    printf("step size underflow : %0.16f \n", dx);
+                    theta_ = 2*jacRedo_;
                 }
 
-                scalar errOld = 0;
-
-                for (k=0; k<=kTarg_+1; k++)
+                if (step.first)
                 {
-                    bool success = seul(res, ode, x, dx, k, theta_);
+                    logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
+                    kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
+                }
 
-                    if (!success)
+                for (label i=0; i < res->systemSize(); ++i)
+                {
+                    scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
+                }
+
+                bool jacUpdated = false;
+
+                if (theta_ > jacRedo_)
+                {
+                    ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
+                    jacUpdated = true;
+                }
+
+                label k;
+                scalar dxNew = fabs(dx);
+                bool firstk = true;
+
+                while (firstk || step.reject)
+                {
+                    dx = step.forward ? dxNew : -dxNew;
+                    firstk = false;
+                    step.reject = false;
+
+                    if (fabs(dx) <= fabs(x) * sqr(SMALL))
                     {
-                        step.reject = true;
-                        dxNew = fabs(dx)*stepFactor5_;
-                        break;
+                        printf("step size underflow : %0.16f \n", dx);
                     }
 
-                    if (k == 0)
-                    {
-                        copyVec(y, ySequence_, res->systemSize());
-                    }
-                    else
-                    {
-                        for (label i=0; i<res->systemSize(); ++i)
-                        {
-                            table_[INDEXMAT(i, k-1, res->systemSize())] = ySequence_[INDEXVEC(i)];
-                        }
-                    }
+                    scalar errOld = 0;
 
-                    if (k != 0)
+                    for (k=0; k<=kTarg_+1; k++)
                     {
-                        extrapolate(k, res->systemSize(), table_, y);
-                        scalar err = 0;
-                        for (label i=0; i<res->systemSize(); ++i)
-                        {
-                            scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
-                            err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, res->systemSize())])/scale_[INDEXVEC(i)]);
-                        }
-                        err = sqrt(err/res->systemSize());
-                        if (err > 1/SMALL || (k > 1 && err >= errOld))
+                        bool success = seul(res, ode, x, dx, k, theta_);
+
+                        if (!success)
                         {
                             step.reject = true;
                             dxNew = fabs(dx)*stepFactor5_;
                             break;
                         }
-                        errOld = min(4*err, 1.0);
-                        scalar expo = 1.0/(k + 1);
-                        scalar facmin = pow(stepFactor3_, expo);
-                        scalar fac;
-                        if (err == 0)
+
+                        if (k == 0)
                         {
-                            fac = 1/facmin;
+                            copyVec(y, ySequence_, res->systemSize());
                         }
                         else
                         {
-                            fac = stepFactor2_/pow(err/stepFactor1_, expo);
-                            fac = max(facmin/stepFactor4_, min(1/facmin, fac));
-                        }
-                        dxOpt_[INDEXVEC(k)] = fabs(dx*fac);
-                        temp_[INDEXVEC(k)] = cpu_[k]/dxOpt_[INDEXVEC(k)];
-
-                        if ((step.first || step.last) && err <= 1)
-                        {
-                            break;
-                        }
-
-                        if
-                        (
-                            k == kTarg_ - 1
-                        && !step.prevReject
-                        && !step.first && !step.last
-                        )
-                        {
-                            if (err <= 1)
+                            for (label i=0; i<res->systemSize(); ++i)
                             {
-                                break;
+                                table_[INDEXMAT(i, k-1, res->systemSize())] = ySequence_[INDEXVEC(i)];
                             }
-                            else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
+                        }
+
+                        if (k != 0)
+                        {
+                            extrapolate(k, res->systemSize(), table_, y);
+                            scalar err = 0;
+                            for (label i=0; i<res->systemSize(); ++i)
+                            {
+                                scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
+                                err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, res->systemSize())])/scale_[INDEXVEC(i)]);
+                            }
+                            err = sqrt(err/res->systemSize());
+                            if (err > 1/SMALL || (k > 1 && err >= errOld))
                             {
                                 step.reject = true;
-                                kTarg_ = k;
-                                if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
-                                {
-                                    kTarg_--;
-                                }
-                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                dxNew = fabs(dx)*stepFactor5_;
                                 break;
                             }
-                        }
+                            errOld = min(4*err, 1.0);
+                            scalar expo = 1.0/(k + 1);
+                            scalar facmin = pow(stepFactor3_, expo);
+                            scalar fac;
+                            if (err == 0)
+                            {
+                                fac = 1/facmin;
+                            }
+                            else
+                            {
+                                fac = stepFactor2_/pow(err/stepFactor1_, expo);
+                                fac = max(facmin/stepFactor4_, min(1/facmin, fac));
+                            }
+                            dxOpt_[INDEXVEC(k)] = fabs(dx*fac);
+                            temp_[INDEXVEC(k)] = cpu_[k]/dxOpt_[INDEXVEC(k)];
 
-                        if (k == kTarg_)
-                        {
-                            if (err <= 1)
+                            if ((step.first || step.last) && err <= 1)
                             {
                                 break;
                             }
-                            else if (err > nSeq_[k + 1]*2)
-                            {
-                                step.reject = true;
-                                if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
-                                {
-                                    kTarg_--;
-                                }
-                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
-                                break;
-                            }
-                        }
 
-                        if (k == kTarg_+1)
-                        {
-                            if (err > 1)
+                            if
+                            (
+                                k == kTarg_ - 1
+                            && !step.prevReject
+                            && !step.first && !step.last
+                            )
                             {
-                                step.reject = true;
-                                if
-                                (
-                                    kTarg_ > 1
-                                && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
-                                )
+                                if (err <= 1)
                                 {
-                                    kTarg_--;
+                                    break;
                                 }
-                                dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
+                                {
+                                    step.reject = true;
+                                    kTarg_ = k;
+                                    if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                                    {
+                                        kTarg_--;
+                                    }
+                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                    break;
+                                }
                             }
-                            break;
+
+                            if (k == kTarg_)
+                            {
+                                if (err <= 1)
+                                {
+                                    break;
+                                }
+                                else if (err > nSeq_[k + 1]*2)
+                                {
+                                    step.reject = true;
+                                    if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                                    {
+                                        kTarg_--;
+                                    }
+                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                    break;
+                                }
+                            }
+
+                            if (k == kTarg_+1)
+                            {
+                                if (err > 1)
+                                {
+                                    step.reject = true;
+                                    if
+                                    (
+                                        kTarg_ > 1
+                                    && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
+                                    )
+                                    {
+                                        kTarg_--;
+                                    }
+                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                }
+                                break;
+                            }
                         }
-                    }
-                } 
-                if (step.reject)
-                {
-                    step.prevReject = true;
-                    if (!jacUpdated)
+                    } 
+                    if (step.reject)
                     {
-                        theta_ = 2*jacRedo_;
-
-                        if (theta_ > jacRedo_ && !jacUpdated)
+                        step.prevReject = true;
+                        if (!jacUpdated)
                         {
-                            ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
-                            jacUpdated = true;
+                            theta_ = 2*jacRedo_;
+
+                            if (theta_ > jacRedo_ && !jacUpdated)
+                            {
+                                ode->jacobian(x, res->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
+                                jacUpdated = true;
+                            }
                         }
                     }
-                }
 
-            }
-            jacUpdated = false;
-            
-            step.dxDid = dx;
-            x += dx;
+                }
+                jacUpdated = false;
+                
+                step.dxDid = dx;
+                x += dx;
 
-            label kopt;
-            if (k == 1)
-            {
-                kopt = 2;
-            }
-            else if (k <= kTarg_)
-            {
-                kopt=k;
-                if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                label kopt;
+                if (k == 1)
                 {
-                    kopt = k - 1;
+                    kopt = 2;
                 }
-                else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+                else if (k <= kTarg_)
                 {
-                    kopt = min(k + 1, kMaxx_ - 1);
-                }
-            }
-            else
-            {
-                kopt = k - 1;
-                if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
-                {
-                    kopt = k - 2;
-                }
-                if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
-                {
-                    kopt = min(k, kMaxx_ - 1);
-                }
-            }
-            
-            if (step.prevReject)
-            {
-                kTarg_ = min(kopt, k);
-                dxNew = min(fabs(dx), dxOpt_[INDEXVEC(kTarg_)]);
-                step.prevReject = false;
-            }
-            else
-            {
-                if (kopt <= k)
-                {
-                    dxNew = dxOpt_[INDEXVEC(kopt)];
+                    kopt=k;
+                    if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                    {
+                        kopt = k - 1;
+                    }
+                    else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+                    {
+                        kopt = min(k + 1, kMaxx_ - 1);
+                    }
                 }
                 else
                 {
-                    if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+                    kopt = k - 1;
+                    if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
                     {
-                        dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
+                        kopt = k - 2;
+                    }
+                    if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
+                    {
+                        kopt = min(k, kMaxx_ - 1);
+                    }
+                }
+                
+                if (step.prevReject)
+                {
+                    kTarg_ = min(kopt, k);
+                    dxNew = min(fabs(dx), dxOpt_[INDEXVEC(kTarg_)]);
+                    step.prevReject = false;
+                }
+                else
+                {
+                    if (kopt <= k)
+                    {
+                        dxNew = dxOpt_[INDEXVEC(kopt)];
                     }
                     else
                     {
-                        dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
+                        if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+                        {
+                            dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
+                        }
+                        else
+                        {
+                            dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
+                        }
                     }
+                    kTarg_ = kopt;
                 }
-                kTarg_ = kopt;
-            }
-            
-            step.dxTry = step.forward ? dxNew : -dxNew;
+                
+                step.dxTry = step.forward ? dxNew : -dxNew;
 
-            for (label i=0; i < res->systemSize(); ++i)
+                for (label i=0; i < res->systemSize(); ++i)
+                {
+                    y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+                }
+            } 
+
+            // Check if reached xEnd
+            if ((x - xEnd)*(xEnd - xStart) >= 0)
             {
-                y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+                if (nStep > 0 && step.last)
+                {
+                    step.dxTry = dxTry0;
+                }
+
+                dxTry = step.dxTry;
+
+                return;
             }
-        } 
-        while (x < xEnd);
+
+            step.first = false;
+
+            // If the step.dxTry was reject set step.prevReject
+            if (step.reject)
+            {
+                step.prevReject = true;
+            }
+        }
     }
 }
 
@@ -386,7 +423,7 @@ kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* res, lab
 : Integrator<ODESystem, SeulexDeviceResources>(ode, res, numOfSystems) {}
 
 template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve(stepState step, label realBatchSize)
+void kodes::Seulex<ODESystem>::solve(kodes::stepState step, label realBatchSize)
 {
     seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->res_, step, realBatchSize);
 }

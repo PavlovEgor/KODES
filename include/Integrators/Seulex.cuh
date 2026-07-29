@@ -13,8 +13,9 @@
 
 #pragma once
 
-__constant__ static scalar absTol_    = 1e-5;
+__constant__ static scalar absTol_    = 1e-12;
 __constant__ static scalar relTol_    = 1e-1;
+__constant__ static label  maxSteps_  = 1000;
 
 __constant__ static scalar stepFactor1_ = 0.6,
                     stepFactor2_ = 0.93,
@@ -81,7 +82,7 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, stepState step);
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* res, kodes::stepState step);
 
 
 namespace kodes 
@@ -99,7 +100,7 @@ public:
         
     virtual ~Seulex() = default;
 
-    void solve(stepState step, label realBatchSize) override;
+    void solve(kodes::stepState step, label realBatchSize) override;
 
 };
 

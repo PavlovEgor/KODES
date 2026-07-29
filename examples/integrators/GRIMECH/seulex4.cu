@@ -30,7 +30,7 @@ int main(){
     kodes::Seulex<kodes::pyJacSystem> solver(ode_prt, res_prt, batchSize);
 
     scalar xEnd = 10.0;
-    stepState step(xEnd);
+    kodes::stepState step(xEnd);
 
     for (label i=0; i < numOfBatches; i++)
     {

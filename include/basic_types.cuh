@@ -43,28 +43,32 @@ namespace kodes
         const label threads = blockSize(numOfSystems);
         return (3 * threads + threads) * sizeof(scalar);
     }
+
+    class stepState
+    {
+    public: 
+
+        bool forward;
+        scalar dxTry;
+        scalar dxDid;
+        bool first;
+        bool last;
+        bool reject;
+        bool prevReject;
+
+        __device__ __host__
+        stepState(const scalar dx)
+            : forward(dx > 0.0 ? true : false)
+            , dxTry(dx)
+            , dxDid(0.0)
+            , first(true)
+            , last(false)
+            , reject(false)
+            , prevReject(false)
+        {}
+    };
 }
 
-typedef struct stepState
-{
-    bool forward;
-    scalar dxTry;
-    scalar dxDid;
-    bool first;
-    bool last;
-    bool reject;
-    bool prevReject;
 
-    __device__ __host__
-    stepState(const scalar dx)
-        : forward(dx > 0.0 ? true : false)
-        , dxTry(dx)
-        , dxDid(0.0)
-        , first(true)
-        , last(false)
-        , reject(false)
-        , prevReject(false)
-    {}
-} stepState;
 
 #endif
