@@ -7,7 +7,6 @@ set(CMAKE_CUDA_STANDARD 17)
 # Исправлено: использование ${} для подстановки переменных
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../)
 set(SRC_DIR ${ROOT_DIR}/src)
-set(INC_DIR ${ROOT_DIR}/include)
 
 # Убираем предупреждение о CUDA архитектуре
 set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
@@ -47,15 +46,13 @@ add_executable( seulex4
 
 
 target_include_directories(seulex4 PRIVATE
-    ${INC_DIR}
-    ${INC_DIR}/Resources
-    ${INC_DIR}/ODESystem
+    ${SRC_DIR}
+    ${SRC_DIR}/ODESystem
     ${SRC_DIR}/ODESystem/grimech/out
     ${SRC_DIR}/ODESystem/grimech/out/jacobs
     ${SRC_DIR}/ODESystem/grimech/out/rates
     ${SRC_DIR}/Integrators
     ${SRC_DIR}/Resources
-    ${INC_DIR}/Integrators
 )
 
 # Дополнительные рекомендации:
