@@ -13,9 +13,13 @@
 
 #pragma once
 
-__constant__ static scalar absTol_    = 1e-12;
-__constant__ static scalar relTol_    = 1e-1;
-__constant__ static label  maxSteps_  = 1000;
+// OpenFOAM ODESolver defaults are absTol = SMALL, relTol = 1e-4, maxSteps = 10000
+constexpr scalar absTolValue_ = 1e-12;
+constexpr scalar relTolValue_ = 1e-4;
+
+__constant__ static scalar absTol_    = absTolValue_;
+__constant__ static scalar relTol_    = relTolValue_;
+__constant__ static label  maxSteps_  = 10000;
 
 __constant__ static scalar stepFactor1_ = 0.6,
                     stepFactor2_ = 0.93,
@@ -28,9 +32,12 @@ __constant__ static scalar stepFactor1_ = 0.6,
 #define kMaxx_ 12
 #define iMaxx_ (kMaxx_ + 1)
 
-__constant__ static scalar jacRedo_ = 1e-5;
+// OpenFOAM: jacRedo_ = min(1e-4, min(relTol_))
+__constant__ static scalar jacRedo_ = relTolValue_ < 1e-4 ? relTolValue_ : 1e-4;
 
-__constant__ static label nSeq_[iMaxx_] = {1, 2, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128};
+// nSeq_[0] = 2, nSeq_[1] = 3, nSeq_[i] = 2*nSeq_[i-2], as built by the OpenFOAM
+// constructor. cpu_ and coeff_ below are derived from this sequence
+__constant__ static label nSeq_[iMaxx_] = {2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128};
 
 __constant__ static scalar cpu_[iMaxx_] = {10, 15, 22, 33, 48, 71, 102, 149, 212, 307, 434, 625, 880};
 
@@ -58,7 +65,7 @@ bool seul (
     const scalar t0,
     const scalar dtTot,
     const label k,
-    scalar theta
+    scalar& theta
 );
 
 

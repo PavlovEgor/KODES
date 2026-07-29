@@ -7,7 +7,7 @@ bool seul (
     const scalar x0,
     const scalar dtTot,
     const label k,
-    scalar theta
+    scalar& theta
 )
 {
     scalar* dfdy_  = resources->dfdy();
@@ -126,6 +126,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
         scalar t = tStart;
 
         scalar dt = deltaT;
+
+        bool reachedEnd = false;
 
         for (label nStep=0; nStep<maxSteps_; ++nStep)
         {
@@ -403,6 +405,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
                     resources->deltaTTry[INDEXVEC(0)] = dtTry0;
                 }
 
+                reachedEnd = true;
+
                 break;
             }
 
@@ -413,6 +417,18 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
             {
                 resources->prevReject[INDEXVEC(0)] = true;
             }
+        }
+
+        // OpenFOAM aborts with a FatalError here, a kernel can only report that
+        // the returned state is not integrated up to tEnd
+        if (!reachedEnd)
+        {
+            printf
+            (
+                "Integration steps greater than maximum %d : system %d, "
+                "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
+                maxSteps_, INDEXVEC(0), t, tEnd, resources->deltaTDid[INDEXVEC(0)]
+            );
         }
 
         // Reduce the step this system would try next into resources->deltaTMin,
