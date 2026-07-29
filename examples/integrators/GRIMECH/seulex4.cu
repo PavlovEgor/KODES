@@ -31,14 +31,20 @@ int main(){
 
     scalar xEnd = 10.0;
 
+    solver.resetDeltaTMin();
+
     for (label i=0; i < numOfBatches; i++)
     {
         op.cpyHostToDevice(i);
         solver.solve(xEnd, op.getRealBatchSize(i));
-        op.cpyDeviceToHost(i); 
+        op.cpyDeviceToHost(i);
     }
 
+    scalar deltaTMin = solver.deltaTMin();
+
     host_res.printVectori(0);
+
+    printf("min deltaTTry over %d systems : %0.16e \n", ensembleSize, deltaTMin);
 
     kodes::pyJacSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);

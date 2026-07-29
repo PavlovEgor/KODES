@@ -403,7 +403,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
                     resources->deltaTTry[INDEXVEC(0)] = dtTry0;
                 }
 
-                return;
+                break;
             }
 
             resources->first[INDEXVEC(0)] = false;
@@ -414,6 +414,10 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
                 resources->prevReject[INDEXVEC(0)] = true;
             }
         }
+
+        // Reduce the step this system would try next into resources->deltaTMin,
+        // only the systems actually integrated take part
+        resources->findMinDeltaT();
     }
 }
 

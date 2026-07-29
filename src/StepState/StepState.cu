@@ -2,7 +2,7 @@
 
 __device__
 kodes::StepState::StepState(label batchSize)
-: batchSize_(batchSize)
+: batchSize_(batchSize), deltaTMin(GREAT)
 {
     cudaMalloc(&forward, batchSize * sizeof(bool));
     cudaMalloc(&deltaTTry, batchSize * sizeof(scalar));
@@ -40,5 +40,9 @@ void kodes::StepState::setDeltaT(const scalar deltaT)
 __device__
 scalar kodes::StepState::findMinDeltaT()
 {
+    // Reduction over the whole grid, deltaTMin holds the ensemble wide minimum
+    // only once every thread of the kernel has contributed
+    atomicMinScalar(&deltaTMin, deltaTTry[INDEXVEC(0)]);
 
+    return deltaTMin;
 }
