@@ -28,7 +28,7 @@ public:
         
     virtual ~Integrator() = default;
 
-    virtual void solve(kodes::stepState step, label realBatchSize) =0;
+    virtual void solve(scalar deltaT, label realBatchSize) =0;
 };
 
 

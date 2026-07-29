@@ -15,6 +15,7 @@ set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
 add_executable( seulex4
     seulex4.cu
     ${SRC_DIR}/basic_linalg.cu
+    ${SRC_DIR}/StepState/StepState.cu
     ${SRC_DIR}/Resources/SeulexDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
     ${SRC_DIR}/Resources/HostResources.cu
@@ -47,6 +48,7 @@ add_executable( seulex4
 
 target_include_directories(seulex4 PRIVATE
     ${SRC_DIR}
+    ${SRC_DIR}/StepState
     ${SRC_DIR}/ODESystem
     ${SRC_DIR}/ODESystem/grimech/out
     ${SRC_DIR}/ODESystem/grimech/out/jacobs

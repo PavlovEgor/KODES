@@ -5,7 +5,7 @@ bool seul (
     kodes::SeulexDeviceResources* resources,
     ODESystem* ode,
     const scalar x0,
-    const scalar dxTot,
+    const scalar dtTot,
     const label k,
     scalar theta
 )
@@ -19,11 +19,11 @@ bool seul (
     
     scalar* dy_    = resources->dy();
     scalar* yTemp_ = resources->yTemp();
-    scalar* dydx_  = resources->dydx();
+    scalar* dydt_  = resources->dydt();
     scalar* y      = resources->ySequence();
 
     label nSteps = nSeq_[k];
-    scalar dx = dxTot/nSteps;
+    scalar dt = dtTot/nSteps;
     
     for (label i=0; i<resources->systemSize(); i++)
     { 
@@ -31,12 +31,12 @@ bool seul (
         {
             a_[INDEXMAT(i, j, resources->systemSize())] = -dfdy_[INDEXMAT(i, j, resources->systemSize())];
         }
-        a_[INDEXMAT(i, i, resources->systemSize())] += 1/dx;
+        a_[INDEXMAT(i, i, resources->systemSize())] += 1/dt;
     }
     
     LUDecompose(a_, pivotIndices_, resources->systemSize());
 
-    scalar xnew = x0 + dx;
+    scalar xnew = x0 + dt;
     ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], y0_, dy_);
 
     LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
@@ -47,7 +47,7 @@ bool seul (
     {
         sumVec(yTemp_, yTemp_, dy_, resources->systemSize());
 
-        xnew += dx;
+        xnew += dt;
 
         if (nn == 1 && k<=1)
         {
@@ -58,10 +58,10 @@ bool seul (
             }
             dy1 = sqrt(dy1);
 
-            ode->derivatives(x0 + dx, resources->parameters[INDEXVEC(0)], yTemp_, dydx_);
+            ode->derivatives(x0 + dt, resources->parameters[INDEXVEC(0)], yTemp_, dydt_);
             for (label i=0; i<resources->systemSize(); i++)
             {
-                dy_[INDEXVEC(i)] = dydx_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dx;
+                dy_[INDEXVEC(i)] = dydt_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dt;
             }
 
             LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
@@ -99,20 +99,21 @@ bool seul (
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes::stepState step, label realBatchSize)
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scalar deltaT, label realBatchSize)
 {
     if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
     {
+        resources->setDeltaT(deltaT);
+
         scalar theta_, logTol;
         label kTarg_;
 
-
         scalar* table_ = resources->table();
-        scalar* dfdx_  = resources->dfdx();
+        scalar* dfdt_  = resources->dfdt();
         scalar* dfdy_  = resources->dfdy();
         
         
-        scalar* dxOpt_ = resources->dxOpt();
+        scalar* dtOpt_ = resources->dtOpt();
         scalar* temp_  = resources->temp();
         scalar* y0_    = resources->y0();
         scalar* ySequence_ = resources->ySequence();
@@ -120,39 +121,39 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
         
         scalar* y      = resources->vectors;
 
-        scalar x = 0;
-        scalar xStart = 0;
-        scalar xEnd = step.dxTry;
-        scalar dx = step.dxTry;
-        scalar dxTry = step.dxTry;
+        scalar tStart   = 0;
+        scalar tEnd     = deltaT;
+        scalar t = tStart;
+
+        scalar dt = deltaT;
 
         for (label nStep=0; nStep<maxSteps_; ++nStep)
         {
-            // Store previous iteration dxTry
-            scalar dxTry0 = step.dxTry;
+            // Store previous iteration dtTry
+            scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
 
-            step.reject = false;
+            resources->reject[INDEXVEC(0)] = false;
 
-            // Check if this is a truncated step and set dxTry to integrate to xEnd
-            if ((x + step.dxTry - xEnd)*(x + step.dxTry - xStart) > 0)
+            // Check if this is a truncated step and set dtTry to integrate to tEnd
+            if ((t + resources->deltaTTry[INDEXVEC(0)] - tEnd)*(t + resources->deltaTTry[INDEXVEC(0)] - tStart) > 0)
             {
-                step.last = true;
-                step.dxTry = xEnd - x;
+                resources->last[INDEXVEC(0)] = true;
+                resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
             }
 
-            // Integrate as far as possible up to step.dxTry
+            // Integrate as far as possible up to resources->deltaTTry[INDEXVEC(0)]
             {
                 temp_[INDEXVEC(0)] = GREAT;
-                dx = step.dxTry;
+                dt = resources->deltaTTry[INDEXVEC(0)];
                 copyVec(y0_, y, resources->systemSize());
-                dxOpt_[INDEXVEC(0)] = fabs(0.1*dx);
+                dtOpt_[INDEXVEC(0)] = fabs(0.1*dt);
 
-                if (step.first || step.prevReject)
+                if (resources->first[INDEXVEC(0)] || resources->prevReject[INDEXVEC(0)])
                 {
                     theta_ = 2*jacRedo_;
                 }
 
-                if (step.first)
+                if (resources->first[INDEXVEC(0)] )
                 {
                     logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
                     kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
@@ -167,35 +168,35 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
 
                 if (theta_ > jacRedo_)
                 {
-                    ode->jacobian(x, resources->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
+                    ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
                     jacUpdated = true;
                 }
 
                 label k;
-                scalar dxNew = fabs(dx);
+                scalar dtNew = fabs(dt);
                 bool firstk = true;
 
-                while (firstk || step.reject)
+                while (firstk || resources->reject[INDEXVEC(0)])
                 {
-                    dx = step.forward ? dxNew : -dxNew;
+                    dt = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
                     firstk = false;
-                    step.reject = false;
+                    resources->reject[INDEXVEC(0)] = false;
 
-                    if (fabs(dx) <= fabs(x) * sqr(SMALL))
+                    if (fabs(dt) <= fabs(t) * sqr(SMALL))
                     {
-                        printf("step size underflow : %0.16f \n", dx);
+                        printf("step size underflow : %0.16f \n", dt);
                     }
 
                     scalar errOld = 0;
 
                     for (k=0; k<=kTarg_+1; k++)
                     {
-                        bool success = seul(resources, ode, x, dx, k, theta_);
+                        bool success = seul(resources, ode, t, dt, k, theta_);
 
                         if (!success)
                         {
-                            step.reject = true;
-                            dxNew = fabs(dx)*stepFactor5_;
+                            resources->reject[INDEXVEC(0)] = true;
+                            dtNew = fabs(dt)*stepFactor5_;
                             break;
                         }
 
@@ -223,8 +224,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                             err = sqrt(err/resources->systemSize());
                             if (err > 1/SMALL || (k > 1 && err >= errOld))
                             {
-                                step.reject = true;
-                                dxNew = fabs(dx)*stepFactor5_;
+                                resources->reject[INDEXVEC(0)] = true;
+                                dtNew = fabs(dt)*stepFactor5_;
                                 break;
                             }
                             errOld = min(4*err, 1.0);
@@ -240,10 +241,10 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                                 fac = stepFactor2_/pow(err/stepFactor1_, expo);
                                 fac = max(facmin/stepFactor4_, min(1/facmin, fac));
                             }
-                            dxOpt_[INDEXVEC(k)] = fabs(dx*fac);
-                            temp_[INDEXVEC(k)] = cpu_[k]/dxOpt_[INDEXVEC(k)];
+                            dtOpt_[INDEXVEC(k)] = fabs(dt*fac);
+                            temp_[INDEXVEC(k)] = cpu_[k]/dtOpt_[INDEXVEC(k)];
 
-                            if ((step.first || step.last) && err <= 1)
+                            if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
                             {
                                 break;
                             }
@@ -251,8 +252,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                             if
                             (
                                 k == kTarg_ - 1
-                            && !step.prevReject
-                            && !step.first && !step.last
+                            && !resources->prevReject[INDEXVEC(0)]
+                            && !resources->first[INDEXVEC(0)] && !resources->last[INDEXVEC(0)]
                             )
                             {
                                 if (err <= 1)
@@ -261,13 +262,13 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                                 }
                                 else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
                                 {
-                                    step.reject = true;
+                                    resources->reject[INDEXVEC(0)] = true;
                                     kTarg_ = k;
                                     if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                                     {
                                         kTarg_--;
                                     }
-                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
                                     break;
                                 }
                             }
@@ -280,12 +281,12 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                                 }
                                 else if (err > nSeq_[k + 1]*2)
                                 {
-                                    step.reject = true;
+                                    resources->reject[INDEXVEC(0)] = true;
                                     if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                                     {
                                         kTarg_--;
                                     }
-                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
                                     break;
                                 }
                             }
@@ -294,7 +295,7 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                             {
                                 if (err > 1)
                                 {
-                                    step.reject = true;
+                                    resources->reject[INDEXVEC(0)] = true;
                                     if
                                     (
                                         kTarg_ > 1
@@ -303,22 +304,22 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                                     {
                                         kTarg_--;
                                     }
-                                    dxNew = dxOpt_[INDEXVEC(kTarg_)];
+                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
                                 }
                                 break;
                             }
                         }
                     } 
-                    if (step.reject)
+                    if (resources->reject[INDEXVEC(0)])
                     {
-                        step.prevReject = true;
+                        resources->prevReject[INDEXVEC(0)] = true;
                         if (!jacUpdated)
                         {
                             theta_ = 2*jacRedo_;
 
                             if (theta_ > jacRedo_ && !jacUpdated)
                             {
-                                ode->jacobian(x, resources->parameters[INDEXVEC(0)], y, dfdx_, dfdy_);
+                                ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
                                 jacUpdated = true;
                             }
                         }
@@ -327,8 +328,8 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                 }
                 jacUpdated = false;
                 
-                step.dxDid = dx;
-                x += dx;
+                resources->deltaTDid[INDEXVEC(0)] = dt;
+                t += dt;
 
                 label kopt;
                 if (k == 1)
@@ -360,33 +361,33 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                     }
                 }
                 
-                if (step.prevReject)
+                if (resources->prevReject[INDEXVEC(0)])
                 {
                     kTarg_ = min(kopt, k);
-                    dxNew = min(fabs(dx), dxOpt_[INDEXVEC(kTarg_)]);
-                    step.prevReject = false;
+                    dtNew = min(fabs(dt), dtOpt_[INDEXVEC(kTarg_)]);
+                    resources->prevReject[INDEXVEC(0)] = false;
                 }
                 else
                 {
                     if (kopt <= k)
                     {
-                        dxNew = dxOpt_[INDEXVEC(kopt)];
+                        dtNew = dtOpt_[INDEXVEC(kopt)];
                     }
                     else
                     {
                         if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
                         {
-                            dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
+                            dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
                         }
                         else
                         {
-                            dxNew = dxOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
+                            dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
                         }
                     }
                     kTarg_ = kopt;
                 }
                 
-                step.dxTry = step.forward ? dxNew : -dxNew;
+                resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
 
                 for (label i=0; i < resources->systemSize(); ++i)
                 {
@@ -394,25 +395,23 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes
                 }
             } 
 
-            // Check if reached xEnd
-            if ((x - xEnd)*(xEnd - xStart) >= 0)
+            // Check if reached tEnd
+            if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
-                if (nStep > 0 && step.last)
+                if (nStep > 0 && resources->last[INDEXVEC(0)])
                 {
-                    step.dxTry = dxTry0;
+                    resources->deltaTTry[INDEXVEC(0)] = dtTry0;
                 }
-
-                dxTry = step.dxTry;
 
                 return;
             }
 
-            step.first = false;
+            resources->first[INDEXVEC(0)] = false;
 
-            // If the step.dxTry was reject set step.prevReject
-            if (step.reject)
+            // If the resources->deltaTTry[INDEXVEC(0)] was reject set resources->prevReject[INDEXVEC(0)]
+            if (resources->reject[INDEXVEC(0)])
             {
-                step.prevReject = true;
+                resources->prevReject[INDEXVEC(0)] = true;
             }
         }
     }
@@ -423,8 +422,8 @@ kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* resource
 : Integrator<ODESystem, SeulexDeviceResources>(ode, resources, numOfSystems) {}
 
 template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve(kodes::stepState step, label realBatchSize)
+void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
 {
-    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->resources_, step, realBatchSize);
+    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->resources_, deltaT, realBatchSize);
 }
 

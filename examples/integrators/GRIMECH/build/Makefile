@@ -777,6 +777,30 @@ home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
 
+home/pavlovep/KODES/src/StepState/StepState.o: home/pavlovep/KODES/src/StepState/StepState.cu.o
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.o
+
+# target to build an object file
+home/pavlovep/KODES/src/StepState/StepState.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/StepState/StepState.cu.o
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.cu.o
+
+home/pavlovep/KODES/src/StepState/StepState.i: home/pavlovep/KODES/src/StepState/StepState.cu.i
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.i
+
+# target to preprocess a source file
+home/pavlovep/KODES/src/StepState/StepState.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/StepState/StepState.cu.i
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.cu.i
+
+home/pavlovep/KODES/src/StepState/StepState.s: home/pavlovep/KODES/src/StepState/StepState.cu.s
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.s
+
+# target to generate assembly for a file
+home/pavlovep/KODES/src/StepState/StepState.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex4.dir/build.make CMakeFiles/seulex4.dir/home/pavlovep/KODES/src/StepState/StepState.cu.s
+.PHONY : home/pavlovep/KODES/src/StepState/StepState.cu.s
+
 home/pavlovep/KODES/src/basic_linalg.o: home/pavlovep/KODES/src/basic_linalg.cu.o
 .PHONY : home/pavlovep/KODES/src/basic_linalg.o
 
@@ -915,6 +939,9 @@ help:
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s"
+	@echo "... home/pavlovep/KODES/src/StepState/StepState.o"
+	@echo "... home/pavlovep/KODES/src/StepState/StepState.i"
+	@echo "... home/pavlovep/KODES/src/StepState/StepState.s"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.o"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.i"
 	@echo "... home/pavlovep/KODES/src/basic_linalg.s"

@@ -10,20 +10,20 @@ class SeulexDeviceResources
 {
 protected:
     scalar* table_;
-    scalar* dfdx_;
+    scalar* dfdt_;
     scalar* dfdy_;
     scalar* a_;
 
     label* pivotIndices_;
 
-    scalar* dxOpt_;
+    scalar* dtOpt_;
     scalar* temp_;
     scalar* y0_;
     scalar* ySequence_ ;
     scalar* scale_;
     scalar* dy_;
     scalar* yTemp_;
-    scalar* dydx_;
+    scalar* dydt_;
     scalar* y_;
 
 public:
@@ -45,7 +45,7 @@ public:
     table() { return table_; }
 
     __device__ scalar* 
-    dfdx() { return dfdx_; }
+    dfdt() { return dfdt_; }
 
     __device__ scalar* 
     dfdy() { return dfdy_; }
@@ -57,7 +57,7 @@ public:
     pivotIndices() { return pivotIndices_; }
 
     __device__ scalar* 
-    dxOpt() { return dxOpt_; }
+    dtOpt() { return dtOpt_; }
 
     __device__ scalar* 
     temp() { return temp_; }
@@ -78,7 +78,7 @@ public:
     yTemp() { return yTemp_; }
 
     __device__ scalar* 
-    dydx() { return dydx_; }
+    dydt() { return dydt_; }
 
     __device__ scalar* 
     y() { return y_; }

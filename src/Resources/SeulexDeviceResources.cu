@@ -22,20 +22,20 @@ kodes::SeulexDeviceResources::create(const label batchSize, const label systemSi
     cudaMalloc(&hostStub->parameters, parameterSize * batchSize * sizeof(scalar));
 
     cudaMalloc(&hostStub->table_, 12 * systemSize * batchSize * sizeof(scalar));
-    cudaMalloc(&hostStub->dfdx_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dfdt_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->dfdy_, systemSize * systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->a_, systemSize * systemSize * batchSize * sizeof(scalar));
 
     cudaMalloc(&hostStub->pivotIndices_, systemSize * batchSize * sizeof(label));
 
-    cudaMalloc(&hostStub->dxOpt_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dtOpt_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->temp_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->y0_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->ySequence_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->scale_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->dy_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar));
-    cudaMalloc(&hostStub->dydx_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->dydt_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->y_, systemSize * batchSize * sizeof(scalar));
     
     cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice);
@@ -54,20 +54,20 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         cudaFree(hostStub->parameters);
 
         cudaFree(hostStub->table_);
-        cudaFree(hostStub->dfdx_);
+        cudaFree(hostStub->dfdt_);
         cudaFree(hostStub->dfdy_);
         cudaFree(hostStub->a_);
 
         cudaFree(hostStub->pivotIndices_);
 
-        cudaFree(hostStub->dxOpt_);
+        cudaFree(hostStub->dtOpt_);
         cudaFree(hostStub->temp_);
         cudaFree(hostStub->y0_);
         cudaFree(hostStub->ySequence_);
         cudaFree(hostStub->scale_);
         cudaFree(hostStub->dy_);
         cudaFree(hostStub->yTemp_);
-        cudaFree(hostStub->dydx_);
+        cudaFree(hostStub->dydt_);
         cudaFree(hostStub->y_);
 
         destructSeulexDeviceResources<<<1, 1>>>(devRes);

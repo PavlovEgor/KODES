@@ -1,12 +1,13 @@
 #include "Resources.cuh"
-
+#include "StepState.cuh"
 
 namespace kodes 
 {
 
 class DeviceResources 
     :
-    public Resources
+    public Resources,
+    public StepState
 {
 public:
 
@@ -15,7 +16,7 @@ public:
 
     __device__
     DeviceResources(const label batchSize, const label systemSize, const label parameterSize) 
-        : Resources(batchSize, systemSize, parameterSize) {}
+        : Resources(batchSize, systemSize, parameterSize), StepState(batchSize) {}
 
     __device__ __host__
     ~DeviceResources() = default;

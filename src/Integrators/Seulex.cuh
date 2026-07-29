@@ -55,8 +55,8 @@ __device__
 bool seul (
     kodes::SeulexDeviceResources* resources,
     ODESystem* ode,
-    const scalar x0,
-    const scalar dxTot,
+    const scalar t0,
+    const scalar dtTot,
     const label k,
     scalar theta
 );
@@ -82,7 +82,7 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, kodes::stepState step);
+void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scalar deltaT, label realBatchSize);
 
 
 namespace kodes 
@@ -100,7 +100,7 @@ public:
         
     virtual ~Seulex() = default;
 
-    void solve(kodes::stepState step, label realBatchSize) override;
+    void solve(scalar deltaT, label realBatchSize) override;
 
 };
 
