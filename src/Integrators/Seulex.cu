@@ -7,9 +7,12 @@ bool seul (
     const scalar x0,
     const scalar dtTot,
     const label k,
-    scalar& theta
+    scalar& theta,
+    SeulexProfile& profile
 )
 {
+    ++profile.nSeul;
+
     scalar* dfdy_  = resources->dfdy();
     scalar* a_     = resources->a();
     label* pivotIndices_ = resources->pivotIndices();
@@ -34,12 +37,22 @@ bool seul (
         a_[INDEXMAT(i, i, resources->systemSize())] += 1/dt;
     }
     
+    long long tProfile = clock64();
     LUDecompose(a_, pivotIndices_, resources->systemSize());
+    profile.luDecompose += clock64() - tProfile;
+    ++profile.nLuDecompose;
 
     scalar xnew = x0 + dt;
-    ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], y0_, dy_);
 
+    tProfile = clock64();
+    ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], y0_, dy_);
+    profile.derivatives += clock64() - tProfile;
+    ++profile.nDerivatives;
+
+    tProfile = clock64();
     LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
+    profile.luBacksubstitute += clock64() - tProfile;
+    ++profile.nLuBacksubstitute;
 
     copyVec(yTemp_, y0_, resources->systemSize());
 
@@ -58,13 +71,20 @@ bool seul (
             }
             dy1 = sqrt(dy1);
 
+            tProfile = clock64();
             ode->derivatives(x0 + dt, resources->parameters[INDEXVEC(0)], yTemp_, dydt_);
+            profile.derivatives += clock64() - tProfile;
+            ++profile.nDerivatives;
+
             for (label i=0; i<resources->systemSize(); i++)
             {
                 dy_[INDEXVEC(i)] = dydt_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dt;
             }
 
+            tProfile = clock64();
             LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
+            profile.luBacksubstitute += clock64() - tProfile;
+            ++profile.nLuBacksubstitute;
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
@@ -88,8 +108,15 @@ bool seul (
             }
         }
 
+        tProfile = clock64();
         ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], yTemp_, dy_);
+        profile.derivatives += clock64() - tProfile;
+        ++profile.nDerivatives;
+
+        tProfile = clock64();
         LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
+        profile.luBacksubstitute += clock64() - tProfile;
+        ++profile.nLuBacksubstitute;
     }
 
     sumVec(y, yTemp_, dy_, resources->systemSize());
@@ -105,12 +132,16 @@ void seulex_solve
     kodes::SeulexDeviceResources* resources,
     scalar deltaT,
     label realBatchSize,
-    kodes::IntegratorControls controls
+    kodes::IntegratorControls controls,
+    label profileSystem
 )
 {
     if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
     {
         resources->setDeltaT(deltaT);
+
+        SeulexProfile profile;
+        const long long tKernel = clock64();
 
         const scalar absTol_ = controls.absTol;
         const scalar relTol_ = controls.relTol;
@@ -144,6 +175,8 @@ void seulex_solve
 
         for (label nStep=0; nStep<maxSteps_; ++nStep)
         {
+            ++profile.nStep;
+
             // Store previous iteration dtTry
             scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
 
@@ -183,7 +216,11 @@ void seulex_solve
 
                 if (theta_ > jacRedo_)
                 {
+                    const long long tProfile = clock64();
                     ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+                    profile.jacobian += clock64() - tProfile;
+                    ++profile.nJacobian;
+
                     jacUpdated = true;
                 }
 
@@ -206,7 +243,7 @@ void seulex_solve
 
                     for (k=0; k<=kTarg_+1; k++)
                     {
-                        bool success = seul(resources, ode, t, dt, k, theta_);
+                        bool success = seul(resources, ode, t, dt, k, theta_, profile);
 
                         if (!success)
                         {
@@ -327,6 +364,8 @@ void seulex_solve
                     } 
                     if (resources->reject[INDEXVEC(0)])
                     {
+                        ++profile.nReject;
+
                         resources->prevReject[INDEXVEC(0)] = true;
                         if (!jacUpdated)
                         {
@@ -334,7 +373,11 @@ void seulex_solve
 
                             if (theta_ > jacRedo_ && !jacUpdated)
                             {
+                                const long long tProfile = clock64();
                                 ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+                                profile.jacobian += clock64() - tProfile;
+                                ++profile.nJacobian;
+
                                 jacUpdated = true;
                             }
                         }
@@ -443,6 +486,13 @@ void seulex_solve
         }
 
         resources->findMinDeltaT();
+
+        profile.total = clock64() - tKernel;
+
+        if (INDEXVEC(0) == profileSystem)
+        {
+            profile.print(INDEXVEC(0));
+        }
     }
 }
 
@@ -454,14 +504,17 @@ kodes::Seulex<ODESystem>::Seulex
     label ensembleSize,
     const IntegratorControls& controls
 )
-: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize, controls) {}
+:
+    Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize, controls),
+    profileSystem_(-1)
+{}
 
 template<class ODESystem>
 void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
 {
     seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>
     (
-        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_
+        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_, profileSystem_
     );
 }
 

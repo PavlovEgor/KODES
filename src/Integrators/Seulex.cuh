@@ -45,6 +45,69 @@ __constant__ static scalar coeff_[iMaxx_][iMaxx_] = {
     {0.02127659574468085, 0.03225806451612903, 0.043478260869565216, 0.06666666666666667, 0.09090909090909091, 0.14285714285714285, 0.2, 0.3333333333333333, 0.5, 1.0, 2.0, 0, 0},
     {0.015873015873015872, 0.024, 0.03225806451612903, 0.049180327868852465, 0.06666666666666667, 0.10344827586206898, 0.14285714285714285, 0.23076923076923078, 0.3333333333333333, 0.6000000000000001, 1.0, 3.000000000000001, 0}
 };
+// Per system cycle counters for the cost centres of the algorithm. The four
+// timed parts are exactly the ones the cpu_ weights above model, with the
+// nominal OpenFOAM ratios cpuJac : cpuFunc : cpuLU : cpuSolve = 5 : 1 : 1 : 1
+struct SeulexProfile
+{
+    long long total;
+    long long jacobian;
+    long long derivatives;
+    long long luDecompose;
+    long long luBacksubstitute;
+
+    label nJacobian;
+    label nDerivatives;
+    label nLuDecompose;
+    label nLuBacksubstitute;
+    label nSeul;
+    label nStep;
+    label nReject;
+
+    __device__
+    SeulexProfile()
+    :
+        total(0), jacobian(0), derivatives(0), luDecompose(0), luBacksubstitute(0),
+        nJacobian(0), nDerivatives(0), nLuDecompose(0), nLuBacksubstitute(0),
+        nSeul(0), nStep(0), nReject(0)
+    {}
+
+    __device__
+    void print(const label system) const
+    {
+        const scalar pct = total > 0 ? 100.0/total : 0.0;
+
+        const long long other =
+            total - jacobian - derivatives - luDecompose - luBacksubstitute;
+
+        printf
+        (
+            "\n"
+            "seulex profile, system %d \n"
+            "                        cycles      share      calls   cycles/call \n"
+            "  jacobian        %12lld  %8.2f%%  %9d  %12lld \n"
+            "  derivatives     %12lld  %8.2f%%  %9d  %12lld \n"
+            "  LU decompose    %12lld  %8.2f%%  %9d  %12lld \n"
+            "  LU backsubst    %12lld  %8.2f%%  %9d  %12lld \n"
+            "  other           %12lld  %8.2f%% \n"
+            "  total           %12lld \n"
+            "  steps %d, rejected %d, seul() calls %d \n"
+            "\n",
+            system,
+            jacobian, jacobian*pct, nJacobian,
+                nJacobian ? jacobian/nJacobian : 0LL,
+            derivatives, derivatives*pct, nDerivatives,
+                nDerivatives ? derivatives/nDerivatives : 0LL,
+            luDecompose, luDecompose*pct, nLuDecompose,
+                nLuDecompose ? luDecompose/nLuDecompose : 0LL,
+            luBacksubstitute, luBacksubstitute*pct, nLuBacksubstitute,
+                nLuBacksubstitute ? luBacksubstitute/nLuBacksubstitute : 0LL,
+            other, other*pct,
+            total,
+            nStep, nReject, nSeul
+        );
+    }
+};
 
 template<class ODESystem>
 __device__
@@ -84,7 +147,8 @@ void seulex_solve
     kodes::SeulexDeviceResources* resources,
     scalar deltaT,
     label realBatchSize,
-    kodes::IntegratorControls controls
+    kodes::IntegratorControls controls,
+    label profileSystem
 );
 
 
@@ -96,7 +160,9 @@ class Seulex
 {
 
 private:
-
+    // Index within the batch whose cycle breakdown is printed at the end of the
+    // kernel, negative to keep the kernel quiet
+    label profileSystem_;
 public:
 
     Seulex
@@ -110,6 +176,8 @@ public:
     virtual ~Seulex() = default;
 
     void solve(scalar deltaT, label realBatchSize) override;
+
+    void setProfileSystem(const label system) { profileSystem_ = system; }
 
 };
 

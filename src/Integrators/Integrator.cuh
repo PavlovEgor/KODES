@@ -88,7 +88,7 @@ Integrator<ODESystem, IntegratorDeviceResources>::Integrator
 
     if (batchSize != threads * blocks)
     {
-        printf("batchSize != threads * blocks");
+        printf("batchSize != threads * blocks\n");
     }
 
     cudaMalloc(&deltaTMinDevice_, sizeof(scalar));
