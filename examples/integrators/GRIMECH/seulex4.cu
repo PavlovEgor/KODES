@@ -27,7 +27,9 @@ int main(){
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
-    kodes::Seulex<kodes::pyJacSystem> solver(ode_prt, res_prt, batchSize);
+    kodes::IntegratorControls controls(1e-12, 1e-4, 10000);
+
+    kodes::Seulex<kodes::pyJacSystem> solver(ode_prt, res_prt, batchSize, controls);
 
     scalar xEnd = 10.0;
 

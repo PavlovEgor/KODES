@@ -99,11 +99,24 @@ bool seul (
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scalar deltaT, label realBatchSize)
+void seulex_solve
+(
+    ODESystem* ode,
+    kodes::SeulexDeviceResources* resources,
+    scalar deltaT,
+    label realBatchSize,
+    kodes::IntegratorControls controls
+)
 {
     if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
     {
         resources->setDeltaT(deltaT);
+
+        const scalar absTol_ = controls.absTol;
+        const scalar relTol_ = controls.relTol;
+        const label  maxSteps_ = controls.maxSteps;
+
+        const scalar jacRedo_ = min(1e-4, relTol_);
 
         scalar theta_, logTol;
         label kTarg_;
@@ -438,12 +451,21 @@ void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scala
 }
 
 template<class ODESystem>
-kodes::Seulex<ODESystem>::Seulex(ODESystem* ode, SeulexDeviceResources* resources, label ensembleSize)
-: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize) {}
+kodes::Seulex<ODESystem>::Seulex
+(
+    ODESystem* ode,
+    SeulexDeviceResources* resources,
+    label ensembleSize,
+    const IntegratorControls& controls
+)
+: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize, controls) {}
 
 template<class ODESystem>
 void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
 {
-    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>(this->ode_, this->resources_, deltaT, realBatchSize);
+    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>
+    (
+        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_
+    );
 }
 

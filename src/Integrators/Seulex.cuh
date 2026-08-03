@@ -13,14 +13,6 @@
 
 #pragma once
 
-// OpenFOAM ODESolver defaults are absTol = SMALL, relTol = 1e-4, maxSteps = 10000
-constexpr scalar absTolValue_ = 1e-12;
-constexpr scalar relTolValue_ = 1e-4;
-
-__constant__ static scalar absTol_    = absTolValue_;
-__constant__ static scalar relTol_    = relTolValue_;
-__constant__ static label  maxSteps_  = 10000;
-
 __constant__ static scalar stepFactor1_ = 0.6,
                     stepFactor2_ = 0.93,
                     stepFactor3_ = 0.1,
@@ -31,9 +23,6 @@ __constant__ static scalar stepFactor1_ = 0.6,
 
 #define kMaxx_ 12
 #define iMaxx_ (kMaxx_ + 1)
-
-// OpenFOAM: jacRedo_ = min(1e-4, min(relTol_))
-__constant__ static scalar jacRedo_ = relTolValue_ < 1e-4 ? relTolValue_ : 1e-4;
 
 // nSeq_[0] = 2, nSeq_[1] = 3, nSeq_[i] = 2*nSeq_[i-2], as built by the OpenFOAM
 // constructor. cpu_ and coeff_ below are derived from this sequence
@@ -89,22 +78,35 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
 
 template<class ODESystem>
 __global__
-void seulex_solve(ODESystem* ode, kodes::SeulexDeviceResources* resources, scalar deltaT, label realBatchSize);
+void seulex_solve
+(
+    ODESystem* ode,
+    kodes::SeulexDeviceResources* resources,
+    scalar deltaT,
+    label realBatchSize,
+    kodes::IntegratorControls controls
+);
 
 
-namespace kodes 
+namespace kodes
 {
 template<class ODESystem>
 class Seulex
 : public Integrator<ODESystem, SeulexDeviceResources>
 {
-    
+
 private:
 
 public:
 
-    Seulex(ODESystem* ode, SeulexDeviceResources* resources, label batchSize);
-        
+    Seulex
+    (
+        ODESystem* ode,
+        SeulexDeviceResources* resources,
+        label batchSize,
+        const IntegratorControls& controls = IntegratorControls()
+    );
+
     virtual ~Seulex() = default;
 
     void solve(scalar deltaT, label realBatchSize) override;
