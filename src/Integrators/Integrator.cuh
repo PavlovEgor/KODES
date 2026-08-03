@@ -8,7 +8,7 @@
 #include <cuda_runtime.h>
 
 #include "basic_types.cuh"
-
+#include "IntegratorControls.cuh"
 
 // Resets the ensemble wide minimum of deltaTTry, launched with a single thread
 template<class IntegratorDeviceResources>
@@ -30,25 +30,6 @@ void fetchDeltaTMinKernel(IntegratorDeviceResources* resources, scalar* deltaTMi
 
 namespace kodes
 {
-
-// Error control settings, passed to the kernels by value. The OpenFOAM
-// equivalents are the ODESolver dictionary entries absTol, relTol and maxSteps
-struct IntegratorControls
-{
-    scalar absTol;
-    scalar relTol;
-    label  maxSteps;
-
-    __device__ __host__
-    IntegratorControls
-    (
-        const scalar absTol = 1e-12,
-        const scalar relTol = 1e-4,
-        const label maxSteps = 10000
-    )
-    : absTol(absTol), relTol(relTol), maxSteps(maxSteps) {}
-};
-
 
 template<class ODESystem, class IntegratorDeviceResources>
 class Integrator

@@ -404,13 +404,9 @@ void seulex_solve
                 
                 resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
 
-                for (label i=0; i < resources->systemSize(); ++i)
-                {
-                    y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
-                }
+                
             } 
 
-            // Check if reached tEnd
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
                 if (nStep > 0 && resources->last[INDEXVEC(0)])
@@ -425,15 +421,12 @@ void seulex_solve
 
             resources->first[INDEXVEC(0)] = false;
 
-            // If the resources->deltaTTry[INDEXVEC(0)] was reject set resources->prevReject[INDEXVEC(0)]
             if (resources->reject[INDEXVEC(0)])
             {
                 resources->prevReject[INDEXVEC(0)] = true;
             }
         }
 
-        // OpenFOAM aborts with a FatalError here, a kernel can only report that
-        // the returned state is not integrated up to tEnd
         if (!reachedEnd)
         {
             printf
@@ -444,8 +437,11 @@ void seulex_solve
             );
         }
 
-        // Reduce the step this system would try next into resources->deltaTMin,
-        // only the systems actually integrated take part
+        for (label i=0; i < resources->systemSize(); ++i)
+        {
+            y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+        }
+
         resources->findMinDeltaT();
     }
 }

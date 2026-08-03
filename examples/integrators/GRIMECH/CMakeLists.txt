@@ -55,6 +55,7 @@ target_include_directories(seulex4 PRIVATE
     ${SRC_DIR}/ODESystem/grimech/out/rates
     ${SRC_DIR}/Integrators
     ${SRC_DIR}/Resources
+    ${SRC_DIR}/IntegratorControls
 )
 
 # Дополнительные рекомендации:

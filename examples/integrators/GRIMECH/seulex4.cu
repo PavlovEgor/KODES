@@ -3,7 +3,7 @@
 
 int main(){
 
-    label ensembleSize = 2050;
+    label ensembleSize = 1024;
 
     kodes::HostResources            host_res(ensembleSize, NSP, 1);
 
@@ -27,7 +27,7 @@ int main(){
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
-    kodes::IntegratorControls controls(1e-12, 1e-4, 10000);
+    kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
 
     kodes::Seulex<kodes::pyJacSystem> solver(ode_prt, res_prt, batchSize, controls);
 
