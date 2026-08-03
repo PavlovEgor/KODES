@@ -133,12 +133,21 @@ void seulex_solve
     scalar deltaT,
     label realBatchSize,
     kodes::IntegratorControls controls,
-    label profileSystem
+    label profileSystem,
+    bool    firstBatch
 )
 {
     if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
     {
-        resources->setDeltaT(deltaT);
+        if (firstBatch)
+        {
+            resources->setDeltaT(deltaT);
+        } else
+        {
+            scalar tmp = resources->deltaTTry[INDEXVEC(0)];
+            resources->setDeltaT(deltaT);
+            resources->deltaTTry[INDEXVEC(0)] = tmp;
+        }
 
         SeulexProfile profile;
         const long long tKernel = clock64();
@@ -510,11 +519,11 @@ kodes::Seulex<ODESystem>::Seulex
 {}
 
 template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
+void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize, bool firstBatch)
 {
     seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>
     (
-        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_, profileSystem_
+        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_, profileSystem_, firstBatch
     );
 }
 

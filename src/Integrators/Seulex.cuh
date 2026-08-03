@@ -148,7 +148,8 @@ void seulex_solve
     scalar deltaT,
     label realBatchSize,
     kodes::IntegratorControls controls,
-    label profileSystem
+    label profileSystem,
+    bool    firstBatch
 );
 
 
@@ -175,7 +176,7 @@ public:
 
     virtual ~Seulex() = default;
 
-    void solve(scalar deltaT, label realBatchSize) override;
+    void solve(scalar deltaT, label realBatchSize, bool firstBatch) override;
 
     void setProfileSystem(const label system) { profileSystem_ = system; }
 

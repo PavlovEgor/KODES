@@ -19,9 +19,8 @@ int main(){
     cudaFree(0);
     const double msContext = toc(tStart);
 
-    label ensembleSize = 2050;
-
-    label batchSize = 1024;
+    label ensembleSize = 8192 * 3;
+    label batchSize = 8192;
     label numOfBatches = (ensembleSize + batchSize - 1) / batchSize;
 
     tStart = tic();
@@ -63,7 +62,7 @@ int main(){
         msContext + msHostResources + msMechanismMemory
       + msDeviceResources + msOdeSystem + msSolver;
 
-    scalar xEnd = 10.0;
+    scalar xEnd = 1e-2;
 
     solver.resetDeltaTMin();
 
@@ -89,7 +88,7 @@ int main(){
         msHostToDevice += ms;
 
         cudaEventRecord(evStart);
-        solver.solve(xEnd, op.getRealBatchSize(i));
+        solver.solve(xEnd, op.getRealBatchSize(i), (i == 0) ? true : false);
         cudaEventRecord(evStop);
         cudaEventSynchronize(evStop);
         cudaEventElapsedTime(&ms, evStart, evStop);

@@ -6,9 +6,9 @@ namespace kodes
 class IntegratorControls
 {
 public:
-    scalar absTol;
-    scalar relTol;
-    label  maxSteps;
+    scalar  absTol;
+    scalar  relTol;
+    label   maxSteps;
 
     __device__ __host__
     IntegratorControls
