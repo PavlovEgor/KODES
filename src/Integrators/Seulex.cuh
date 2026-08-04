@@ -76,14 +76,23 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
     }
 }
 
-template<class ODESystem>
+template<class ODESystem, class DeviceResources>
 __global__
+void adaptive_solve
+(
+    ODESystem* ode,
+    DeviceResources* resources,
+    scalar deltaT,
+    label realBatchSize,
+    kodes::IntegratorControls controls
+);
+
+template<class ODESystem>
+__device__
 void seulex_solve
 (
     ODESystem* ode,
     kodes::SeulexDeviceResources* resources,
-    scalar deltaT,
-    label realBatchSize,
     kodes::IntegratorControls controls
 );
 

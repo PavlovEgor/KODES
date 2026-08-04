@@ -3,7 +3,7 @@
 
 int main(){
 
-    label ensembleSize = 1024;
+    label ensembleSize = 8192 * 3;
 
     kodes::HostResources            host_res(ensembleSize, NSP, 1);
 
@@ -14,7 +14,7 @@ int main(){
     mechanism_memory *h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
     mechanism_memory *d_mem = nullptr;
 
-    label batchSize = 1024;
+    label batchSize = 8192;
     label numOfBatches = (ensembleSize + batchSize - 1) / batchSize;
 
     initialize_gpu_memory(batchSize, &h_mem, &d_mem);

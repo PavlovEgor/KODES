@@ -47,6 +47,7 @@ namespace kodes
         bool* forward;
         scalar* deltaTTry;
         scalar* deltaTDid;
+        scalar* currentT;
         bool* first;
         bool* last;
         bool* reject;

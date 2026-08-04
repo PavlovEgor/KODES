@@ -97,12 +97,12 @@ bool seul (
     return true;
 }
 
-template<class ODESystem>
+template<class ODESystem, class DeviceResources>
 __global__
-void seulex_solve
+void adaptive_solve
 (
     ODESystem* ode,
-    kodes::SeulexDeviceResources* resources,
+    DeviceResources* resources,
     scalar deltaT,
     label realBatchSize,
     kodes::IntegratorControls controls
@@ -110,35 +110,14 @@ void seulex_solve
 {
     if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
     {
-        resources->setDeltaT(deltaT);
+        resources->setDeltaT(deltaT);    
 
-        const scalar absTol_ = controls.absTol;
-        const scalar relTol_ = controls.relTol;
         const label  maxSteps_ = controls.maxSteps;
-
-        const scalar jacRedo_ = min(1e-4, relTol_);
-
-        scalar theta_, logTol;
-        label kTarg_;
-
-        scalar* table_ = resources->table();
-        scalar* dfdt_  = resources->dfdt();
-        scalar* dfdy_  = resources->dfdy();
-        
-        
-        scalar* dtOpt_ = resources->dtOpt();
-        scalar* temp_  = resources->temp();
-        scalar* y0_    = resources->y0();
-        scalar* ySequence_ = resources->ySequence();
-        scalar* scale_ = resources->scale();
-        
-        scalar* y      = resources->vectors;
 
         scalar tStart   = 0;
         scalar tEnd     = deltaT;
-        scalar t = tStart;
-
-        scalar dt = deltaT;
+        resources->currentT[INDEXVEC(0)] = tStart;
+        scalar& t = resources->currentT[INDEXVEC(0)];
 
         bool reachedEnd = false;
 
@@ -157,255 +136,7 @@ void seulex_solve
             }
 
             // Integrate as far as possible up to resources->deltaTTry[INDEXVEC(0)]
-            {
-                temp_[INDEXVEC(0)] = GREAT;
-                dt = resources->deltaTTry[INDEXVEC(0)];
-                copyVec(y0_, y, resources->systemSize());
-                dtOpt_[INDEXVEC(0)] = fabs(0.1*dt);
-
-                if (resources->first[INDEXVEC(0)] || resources->prevReject[INDEXVEC(0)])
-                {
-                    theta_ = 2*jacRedo_;
-                }
-
-                if (resources->first[INDEXVEC(0)] )
-                {
-                    logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
-                    kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
-                }
-
-                for (label i=0; i < resources->systemSize(); ++i)
-                {
-                    scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
-                }
-
-                bool jacUpdated = false;
-
-                if (theta_ > jacRedo_)
-                {
-                    ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
-                    jacUpdated = true;
-                }
-
-                label k;
-                scalar dtNew = fabs(dt);
-                bool firstk = true;
-
-                while (firstk || resources->reject[INDEXVEC(0)])
-                {
-                    dt = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
-                    firstk = false;
-                    resources->reject[INDEXVEC(0)] = false;
-
-                    if (fabs(dt) <= fabs(t) * sqr(SMALL))
-                    {
-                        printf("step size underflow : %0.16f \n", dt);
-                    }
-
-                    scalar errOld = 0;
-
-                    for (k=0; k<=kTarg_+1; k++)
-                    {
-                        bool success = seul(resources, ode, t, dt, k, theta_);
-
-                        if (!success)
-                        {
-                            resources->reject[INDEXVEC(0)] = true;
-                            dtNew = fabs(dt)*stepFactor5_;
-                            break;
-                        }
-
-                        if (k == 0)
-                        {
-                            copyVec(y, ySequence_, resources->systemSize());
-                        }
-                        else
-                        {
-                            for (label i=0; i<resources->systemSize(); ++i)
-                            {
-                                table_[INDEXMAT(i, k-1, resources->systemSize())] = ySequence_[INDEXVEC(i)];
-                            }
-                        }
-
-                        if (k != 0)
-                        {
-                            extrapolate(k, resources->systemSize(), table_, y);
-                            scalar err = 0;
-                            for (label i=0; i<resources->systemSize(); ++i)
-                            {
-                                scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
-                                err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, resources->systemSize())])/scale_[INDEXVEC(i)]);
-                            }
-                            err = sqrt(err/resources->systemSize());
-                            if (err > 1/SMALL || (k > 1 && err >= errOld))
-                            {
-                                resources->reject[INDEXVEC(0)] = true;
-                                dtNew = fabs(dt)*stepFactor5_;
-                                break;
-                            }
-                            errOld = min(4*err, 1.0);
-                            scalar expo = 1.0/(k + 1);
-                            scalar facmin = pow(stepFactor3_, expo);
-                            scalar fac;
-                            if (err == 0)
-                            {
-                                fac = 1/facmin;
-                            }
-                            else
-                            {
-                                fac = stepFactor2_/pow(err/stepFactor1_, expo);
-                                fac = max(facmin/stepFactor4_, min(1/facmin, fac));
-                            }
-                            dtOpt_[INDEXVEC(k)] = fabs(dt*fac);
-                            temp_[INDEXVEC(k)] = cpu_[k]/dtOpt_[INDEXVEC(k)];
-
-                            if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
-                            {
-                                break;
-                            }
-
-                            if
-                            (
-                                k == kTarg_ - 1
-                            && !resources->prevReject[INDEXVEC(0)]
-                            && !resources->first[INDEXVEC(0)] && !resources->last[INDEXVEC(0)]
-                            )
-                            {
-                                if (err <= 1)
-                                {
-                                    break;
-                                }
-                                else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
-                                {
-                                    resources->reject[INDEXVEC(0)] = true;
-                                    kTarg_ = k;
-                                    if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
-                                    {
-                                        kTarg_--;
-                                    }
-                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
-                                    break;
-                                }
-                            }
-
-                            if (k == kTarg_)
-                            {
-                                if (err <= 1)
-                                {
-                                    break;
-                                }
-                                else if (err > nSeq_[k + 1]*2)
-                                {
-                                    resources->reject[INDEXVEC(0)] = true;
-                                    if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
-                                    {
-                                        kTarg_--;
-                                    }
-                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
-                                    break;
-                                }
-                            }
-
-                            if (k == kTarg_+1)
-                            {
-                                if (err > 1)
-                                {
-                                    resources->reject[INDEXVEC(0)] = true;
-                                    if
-                                    (
-                                        kTarg_ > 1
-                                    && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
-                                    )
-                                    {
-                                        kTarg_--;
-                                    }
-                                    dtNew = dtOpt_[INDEXVEC(kTarg_)];
-                                }
-                                break;
-                            }
-                        }
-                    } 
-                    if (resources->reject[INDEXVEC(0)])
-                    {
-                        resources->prevReject[INDEXVEC(0)] = true;
-                        if (!jacUpdated)
-                        {
-                            theta_ = 2*jacRedo_;
-
-                            if (theta_ > jacRedo_ && !jacUpdated)
-                            {
-                                ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
-                                jacUpdated = true;
-                            }
-                        }
-                    }
-
-                }
-                jacUpdated = false;
-                
-                resources->deltaTDid[INDEXVEC(0)] = dt;
-                t += dt;
-
-                label kopt;
-                if (k == 1)
-                {
-                    kopt = 2;
-                }
-                else if (k <= kTarg_)
-                {
-                    kopt=k;
-                    if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
-                    {
-                        kopt = k - 1;
-                    }
-                    else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
-                    {
-                        kopt = min(k + 1, kMaxx_ - 1);
-                    }
-                }
-                else
-                {
-                    kopt = k - 1;
-                    if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
-                    {
-                        kopt = k - 2;
-                    }
-                    if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
-                    {
-                        kopt = min(k, kMaxx_ - 1);
-                    }
-                }
-                
-                if (resources->prevReject[INDEXVEC(0)])
-                {
-                    kTarg_ = min(kopt, k);
-                    dtNew = min(fabs(dt), dtOpt_[INDEXVEC(kTarg_)]);
-                    resources->prevReject[INDEXVEC(0)] = false;
-                }
-                else
-                {
-                    if (kopt <= k)
-                    {
-                        dtNew = dtOpt_[INDEXVEC(kopt)];
-                    }
-                    else
-                    {
-                        if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
-                        {
-                            dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
-                        }
-                        else
-                        {
-                            dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
-                        }
-                    }
-                    kTarg_ = kopt;
-                }
-                
-                resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
-
-                
-            } 
+            seulex_solve(ode, resources, controls);
 
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
@@ -437,6 +168,7 @@ void seulex_solve
             );
         }
 
+        scalar* y      = resources->vectors;
         for (label i=0; i < resources->systemSize(); ++i)
         {
             y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
@@ -444,6 +176,287 @@ void seulex_solve
 
         resources->findMinDeltaT();
     }
+}
+
+template<class ODESystem>
+__device__
+void seulex_solve
+(
+    ODESystem* ode,
+    kodes::SeulexDeviceResources* resources,
+    kodes::IntegratorControls controls
+)
+{
+    const scalar absTol_ = controls.absTol;
+    const scalar relTol_ = controls.relTol;
+    
+
+    const scalar jacRedo_ = min(1e-4, relTol_);
+
+    scalar theta_, logTol;
+    label kTarg_;
+
+    scalar* table_ = resources->table();
+    scalar* dfdt_  = resources->dfdt();
+    scalar* dfdy_  = resources->dfdy();
+    
+    
+    scalar* dtOpt_ = resources->dtOpt();
+    scalar* temp_  = resources->temp();
+    scalar* y0_    = resources->y0();
+    scalar* ySequence_ = resources->ySequence();
+    scalar* scale_ = resources->scale();
+    
+    scalar* y      = resources->vectors;
+
+    scalar& t = resources->currentT[INDEXVEC(0)];
+
+    temp_[INDEXVEC(0)] = GREAT;
+    scalar dt = resources->deltaTTry[INDEXVEC(0)];
+    copyVec(y0_, y, resources->systemSize());
+    dtOpt_[INDEXVEC(0)] = fabs(0.1*dt);
+
+    if (resources->first[INDEXVEC(0)] || resources->prevReject[INDEXVEC(0)])
+    {
+        theta_ = 2*jacRedo_;
+    }
+
+    if (resources->first[INDEXVEC(0)] )
+    {
+        logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
+        kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
+    }
+
+    for (label i=0; i < resources->systemSize(); ++i)
+    {
+        scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y[INDEXVEC(i)]);
+    }
+
+    bool jacUpdated = false;
+
+    if (theta_ > jacRedo_)
+    {
+        ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+        jacUpdated = true;
+    }
+
+    label k;
+    scalar dtNew = fabs(dt);
+    bool firstk = true;
+
+    while (firstk || resources->reject[INDEXVEC(0)])
+    {
+        dt = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+        firstk = false;
+        resources->reject[INDEXVEC(0)] = false;
+
+        if (fabs(dt) <= fabs(t) * sqr(SMALL))
+        {
+            printf("step size underflow : %0.16f \n", dt);
+        }
+
+        scalar errOld = 0;
+
+        for (k=0; k<=kTarg_+1; k++)
+        {
+            bool success = seul(resources, ode, t, dt, k, theta_);
+
+            if (!success)
+            {
+                resources->reject[INDEXVEC(0)] = true;
+                dtNew = fabs(dt)*stepFactor5_;
+                break;
+            }
+
+            if (k == 0)
+            {
+                copyVec(y, ySequence_, resources->systemSize());
+            }
+            else
+            {
+                for (label i=0; i<resources->systemSize(); ++i)
+                {
+                    table_[INDEXMAT(i, k-1, resources->systemSize())] = ySequence_[INDEXVEC(i)];
+                }
+            }
+
+            if (k != 0)
+            {
+                extrapolate(k, resources->systemSize(), table_, y);
+                scalar err = 0;
+                for (label i=0; i<resources->systemSize(); ++i)
+                {
+                    scale_[INDEXVEC(i)] = absTol_ + relTol_*fabs(y0_[INDEXVEC(i)]);
+                    err += sqr((y[INDEXVEC(i)] - table_[INDEXMAT(i, 0, resources->systemSize())])/scale_[INDEXVEC(i)]);
+                }
+                err = sqrt(err/resources->systemSize());
+                if (err > 1/SMALL || (k > 1 && err >= errOld))
+                {
+                    resources->reject[INDEXVEC(0)] = true;
+                    dtNew = fabs(dt)*stepFactor5_;
+                    break;
+                }
+                errOld = min(4*err, 1.0);
+                scalar expo = 1.0/(k + 1);
+                scalar facmin = pow(stepFactor3_, expo);
+                scalar fac;
+                if (err == 0)
+                {
+                    fac = 1/facmin;
+                }
+                else
+                {
+                    fac = stepFactor2_/pow(err/stepFactor1_, expo);
+                    fac = max(facmin/stepFactor4_, min(1/facmin, fac));
+                }
+                dtOpt_[INDEXVEC(k)] = fabs(dt*fac);
+                temp_[INDEXVEC(k)] = cpu_[k]/dtOpt_[INDEXVEC(k)];
+
+                if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
+                {
+                    break;
+                }
+
+                if
+                (
+                    k == kTarg_ - 1
+                && !resources->prevReject[INDEXVEC(0)]
+                && !resources->first[INDEXVEC(0)] && !resources->last[INDEXVEC(0)]
+                )
+                {
+                    if (err <= 1)
+                    {
+                        break;
+                    }
+                    else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
+                    {
+                        resources->reject[INDEXVEC(0)] = true;
+                        kTarg_ = k;
+                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                        {
+                            kTarg_--;
+                        }
+                        dtNew = dtOpt_[INDEXVEC(kTarg_)];
+                        break;
+                    }
+                }
+
+                if (k == kTarg_)
+                {
+                    if (err <= 1)
+                    {
+                        break;
+                    }
+                    else if (err > nSeq_[k + 1]*2)
+                    {
+                        resources->reject[INDEXVEC(0)] = true;
+                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                        {
+                            kTarg_--;
+                        }
+                        dtNew = dtOpt_[INDEXVEC(kTarg_)];
+                        break;
+                    }
+                }
+
+                if (k == kTarg_+1)
+                {
+                    if (err > 1)
+                    {
+                        resources->reject[INDEXVEC(0)] = true;
+                        if
+                        (
+                            kTarg_ > 1
+                        && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
+                        )
+                        {
+                            kTarg_--;
+                        }
+                        dtNew = dtOpt_[INDEXVEC(kTarg_)];
+                    }
+                    break;
+                }
+            }
+        } 
+        if (resources->reject[INDEXVEC(0)])
+        {
+            resources->prevReject[INDEXVEC(0)] = true;
+            if (!jacUpdated)
+            {
+                theta_ = 2*jacRedo_;
+
+                if (theta_ > jacRedo_ && !jacUpdated)
+                {
+                    ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+                    jacUpdated = true;
+                }
+            }
+        }
+
+    }
+    jacUpdated = false;
+    
+    resources->deltaTDid[INDEXVEC(0)] = dt;
+    t += dt;
+
+    label kopt;
+    if (k == 1)
+    {
+        kopt = 2;
+    }
+    else if (k <= kTarg_)
+    {
+        kopt=k;
+        if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+        {
+            kopt = k - 1;
+        }
+        else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+        {
+            kopt = min(k + 1, kMaxx_ - 1);
+        }
+    }
+    else
+    {
+        kopt = k - 1;
+        if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
+        {
+            kopt = k - 2;
+        }
+        if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
+        {
+            kopt = min(k, kMaxx_ - 1);
+        }
+    }
+    
+    if (resources->prevReject[INDEXVEC(0)])
+    {
+        kTarg_ = min(kopt, k);
+        dtNew = min(fabs(dt), dtOpt_[INDEXVEC(kTarg_)]);
+        resources->prevReject[INDEXVEC(0)] = false;
+    }
+    else
+    {
+        if (kopt <= k)
+        {
+            dtNew = dtOpt_[INDEXVEC(kopt)];
+        }
+        else
+        {
+            if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+            {
+                dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
+            }
+            else
+            {
+                dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
+            }
+        }
+        kTarg_ = kopt;
+    }
+    
+    resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+
 }
 
 template<class ODESystem>
@@ -459,7 +472,7 @@ kodes::Seulex<ODESystem>::Seulex
 template<class ODESystem>
 void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
 {
-    seulex_solve<ODESystem><<<this->blocks, this->threads, this->sharedMemSize>>>
+    adaptive_solve<ODESystem, kodes::SeulexDeviceResources><<<this->blocks, this->threads, this->sharedMemSize>>>
     (
         this->ode_, this->resources_, deltaT, realBatchSize, this->controls_
     );
