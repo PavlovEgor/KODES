@@ -26,6 +26,10 @@ protected:
     scalar* dydt_;
     scalar* y_;
 
+    // Coefficients of the Householder reflections that carry the Jacobian in
+    // dfdy_ to the Hessenberg form the stage matrices are factorised from
+    scalar* hessTau_;
+
 public:
 
     __device__ __host__
@@ -80,8 +84,11 @@ public:
     __device__ scalar* 
     dydt() { return dydt_; }
 
-    __device__ scalar* 
+    __device__ scalar*
     y() { return y_; }
+
+    __device__ scalar*
+    hessTau() { return hessTau_; }
 
 };
 

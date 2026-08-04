@@ -13,13 +13,14 @@ bool seul (
 {
     ++profile.nSeul;
 
-    scalar* dfdy_  = resources->dfdy();
+    scalar* hess_  = resources->dfdy();
+    scalar* tau_   = resources->hessTau();
     scalar* a_     = resources->a();
     label* pivotIndices_ = resources->pivotIndices();
-    
+
     scalar* y0_    = resources->y0();
     scalar* scale = resources->scale();
-    
+
     scalar* dy_    = resources->dy();
     scalar* yTemp_ = resources->yTemp();
     scalar* dydt_  = resources->dydt();
@@ -27,20 +28,14 @@ bool seul (
 
     label nSteps = nSeq_[k];
     scalar dt = dtTot/nSteps;
-    
-    for (label i=0; i<resources->systemSize(); i++)
-    { 
-        for (label j=0; j<resources->systemSize(); j++)
-        {
-            a_[INDEXMAT(i, j, resources->systemSize())] = -dfdy_[INDEXMAT(i, j, resources->systemSize())];
-        }
-        a_[INDEXMAT(i, i, resources->systemSize())] += 1/dt;
-    }
-    
+
+    // The Jacobian was reduced to Hessenberg form when it was evaluated, so
+    // the stage matrix 1/dt I - J is factorised in O(n^2) and no O(n^3) work
+    // is repeated per stage
     long long tProfile = clock64();
-    LUDecompose(a_, pivotIndices_, resources->systemSize());
-    profile.luDecompose += clock64() - tProfile;
-    ++profile.nLuDecompose;
+    hessenbergShiftedFactorise(hess_, 1/dt, a_, pivotIndices_, resources->systemSize());
+    profile.stageFactorise += clock64() - tProfile;
+    ++profile.nStageFactorise;
 
     scalar xnew = x0 + dt;
 
@@ -50,9 +45,9 @@ bool seul (
     ++profile.nDerivatives;
 
     tProfile = clock64();
-    LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-    profile.luBacksubstitute += clock64() - tProfile;
-    ++profile.nLuBacksubstitute;
+    hessenbergSolve(hess_, tau_, a_, pivotIndices_, dy_, resources->systemSize());
+    profile.stageSolve += clock64() - tProfile;
+    ++profile.nStageSolve;
 
     copyVec(yTemp_, y0_, resources->systemSize());
 
@@ -82,9 +77,9 @@ bool seul (
             }
 
             tProfile = clock64();
-            LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-            profile.luBacksubstitute += clock64() - tProfile;
-            ++profile.nLuBacksubstitute;
+            hessenbergSolve(hess_, tau_, a_, pivotIndices_, dy_, resources->systemSize());
+            profile.stageSolve += clock64() - tProfile;
+            ++profile.nStageSolve;
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
@@ -114,9 +109,9 @@ bool seul (
         ++profile.nDerivatives;
 
         tProfile = clock64();
-        LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-        profile.luBacksubstitute += clock64() - tProfile;
-        ++profile.nLuBacksubstitute;
+        hessenbergSolve(hess_, tau_, a_, pivotIndices_, dy_, resources->systemSize());
+        profile.stageSolve += clock64() - tProfile;
+        ++profile.nStageSolve;
     }
 
     sumVec(y, yTemp_, dy_, resources->systemSize());
@@ -164,6 +159,7 @@ void seulex_solve
         scalar* table_ = resources->table();
         scalar* dfdt_  = resources->dfdt();
         scalar* dfdy_  = resources->dfdy();
+        scalar* hessTau_ = resources->hessTau();
         
         
         scalar* dtOpt_ = resources->dtOpt();
@@ -225,10 +221,18 @@ void seulex_solve
 
                 if (theta_ > jacRedo_)
                 {
-                    const long long tProfile = clock64();
+                    long long tProfile = clock64();
                     ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
                     profile.jacobian += clock64() - tProfile;
                     ++profile.nJacobian;
+
+                    // The only O(n^3) step left. Every stage matrix built from
+                    // this Jacobian, over this step and over as many following
+                    // ones as it survives, is factorised from the result
+                    tProfile = clock64();
+                    hessenbergReduce(dfdy_, hessTau_, resources->systemSize());
+                    profile.hessReduce += clock64() - tProfile;
+                    ++profile.nHessReduce;
 
                     jacUpdated = true;
                 }
@@ -382,10 +386,15 @@ void seulex_solve
 
                             if (theta_ > jacRedo_ && !jacUpdated)
                             {
-                                const long long tProfile = clock64();
+                                long long tProfile = clock64();
                                 ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
                                 profile.jacobian += clock64() - tProfile;
                                 ++profile.nJacobian;
+
+                                tProfile = clock64();
+                                hessenbergReduce(dfdy_, hessTau_, resources->systemSize());
+                                profile.hessReduce += clock64() - tProfile;
+                                ++profile.nHessReduce;
 
                                 jacUpdated = true;
                             }

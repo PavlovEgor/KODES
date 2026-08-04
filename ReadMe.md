@@ -41,8 +41,9 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
   integrators, and `stepState` — the small struct (forward/backward direction, trial and achieved
   step size, first/last/reject flags) threaded through an integrator's `solve()` call.
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
-  `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
-  the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
+  `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution),
+  `hessenbergReduce`/`hessenbergShiftedFactorise`/`hessenbergSolve` (see *One reduction per
+  Jacobian instead of one LU per stage* below), plus small helpers (`copyVec`, `sumVec`, `sqr`,
   `clamp`, `swap`, `normalizeError`).
 - **`kodes::Config`** (`kodes_config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
   (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE
@@ -114,6 +115,47 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
   Bulirsch-Stoer extrapolation method (the same algorithm as OpenFOAM's own `seulex` ODE solver),
   one CUDA thread per system. `solve(stepState)` launches a single kernel that integrates every
   system in the batch from local time 0 to the step's target end-time, using
-  `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and polynomial extrapolation
-  (`extrapolate`) to control step size and order. Absolute/relative tolerances and the step-control
-  coefficients are compile-time `__constant__`s in this header, not runtime-configurable.
+  a shift-invariant Hessenberg factorization for the implicit linear solves (see below) and
+  polynomial extrapolation (`extrapolate`) to control step size and order. The step-control
+  coefficients are compile-time `__constant__`s in this header, tolerances come from
+  `IntegratorControls`. `SeulexProfile` collects a per-system cycle breakdown of the cost centres,
+  printed for the system selected with `setProfileSystem`.
+
+#### One reduction per Jacobian instead of one LU per stage
+
+Stage `k` of the extrapolation splits the step `dtTot` into `nSeq_[k]` sub steps and solves with
+
+    A(gamma) = gamma*I - J,   gamma = nSeq_[k]/dtTot
+
+The Jacobian `J` is held fixed across all stages of a step, and across every following step until
+`theta` says it has gone stale, so the stage matrices differ from each other only by a **multiple
+of the identity**. Factorizing each from scratch costs `O(n^3)` per stage and used to dominate the
+run time, while a stage only solves `nSeq_[k]` right hand sides — far fewer than the `~n/3`
+back-substitutions an LU is worth.
+
+An LU factorization cannot be updated cheaply under a full-rank diagonal shift (Sherman-Morrison
+and Woodbury only cover low-rank changes), but an **orthogonal similarity is shift invariant**:
+
+    J = Q H Q^T   =>   gamma*I - J = Q (gamma*I - H) Q^T
+
+So `J` is reduced once to upper Hessenberg form by Householder reflections (`hessenbergReduce`,
+`(10/3)n^3`, charged to the Jacobian evaluation that produced it), and after that
+
+- `hessenbergShiftedFactorise` builds `gamma*I - H` and eliminates its single subdiagonal in
+  `O(n^2)` — about `n/3` times cheaper than the LU it replaces, and the pivoting collapses to one
+  bit per column since the interchange can only ever be between neighbouring rows;
+- `hessenbergSolve` applies `Q^T`, the triangular solves and `Q`, all `O(n^2)`. `Q` is never
+  formed: the reflections are read straight out of the space below the subdiagonal of the reduced
+  matrix, where the zeros they create would otherwise sit.
+
+The reduced Jacobian lives in `dfdy` (overwritten in place by `hessenbergReduce`), the reflection
+coefficients in `hessTau`, and the per-stage factors in the existing `a` work matrix — the only
+new storage is `hessTau`, one vector per system.
+
+The trade is `O(n^3)` per stage against `O(n^3)` per Jacobian plus a solve that costs about 2.5
+back-substitutions instead of 1 (the two orthogonal transforms). It therefore pays off in
+proportion to how many stage matrices one Jacobian serves; the profile print reports that ratio
+directly as *stage factorisations per reduction*. Counting memory traffic in units of `n^2`, a
+reduction is worth `~2.5n` and an LU `~(2/3)n`, so for GRI-Mech (`n = 53`) break-even sits at
+roughly four to five stage factorizations per reduction — about what a single step already
+produces, and every further step the Jacobian survives is pure gain.

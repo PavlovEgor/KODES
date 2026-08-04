@@ -37,6 +37,7 @@ kodes::SeulexDeviceResources::create(const label batchSize, const label systemSi
     cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->dydt_, systemSize * batchSize * sizeof(scalar));
     cudaMalloc(&hostStub->y_, systemSize * batchSize * sizeof(scalar));
+    cudaMalloc(&hostStub->hessTau_, systemSize * batchSize * sizeof(scalar));
 
     hostStub->allocate(batchSize);
 
@@ -71,6 +72,7 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         cudaFree(hostStub->yTemp_);
         cudaFree(hostStub->dydt_);
         cudaFree(hostStub->y_);
+        cudaFree(hostStub->hessTau_);
 
         hostStub->deallocate();
 
