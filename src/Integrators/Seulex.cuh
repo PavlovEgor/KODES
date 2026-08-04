@@ -117,7 +117,8 @@ bool seul (
     const scalar t0,
     const scalar dtTot,
     const label k,
-    scalar& theta
+    scalar& theta,
+    SeulexProfile& profile
 );
 
 
@@ -139,17 +140,33 @@ void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar*
     }
 }
 
-template<class ODESystem>
+// Outer step control: drives the ensemble from local time 0 to deltaT, one
+// thread per system, deciding how far each seulex step is allowed to reach and
+// when the target has been met
+template<class ODESystem, class DeviceResources>
 __global__
-void seulex_solve
+void adaptive_solve
 (
     ODESystem* ode,
-    kodes::SeulexDeviceResources* resources,
+    DeviceResources* resources,
     scalar deltaT,
     label realBatchSize,
     kodes::IntegratorControls controls,
     label profileSystem,
     bool    firstBatch
+);
+
+// One seulex step of the size the caller asked for: Jacobian, the sequence of
+// seul() sub integrations, the extrapolation and the order and step size it
+// leaves behind for the next one
+template<class ODESystem>
+__device__
+void seulex_solve
+(
+    ODESystem* ode,
+    kodes::SeulexDeviceResources* resources,
+    kodes::IntegratorControls controls,
+    SeulexProfile& profile
 );
 
 
