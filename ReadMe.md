@@ -42,8 +42,9 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
   step size, first/last/reject flags) threaded through an integrator's `solve()` call.
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
-  the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
-  `clamp`, `swap`, `normalizeError`).
+  the linear systems in each implicit step), `shiftedBiCGStab` (see *Reusing one factorization
+  across the extrapolation stages* below), plus small helpers (`copyVec`, `sumVec`, `zeroVec`,
+  `dotProduct`, `scaledNorm`, `sqr`, `clamp`, `swap`, `normalizeError`).
 - **`kodes::Config`** (`kodes_config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
   (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE
   machinery. Requires the `external/rapidjson` submodule.
@@ -117,3 +118,52 @@ same component. Converting between the two layouts is the `Operator`'s job (see 
   `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and polynomial extrapolation
   (`extrapolate`) to control step size and order. Absolute/relative tolerances and the step-control
   coefficients are compile-time `__constant__`s in this header, not runtime-configurable.
+  `SeulexProfile` collects a per-system cycle breakdown of the cost centres (Jacobian,
+  derivatives, LU factorization, back-substitution, iterative solve), printed for the system
+  selected with `setProfileSystem`.
+
+#### Reusing one factorization across the extrapolation stages
+
+Stage `k` of the extrapolation splits the step `dtTot` into `nSeq_[k]` sub steps and solves with
+
+    A(gamma) = gamma*I - J,   gamma = nSeq_[k]/dtTot
+
+The Jacobian `J` is held fixed over all stages of a step (and usually over several steps), so the
+stage matrices differ from each other only by a **multiple of the identity**. Factorizing each of
+them from scratch costs `O(n^3)` per stage and used to dominate the run time, while every stage
+only solves `nSeq_[k]` right hand sides, which is far fewer than the `~n/3` back-substitutions an
+LU is worth.
+
+There is no `O(n^2)` exact update of an LU factorization under a full-rank diagonal shift — a
+Sherman-Morrison/Woodbury update only helps for low-rank changes. What the shift structure does
+give is a preconditioner that costs nothing to build. Writing `M = A(gammaRef)` for a
+factorization already in hand and `eta = gamma - gammaRef`, the left preconditioned stage system is
+
+    M^-1 A(gamma) x = M^-1 b   with   M^-1 A(gamma) = I + eta*M^-1
+
+The preconditioned operator contains no reference to the shifted matrix at all, only to `M^-1`:
+applying it is one back-substitution and one axpy, with **no matrix-vector product and no shifted
+matrix to assemble**. Its eigenvalues are `1 + eta/(gammaRef - lambda)` over the eigenvalues
+`lambda` of `J`. Every stiff mode (`|lambda| >> gamma`) maps to a value indistinguishable from one
+and only the few slow modes are spread out, over an interval of width `gamma/gammaRef`, so a
+Krylov method converges in a handful of iterations as long as consecutive stage shifts stay within
+a small factor of each other — which they do, `nSeq_` grows by 1.5 or 1.33 at a time.
+
+`shiftedBiCGStab` (`basic_linalg`) is Bi-CGStab on exactly that operator, and `Seulex` drives it
+from `prepareStageMatrix`/`stageSolve`: a stage refreshes the factorization only when the Jacobian
+changed, when its shift has drifted by more than `maxShiftRatio`, or when it has enough right hand
+sides for an `O(n^3)` factorization to amortize by itself (`nSubSteps*expectedLinIters >= n/3`,
+which is why the whole scheme switches itself off for small systems); otherwise it borrows the
+previous one. A solve that does not reach `linTol` within `maxLinIters` iterations restores its
+right hand side, refactorizes at its own shift and finishes directly, so the accuracy of the
+result never depends on whether the iterative path was taken. Setting `iterativeLinearSolver` to
+false in `IntegratorControls` restores one factorization per stage.
+
+For GRI-Mech (`n = 53`) with the default `nSeq_ = {2, 3, 4, 6, 8, ...}` and a typical `kTarg` of 2
+this turns the four to five factorizations a step used to need into two, and the arithmetic that
+replaces them is back-substitutions rather than eliminations.
+
+The convergence test measures the residual of the *preconditioned* system, which — `M^-1` being
+close to the inverse of the stage matrix — is directly an estimate of the error of the solution
+itself, in the same `absTol + relTol*|y|` scale the step controller uses. `linTol` is therefore
+read as a fraction of the integration tolerance rather than as a residual reduction.

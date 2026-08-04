@@ -1,4 +1,5 @@
 #include "DeviceResources.cuh"
+#include "basic_linalg.cuh"
 
 
 namespace kodes 
@@ -25,6 +26,13 @@ protected:
     scalar* yTemp_;
     scalar* dydt_;
     scalar* y_;
+
+    // Bi-CGStab scratch, BICGSTAB_WORK_VECTORS vectors per system
+    scalar* linWork_;
+
+    // Shift 1/dt the factorisation currently held in a_ was built with, zero
+    // when a_ holds nothing usable (a fresh Jacobian invalidates it)
+    scalar* gammaRef_;
 
 public:
 
@@ -80,8 +88,14 @@ public:
     __device__ scalar* 
     dydt() { return dydt_; }
 
-    __device__ scalar* 
+    __device__ scalar*
     y() { return y_; }
+
+    __device__ scalar*
+    linWork() { return linWork_; }
+
+    __device__ scalar*
+    gammaRef() { return gammaRef_; }
 
 };
 

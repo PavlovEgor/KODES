@@ -1,4 +1,141 @@
 
+// Builds the stage matrix gamma*I - J and factorises it in place, recording
+// the shift it belongs to so that later stages can tell how far they are from it
+__device__ inline
+void factoriseStageMatrix
+(
+    kodes::SeulexDeviceResources* resources,
+    const scalar gamma,
+    SeulexProfile& profile
+)
+{
+    const label size = resources->systemSize();
+
+    scalar* dfdy_ = resources->dfdy();
+    scalar* a_    = resources->a();
+
+    for (label i=0; i<size; i++)
+    {
+        for (label j=0; j<size; j++)
+        {
+            a_[INDEXMAT(i, j, size)] = -dfdy_[INDEXMAT(i, j, size)];
+        }
+        a_[INDEXMAT(i, i, size)] += gamma;
+    }
+
+    const long long tProfile = clock64();
+    LUDecompose(a_, resources->pivotIndices(), size);
+    profile.luDecompose += clock64() - tProfile;
+    ++profile.nLuDecompose;
+
+    resources->gammaRef()[INDEXVEC(0)] = gamma;
+}
+
+
+// Decides whether the stage about to run can borrow the factorisation already
+// held in a_. Returns the shift eta = gamma - gammaRef the solves then have to
+// correct for, and zero when a_ was refreshed at gamma itself
+__device__ inline
+scalar prepareStageMatrix
+(
+    kodes::SeulexDeviceResources* resources,
+    const scalar gamma,
+    const label nSteps,
+    const kodes::IntegratorControls& controls,
+    SeulexProfile& profile
+)
+{
+    const scalar gammaRef = resources->gammaRef()[INDEXVEC(0)];
+
+    // gammaRef is zeroed whenever a_ stops belonging to the current Jacobian.
+    // A ratio of the two shifts that comes out negative, which happens when the
+    // integration direction reversed, fails the tests below and refactorises
+    if (controls.iterativeLinearSolver && gammaRef != 0)
+    {
+        const scalar ratio = gamma/gammaRef;
+
+        const bool refactorise =
+            // too far from the shift a_ was built with for the iteration to
+            // converge quickly
+            ratio > controls.maxShiftRatio
+         || ratio*controls.maxShiftRatio < 1
+            // enough right hand sides for a factorisation of its own to pay
+            // for itself, see IntegratorControls::expectedLinIters
+         || 3*nSteps*controls.expectedLinIters > resources->systemSize();
+
+        if (!refactorise)
+        {
+            return gamma - gammaRef;
+        }
+    }
+
+    factoriseStageMatrix(resources, gamma, profile);
+
+    return 0;
+}
+
+
+// Solves (gamma*I - J) x = x, the right hand side being overwritten by the
+// solution. With eta == 0 the factorisation in a_ is the one of the stage
+// matrix itself and a back substitution is all it takes, otherwise it is only
+// a preconditioner and Bi-CGStab makes up the difference. A failed iteration
+// refactorises at gamma and clears eta, so the remaining sub steps of the
+// stage go the direct way and the answer is never less accurate than the
+// direct solve would have been
+__device__ inline
+void stageSolve
+(
+    kodes::SeulexDeviceResources* resources,
+    scalar& eta,
+    const scalar gamma,
+    scalar* x,
+    const kodes::IntegratorControls& controls,
+    SeulexProfile& profile
+)
+{
+    const label size = resources->systemSize();
+
+    if (eta != 0)
+    {
+        const long long tProfile = clock64();
+
+        const label iters = shiftedBiCGStab
+        (
+            resources->a(),
+            resources->pivotIndices(),
+            eta,
+            x,
+            resources->scale(),
+            resources->linWork(),
+            size,
+            controls.linTol,
+            controls.maxLinIters
+        );
+
+        profile.linSolve += clock64() - tProfile;
+        ++profile.nLinSolve;
+
+        if (iters >= 0)
+        {
+            profile.nLinIters += iters;
+            return;
+        }
+
+        // the solver put the right hand side back, so the direct path below
+        // finishes the job
+        ++profile.nLinFail;
+        eta = 0;
+
+        factoriseStageMatrix(resources, gamma, profile);
+    }
+
+    const long long tProfile = clock64();
+    LUBacksubstitute(resources->a(), resources->pivotIndices(), x, size);
+    profile.luBacksubstitute += clock64() - tProfile;
+    ++profile.nLuBacksubstitute;
+}
+
+
 template<class ODESystem>
 __device__
 bool seul (
@@ -8,18 +145,15 @@ bool seul (
     const scalar dtTot,
     const label k,
     scalar& theta,
+    const kodes::IntegratorControls& controls,
     SeulexProfile& profile
 )
 {
     ++profile.nSeul;
 
-    scalar* dfdy_  = resources->dfdy();
-    scalar* a_     = resources->a();
-    label* pivotIndices_ = resources->pivotIndices();
-    
-    scalar* y0_    = resources->y0();
     scalar* scale = resources->scale();
-    
+
+    scalar* y0_    = resources->y0();
     scalar* dy_    = resources->dy();
     scalar* yTemp_ = resources->yTemp();
     scalar* dydt_  = resources->dydt();
@@ -27,32 +161,19 @@ bool seul (
 
     label nSteps = nSeq_[k];
     scalar dt = dtTot/nSteps;
-    
-    for (label i=0; i<resources->systemSize(); i++)
-    { 
-        for (label j=0; j<resources->systemSize(); j++)
-        {
-            a_[INDEXMAT(i, j, resources->systemSize())] = -dfdy_[INDEXMAT(i, j, resources->systemSize())];
-        }
-        a_[INDEXMAT(i, i, resources->systemSize())] += 1/dt;
-    }
-    
-    long long tProfile = clock64();
-    LUDecompose(a_, pivotIndices_, resources->systemSize());
-    profile.luDecompose += clock64() - tProfile;
-    ++profile.nLuDecompose;
+
+    const scalar gamma = 1/dt;
+
+    scalar eta = prepareStageMatrix(resources, gamma, nSteps, controls, profile);
 
     scalar xnew = x0 + dt;
 
-    tProfile = clock64();
+    long long tProfile = clock64();
     ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], y0_, dy_);
     profile.derivatives += clock64() - tProfile;
     ++profile.nDerivatives;
 
-    tProfile = clock64();
-    LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-    profile.luBacksubstitute += clock64() - tProfile;
-    ++profile.nLuBacksubstitute;
+    stageSolve(resources, eta, gamma, dy_, controls, profile);
 
     copyVec(yTemp_, y0_, resources->systemSize());
 
@@ -81,10 +202,7 @@ bool seul (
                 dy_[INDEXVEC(i)] = dydt_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dt;
             }
 
-            tProfile = clock64();
-            LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-            profile.luBacksubstitute += clock64() - tProfile;
-            ++profile.nLuBacksubstitute;
+            stageSolve(resources, eta, gamma, dy_, controls, profile);
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
@@ -113,10 +231,7 @@ bool seul (
         profile.derivatives += clock64() - tProfile;
         ++profile.nDerivatives;
 
-        tProfile = clock64();
-        LUBacksubstitute(a_, pivotIndices_, dy_, resources->systemSize());
-        profile.luBacksubstitute += clock64() - tProfile;
-        ++profile.nLuBacksubstitute;
+        stageSolve(resources, eta, gamma, dy_, controls, profile);
     }
 
     sumVec(y, yTemp_, dy_, resources->systemSize());
@@ -151,6 +266,10 @@ void seulex_solve
 
         SeulexProfile profile;
         const long long tKernel = clock64();
+
+        // a_ and dfdy_ carry over from whatever system occupied this slot in
+        // the previous batch, nothing in them may be reused
+        resources->gammaRef()[INDEXVEC(0)] = 0;
 
         const scalar absTol_ = controls.absTol;
         const scalar relTol_ = controls.relTol;
@@ -230,6 +349,9 @@ void seulex_solve
                     profile.jacobian += clock64() - tProfile;
                     ++profile.nJacobian;
 
+                    // the factorisation in a_ belongs to the old Jacobian
+                    resources->gammaRef()[INDEXVEC(0)] = 0;
+
                     jacUpdated = true;
                 }
 
@@ -252,7 +374,7 @@ void seulex_solve
 
                     for (k=0; k<=kTarg_+1; k++)
                     {
-                        bool success = seul(resources, ode, t, dt, k, theta_, profile);
+                        bool success = seul(resources, ode, t, dt, k, theta_, controls, profile);
 
                         if (!success)
                         {
@@ -386,6 +508,8 @@ void seulex_solve
                                 ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
                                 profile.jacobian += clock64() - tProfile;
                                 ++profile.nJacobian;
+
+                                resources->gammaRef()[INDEXVEC(0)] = 0;
 
                                 jacUpdated = true;
                             }

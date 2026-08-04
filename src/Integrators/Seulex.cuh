@@ -55,11 +55,15 @@ struct SeulexProfile
     long long derivatives;
     long long luDecompose;
     long long luBacksubstitute;
+    long long linSolve;
 
     label nJacobian;
     label nDerivatives;
     label nLuDecompose;
     label nLuBacksubstitute;
+    label nLinSolve;
+    label nLinIters;
+    label nLinFail;
     label nSeul;
     label nStep;
     label nReject;
@@ -68,7 +72,9 @@ struct SeulexProfile
     SeulexProfile()
     :
         total(0), jacobian(0), derivatives(0), luDecompose(0), luBacksubstitute(0),
+        linSolve(0),
         nJacobian(0), nDerivatives(0), nLuDecompose(0), nLuBacksubstitute(0),
+        nLinSolve(0), nLinIters(0), nLinFail(0),
         nSeul(0), nStep(0), nReject(0)
     {}
 
@@ -78,7 +84,8 @@ struct SeulexProfile
         const scalar pct = total > 0 ? 100.0/total : 0.0;
 
         const long long other =
-            total - jacobian - derivatives - luDecompose - luBacksubstitute;
+            total - jacobian - derivatives - luDecompose - luBacksubstitute
+          - linSolve;
 
         printf
         (
@@ -89,9 +96,11 @@ struct SeulexProfile
             "  derivatives     %12lld  %8.2f%%  %9d  %12lld \n"
             "  LU decompose    %12lld  %8.2f%%  %9d  %12lld \n"
             "  LU backsubst    %12lld  %8.2f%%  %9d  %12lld \n"
+            "  Bi-CGStab       %12lld  %8.2f%%  %9d  %12lld \n"
             "  other           %12lld  %8.2f%% \n"
             "  total           %12lld \n"
             "  steps %d, rejected %d, seul() calls %d \n"
+            "  Bi-CGStab iterations %d (%.2f per solve), fallbacks %d \n"
             "\n",
             system,
             jacobian, jacobian*pct, nJacobian,
@@ -102,9 +111,12 @@ struct SeulexProfile
                 nLuDecompose ? luDecompose/nLuDecompose : 0LL,
             luBacksubstitute, luBacksubstitute*pct, nLuBacksubstitute,
                 nLuBacksubstitute ? luBacksubstitute/nLuBacksubstitute : 0LL,
+            linSolve, linSolve*pct, nLinSolve,
+                nLinSolve ? linSolve/nLinSolve : 0LL,
             other, other*pct,
             total,
-            nStep, nReject, nSeul
+            nStep, nReject, nSeul,
+            nLinIters, nLinSolve ? scalar(nLinIters)/nLinSolve : 0.0, nLinFail
         );
     }
 };
@@ -117,7 +129,9 @@ bool seul (
     const scalar t0,
     const scalar dtTot,
     const label k,
-    scalar& theta
+    scalar& theta,
+    const kodes::IntegratorControls& controls,
+    SeulexProfile& profile
 );
 
 
