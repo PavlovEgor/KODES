@@ -17,8 +17,6 @@ void adaptive_solve
 (
     ODESystem* ode,
     IntegratorDeviceResources* resources,
-    scalar deltaT,
-    label realBatchSize,
     kodes::IntegratorControls controls
 );
 }

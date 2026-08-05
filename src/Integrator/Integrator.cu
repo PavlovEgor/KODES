@@ -6,19 +6,20 @@ void kodes::adaptive_solve
 (
     ODESystem* ode,
     IntegratorDeviceResources* resources,
-    scalar deltaT,
-    label realBatchSize,
     kodes::IntegratorControls controls
 )
 {
-    if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
+    if ((INDEXVEC(0) < controls.realBatchSize) && (resources->vectors[INDEXVEC(0)] > controls.Treact))
     {
-        resources->setDeltaT(deltaT);
+        if (controls.batchIndex == 0)
+        {
+            resources->setDeltaT(controls.deltaT);
+        }
 
         const label maxSteps_ = controls.maxSteps;
 
         scalar tStart = 0;
-        scalar tEnd   = deltaT;
+        scalar tEnd   = controls.deltaT;
         resources->currentT[INDEXVEC(0)] = tStart;
         scalar& t = resources->currentT[INDEXVEC(0)];
 
@@ -119,8 +120,12 @@ kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::~Int
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::solve(scalar deltaT, label realBatchSize)
 {
+    controls_.realBatchSize = realBatchSize;
+    controls_.deltaT = deltaT;
+    ++controls_.batchIndex;
+
     adaptive_solve<ODESystem, IntegrationMethod, IntegratorDeviceResources>
         <<<blocks, threads, sharedMemSize>>>
-        (ode_, resources_, deltaT, realBatchSize, controls_);
+        (ode_, resources_, controls_);
     CUDA_CHECK_LAST();
 }
