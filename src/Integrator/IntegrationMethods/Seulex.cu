@@ -24,7 +24,7 @@ bool kodes::Seulex<ODESystem>::seul (
 
     const label systemSize = resources->systemSize();
 
-    label nSteps = nSeq_[k];
+    label nSteps = resources->nSeq_[k];
     scalar dt = dtTot/nSteps;
     
     for (label i=0; i<systemSize; i++)
@@ -101,20 +101,20 @@ bool kodes::Seulex<ODESystem>::seul (
 
 template<class ODESystem>
 __device__
-void kodes::Seulex<ODESystem>::extrapolate (const label k,const label systemSize, scalar* table, scalar* y)
+void kodes::Seulex<ODESystem>::extrapolate (const label k,const label systemSize, scalar* table, scalar* y, const scalar* coeff_, const label iMaxx_)
 {
     for (label j=k-1; j>0; j--)
     {
         for (label i=0; i<systemSize; i++)
         {
             table[INDEXMAT(i, j-1, systemSize)] =
-                table[INDEXMAT(i, j, systemSize)] + coeff_[k][j]*(table[INDEXMAT(i, j, systemSize)] - table[INDEXMAT(i, j-1, systemSize)]);
+                table[INDEXMAT(i, j, systemSize)] + coeff_[k + j*iMaxx_]*(table[INDEXMAT(i, j, systemSize)] - table[INDEXMAT(i, j-1, systemSize)]);
         }
     }
 
     for (label i=0; i<systemSize; i++)
     {
-        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, systemSize)] + coeff_[k][0]*(table[INDEXMAT(i, 0, systemSize)] - y[INDEXVEC(i)]);
+        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, systemSize)] + coeff_[k]*(table[INDEXMAT(i, 0, systemSize)] - y[INDEXVEC(i)]);
     }
 }
 
@@ -149,6 +149,12 @@ void kodes::Seulex<ODESystem>::step
     
     scalar* y      = resources->vectors;
     scalar& t      = resources->currentT[INDEXVEC(0)];
+
+
+    const label kMaxx_ = resources->kMaxx_;
+    const label* nSeq_  = resources->nSeq_;
+    const scalar* gpu_   = resources->gpu_;
+    const scalar* coeff_ = resources->coeff_;
 
     temp_[INDEXVEC(0)] = GREAT;
     scalar dt = resources->deltaTTry[INDEXVEC(0)];
@@ -203,7 +209,7 @@ void kodes::Seulex<ODESystem>::step
             if (!success)
             {
                 resources->reject[INDEXVEC(0)] = true;
-                dtNew = fabs(dt)*stepFactor5_;
+                dtNew = fabs(dt)*resources->stepFactor5_;
                 break;
             }
 
@@ -221,7 +227,7 @@ void kodes::Seulex<ODESystem>::step
 
             if (k != 0)
             {
-                extrapolate(k, systemSize, table_, y);
+                extrapolate(k, systemSize, table_, y, coeff_, resources->iMaxx_);
                 scalar err = 0;
                 for (label i=0; i<systemSize; ++i)
                 {
@@ -232,12 +238,12 @@ void kodes::Seulex<ODESystem>::step
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
                     resources->reject[INDEXVEC(0)] = true;
-                    dtNew = fabs(dt)*stepFactor5_;
+                    dtNew = fabs(dt)*resources->stepFactor5_;
                     break;
                 }
                 errOld = min(4*err, 1.0);
                 scalar expo = 1.0/(k + 1);
-                scalar facmin = pow(stepFactor3_, expo);
+                scalar facmin = pow(resources->stepFactor3_, expo);
                 scalar fac;
                 if (err == 0)
                 {
@@ -245,11 +251,11 @@ void kodes::Seulex<ODESystem>::step
                 }
                 else
                 {
-                    fac = stepFactor2_/pow(err/stepFactor1_, expo);
-                    fac = max(facmin/stepFactor4_, min(1/facmin, fac));
+                    fac = resources->stepFactor2_/pow(err/resources->stepFactor1_, expo);
+                    fac = max(facmin/resources->stepFactor4_, min(1/facmin, fac));
                 }
                 dtOpt_[INDEXVEC(k)] = fabs(dt*fac);
-                temp_[INDEXVEC(k)] = cpu_[k]/dtOpt_[INDEXVEC(k)];
+                temp_[INDEXVEC(k)] = gpu_[k]/dtOpt_[INDEXVEC(k)];
 
                 if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
                 {
@@ -271,7 +277,7 @@ void kodes::Seulex<ODESystem>::step
                     {
                         resources->reject[INDEXVEC(0)] = true;
                         kTarg_ = k;
-                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < resources->kFactor1_*temp_[INDEXVEC(k)])
                         {
                             kTarg_--;
                         }
@@ -289,7 +295,7 @@ void kodes::Seulex<ODESystem>::step
                     else if (err > nSeq_[k + 1]*2)
                     {
                         resources->reject[INDEXVEC(0)] = true;
-                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+                        if (kTarg_>1 && temp_[INDEXVEC(k-1)] < resources->kFactor1_*temp_[INDEXVEC(k)])
                         {
                             kTarg_--;
                         }
@@ -306,7 +312,7 @@ void kodes::Seulex<ODESystem>::step
                         if
                         (
                             kTarg_ > 1
-                        && temp_[INDEXVEC(kTarg_-1)] < kFactor1_*temp_[INDEXVEC(kTarg_)]
+                        && temp_[INDEXVEC(kTarg_-1)] < resources->kFactor1_*temp_[INDEXVEC(kTarg_)]
                         )
                         {
                             kTarg_--;
@@ -346,11 +352,11 @@ void kodes::Seulex<ODESystem>::step
     else if (k <= kTarg_)
     {
         kopt=k;
-        if (temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
+        if (temp_[INDEXVEC(k-1)] < resources->kFactor1_*temp_[INDEXVEC(k)])
         {
             kopt = k - 1;
         }
-        else if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+        else if (temp_[INDEXVEC(k)] < resources->kFactor2_*temp_[INDEXVEC(k - 1)])
         {
             kopt = min(k + 1, kMaxx_ - 1);
         }
@@ -358,11 +364,11 @@ void kodes::Seulex<ODESystem>::step
     else
     {
         kopt = k - 1;
-        if (k > 2 && temp_[INDEXVEC(k-2)] < kFactor1_*temp_[INDEXVEC(k - 1)])
+        if (k > 2 && temp_[INDEXVEC(k-2)] < resources->kFactor1_*temp_[INDEXVEC(k - 1)])
         {
             kopt = k - 2;
         }
-        if (temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(kopt)])
+        if (temp_[INDEXVEC(k)] < resources->kFactor2_*temp_[INDEXVEC(kopt)])
         {
             kopt = min(k, kMaxx_ - 1);
         }
@@ -382,13 +388,13 @@ void kodes::Seulex<ODESystem>::step
         }
         else
         {
-            if (k < kTarg_ && temp_[INDEXVEC(k)] < kFactor2_*temp_[INDEXVEC(k - 1)])
+            if (k < kTarg_ && temp_[INDEXVEC(k)] < resources->kFactor2_*temp_[INDEXVEC(k - 1)])
             {
-                dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt + 1]/cpu_[k];
+                dtNew = dtOpt_[INDEXVEC(k)]*gpu_[kopt + 1]/gpu_[k];
             }
             else
             {
-                dtNew = dtOpt_[INDEXVEC(k)]*cpu_[kopt]/cpu_[k];
+                dtNew = dtOpt_[INDEXVEC(k)]*gpu_[kopt]/gpu_[k];
             }
         }
         kTarg_ = kopt;

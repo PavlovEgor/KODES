@@ -4,6 +4,33 @@ __global__ void
 constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label batchSize, const label systemSize, const label parameterSize)
 {
     new (devRes) kodes::SeulexDeviceResources(batchSize, systemSize, parameterSize);
+
+    // The gpu time factors for the major parts of the algorithm
+    const scalar gpuFunc = 2, gpuJac = 40, gpuLU = 17, gpuSolve = 1;
+
+    devRes->nSeq_[0] = 2;
+    devRes->nSeq_[1] = 3;
+
+    for (int i=2; i<devRes->iMaxx_; i++)
+    {
+        devRes->nSeq_[i] = 2*devRes->nSeq_[i-2];
+    }
+    devRes->gpu_[0] = gpuJac + gpuLU + devRes->nSeq_[0]*(gpuFunc + gpuSolve);
+
+    for (int k=0; k<devRes->kMaxx_; k++)
+    {
+        devRes->gpu_[k+1] = devRes->gpu_[k] + (devRes->nSeq_[k+1]-1)*(gpuFunc + gpuSolve) + gpuLU;
+    }
+
+    // Set the extrapolation coefficients array
+    for (int k=0; k<devRes->iMaxx_; k++)
+    {
+        for (int l=0; l<k; l++)
+        {
+            scalar ratio = scalar(devRes->nSeq_[k])/devRes->nSeq_[l];
+            devRes->coeff_[k + l*devRes->iMaxx_] = 1/(ratio - 1);
+        }
+    }
 }
 
 __global__ void 
