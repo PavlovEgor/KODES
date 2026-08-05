@@ -1,5 +1,6 @@
+#ifndef SEULEXDEVRES 
+#define SEULEXDEVRES
 #include "DeviceResources.cuh"
-
 
 namespace kodes 
 {
@@ -87,3 +88,4 @@ public:
 
 }
 
+#endif 

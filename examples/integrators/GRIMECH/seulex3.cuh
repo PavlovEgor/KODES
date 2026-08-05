@@ -15,4 +15,4 @@
 #include <chrono> 
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
-
+#include "Integrator.cuh"

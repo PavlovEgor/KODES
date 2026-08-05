@@ -1,7 +1,7 @@
 
 template<class ODESystem>
 __device__
-bool seul (
+bool kodes::Seulex<ODESystem>::seul (
     kodes::SeulexDeviceResources* resources,
     ODESystem* ode,
     const scalar x0,
@@ -97,90 +97,28 @@ bool seul (
     return true;
 }
 
-template<class ODESystem, class DeviceResources>
-__global__
-void adaptive_solve
-(
-    ODESystem* ode,
-    DeviceResources* resources,
-    scalar deltaT,
-    label realBatchSize,
-    kodes::IntegratorControls controls
-)
+template<class ODESystem>
+__device__
+void kodes::Seulex<ODESystem>::extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar* y)
 {
-    if ((INDEXVEC(0) < realBatchSize) && (resources->vectors[INDEXVEC(0)] > 0))
+    for (label j=k-1; j>0; j--)
     {
-        resources->setDeltaT(deltaT);    
-
-        const label  maxSteps_ = controls.maxSteps;
-
-        scalar tStart   = 0;
-        scalar tEnd     = deltaT;
-        resources->currentT[INDEXVEC(0)] = tStart;
-        scalar& t = resources->currentT[INDEXVEC(0)];
-
-        bool reachedEnd = false;
-
-        for (label nStep=0; nStep<maxSteps_; ++nStep)
+        for (label i=0; i<sizeOfSystem; i++)
         {
-            // Store previous iteration dtTry
-            scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
-
-            resources->reject[INDEXVEC(0)] = false;
-
-            // Check if this is a truncated step and set dtTry to integrate to tEnd
-            if ((t + resources->deltaTTry[INDEXVEC(0)] - tEnd)*(t + resources->deltaTTry[INDEXVEC(0)] - tStart) > 0)
-            {
-                resources->last[INDEXVEC(0)] = true;
-                resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
-            }
-
-            // Integrate as far as possible up to resources->deltaTTry[INDEXVEC(0)]
-            seulex_solve(ode, resources, controls);
-
-            if ((t - tEnd)*(tEnd - tStart) >= 0)
-            {
-                if (nStep > 0 && resources->last[INDEXVEC(0)])
-                {
-                    resources->deltaTTry[INDEXVEC(0)] = dtTry0;
-                }
-
-                reachedEnd = true;
-
-                break;
-            }
-
-            resources->first[INDEXVEC(0)] = false;
-
-            if (resources->reject[INDEXVEC(0)])
-            {
-                resources->prevReject[INDEXVEC(0)] = true;
-            }
+            table[INDEXMAT(i, j-1, sizeOfSystem)] =
+                table[INDEXMAT(i, j, sizeOfSystem)] + coeff_[k][j]*(table[INDEXMAT(i, j, sizeOfSystem)] - table[INDEXMAT(i, j-1, sizeOfSystem)]);
         }
+    }
 
-        if (!reachedEnd)
-        {
-            printf
-            (
-                "Integration steps greater than maximum %d : system %d, "
-                "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps_, INDEXVEC(0), t, tEnd, resources->deltaTDid[INDEXVEC(0)]
-            );
-        }
-
-        scalar* y      = resources->vectors;
-        for (label i=0; i < resources->systemSize(); ++i)
-        {
-            y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
-        }
-
-        resources->findMinDeltaT();
+    for (label i=0; i<sizeOfSystem; i++)
+    {
+        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, sizeOfSystem)] + coeff_[k][0]*(table[INDEXMAT(i, 0, sizeOfSystem)] - y[INDEXVEC(i)]);
     }
 }
 
 template<class ODESystem>
 __device__
-void seulex_solve
+void kodes::Seulex<ODESystem>::step
 (
     ODESystem* ode,
     kodes::SeulexDeviceResources* resources,
@@ -459,22 +397,5 @@ void seulex_solve
 
 }
 
-template<class ODESystem>
-kodes::Seulex<ODESystem>::Seulex
-(
-    ODESystem* ode,
-    SeulexDeviceResources* resources,
-    label ensembleSize,
-    const IntegratorControls& controls
-)
-: Integrator<ODESystem, SeulexDeviceResources>(ode, resources, ensembleSize, controls) {}
 
-template<class ODESystem>
-void kodes::Seulex<ODESystem>::solve(scalar deltaT, label realBatchSize)
-{
-    adaptive_solve<ODESystem, kodes::SeulexDeviceResources><<<this->blocks, this->threads, this->sharedMemSize>>>
-    (
-        this->ode_, this->resources_, deltaT, realBatchSize, this->controls_
-    );
-}
 

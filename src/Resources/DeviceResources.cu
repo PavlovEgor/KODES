@@ -17,12 +17,14 @@ destructDeviceResources(kodes::DeviceResources* devRes) {
 __host__  kodes::DeviceResources* 
 kodes::DeviceResources::create(const label batchSize, const label systemSize, const label parameterSize) {
     DeviceResources* ptr;
-    cudaMalloc(&ptr, sizeof(DeviceResources));
-    constructDeviceResources<<<1, 1>>>(ptr, batchSize, systemSize, parameterSize);
-    cudaDeviceSynchronize();
+    CUDA_CHECK(cudaMalloc(&ptr, sizeof(DeviceResources)));
 
-    cudaMalloc(&ptr->vectors, systemSize * batchSize * sizeof(scalar));
-    cudaMalloc(&ptr->parameters, parameterSize * batchSize * sizeof(scalar));
+    constructDeviceResources<<<1, 1>>>(ptr, batchSize, systemSize, parameterSize);
+    CUDA_CHECK_LAST();
+    CUDA_CHECK(cudaDeviceSynchronize());
+
+    CUDA_CHECK(cudaMalloc(&ptr->vectors, systemSize * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&ptr->parameters, parameterSize * batchSize * sizeof(scalar)));
 
     return ptr;
 }
@@ -31,12 +33,14 @@ __host__  void
 kodes::DeviceResources::destroy(kodes::DeviceResources* devRes) {
     if (devRes) {
 
-        cudaFree(devRes->vectors);
-        cudaFree(devRes->parameters);
+        CUDA_CHECK(cudaFree(devRes->vectors));
+        CUDA_CHECK(cudaFree(devRes->parameters));
 
         destructDeviceResources<<<1, 1>>>(devRes);
-        cudaDeviceSynchronize();
-        cudaFree(devRes);
+        CUDA_CHECK_LAST();
+        CUDA_CHECK(cudaDeviceSynchronize());
+
+        CUDA_CHECK(cudaFree(devRes));
     }
 }
 

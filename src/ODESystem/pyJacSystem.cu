@@ -14,10 +14,17 @@ destructGPU(kodes::pyJacSystem* system) {
 
 __host__  kodes::pyJacSystem* 
 kodes::pyJacSystem::createGPU(mechanism_memory *d_mem) {
+    if (!d_mem)
+    {
+        fprintf(stderr, "pyJacSystem::createGPU error at %s:%d: d_mem is null\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
     pyJacSystem* ptr;
-    cudaMalloc(&ptr, sizeof(pyJacSystem));
+    CUDA_CHECK(cudaMalloc(&ptr, sizeof(pyJacSystem)));
     constructGPU<<<1, 1>>>(ptr, d_mem);
-    cudaDeviceSynchronize();
+    CUDA_CHECK_LAST();
+    CUDA_CHECK(cudaDeviceSynchronize());
     return ptr;
 }
 
@@ -25,8 +32,9 @@ __host__  void
 kodes::pyJacSystem::destroyGPU(kodes::pyJacSystem* system) {
     if (system) {
         destructGPU<<<1, 1>>>(system);
-        cudaDeviceSynchronize();
-        cudaFree(system);
+        CUDA_CHECK_LAST();
+        CUDA_CHECK(cudaDeviceSynchronize());
+        CUDA_CHECK(cudaFree(system));
     }
 }
 

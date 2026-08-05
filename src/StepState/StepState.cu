@@ -8,27 +8,27 @@ kodes::StepState::StepState(label batchSize)
 __host__
 void kodes::StepState::allocate(const label batchSize)
 {
-    cudaMalloc(&forward, batchSize * sizeof(bool));
-    cudaMalloc(&deltaTTry, batchSize * sizeof(scalar));
-    cudaMalloc(&deltaTDid, batchSize * sizeof(scalar));
-    cudaMalloc(&currentT, batchSize * sizeof(scalar));
-    cudaMalloc(&first, batchSize * sizeof(bool));
-    cudaMalloc(&last, batchSize * sizeof(bool));
-    cudaMalloc(&reject, batchSize * sizeof(bool));
-    cudaMalloc(&prevReject, batchSize * sizeof(bool));
+    CUDA_CHECK(cudaMalloc(&forward, batchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&deltaTTry, batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&deltaTDid, batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&currentT, batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&first, batchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&last, batchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&reject, batchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&prevReject, batchSize * sizeof(bool)));
 }
 
 __host__
 void kodes::StepState::deallocate()
 {
-    cudaFree(forward);
-    cudaFree(deltaTTry);
-    cudaFree(deltaTDid);
-    cudaFree(currentT);
-    cudaFree(first);
-    cudaFree(last);
-    cudaFree(reject);
-    cudaFree(prevReject);
+    CUDA_CHECK(cudaFree(forward));
+    CUDA_CHECK(cudaFree(deltaTTry));
+    CUDA_CHECK(cudaFree(deltaTDid));
+    CUDA_CHECK(cudaFree(currentT));
+    CUDA_CHECK(cudaFree(first));
+    CUDA_CHECK(cudaFree(last));
+    CUDA_CHECK(cudaFree(reject));
+    CUDA_CHECK(cudaFree(prevReject));
 }
 
 __device__
@@ -47,8 +47,6 @@ void kodes::StepState::setDeltaT(const scalar deltaT)
 __device__
 scalar kodes::StepState::findMinDeltaT()
 {
-    // Reduction over the whole grid, deltaTMin holds the ensemble wide minimum
-    // only once every thread of the kernel has contributed
     atomicMinScalar(&deltaTMin, deltaTTry[INDEXVEC(0)]);
 
     return deltaTMin;

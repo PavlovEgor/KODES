@@ -1,6 +1,9 @@
 #ifndef basic_types
 #define basic_types
 
+#include <cstdio>
+#include <cstdlib>
+
 typedef double scalar;
 typedef int    label;
 
@@ -14,6 +17,26 @@ typedef int    label;
 #define INDEXMAT(i, j, size) (T_ID + ((i) + (j) * (size)) * GRID_DIM)
 
 #define KODES_BLOCK_SIZE 256
+
+#define CUDA_CHECK(call)                                                          \
+    do {                                                                         \
+        cudaError_t err__ = (call);                                              \
+        if (err__ != cudaSuccess) {                                              \
+            fprintf(stderr, "CUDA error at %s:%d: %s\n", __FILE__, __LINE__,     \
+                    cudaGetErrorString(err__));                                  \
+            std::exit(EXIT_FAILURE);                                             \
+        }                                                                        \
+    } while (0)
+
+#define CUDA_CHECK_LAST()                                                         \
+    do {                                                                         \
+        cudaError_t err__ = cudaGetLastError();                                  \
+        if (err__ != cudaSuccess) {                                              \
+            fprintf(stderr, "CUDA kernel launch error at %s:%d: %s\n", __FILE__, \
+                    __LINE__, cudaGetErrorString(err__));                        \
+            std::exit(EXIT_FAILURE);                                             \
+        }                                                                        \
+    } while (0)
 
 namespace kodes
 {

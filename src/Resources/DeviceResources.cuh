@@ -1,3 +1,6 @@
+#ifndef DEVRES 
+#define DEVRES
+
 #include "Resources.cuh"
 #include "StepState.cuh"
 
@@ -39,3 +42,4 @@ public:
 
 }
 
+#endif
