@@ -27,11 +27,12 @@ int main(){
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
-    kodes::IntegratorControls controls(1e-12, 1e-4, 10000);
+    kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
 
     kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources> solver(ode_prt, res_prt, batchSize, controls);
 
     scalar xEnd = 10.0;
+    solver.setDeltaT(xEnd);
 
     for (label i=0; i < numOfBatches; i++)
     {

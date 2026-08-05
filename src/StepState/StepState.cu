@@ -44,3 +44,9 @@ void kodes::StepState::setDeltaT(const scalar deltaT)
     prevReject[INDEXVEC(0)] = false;
 }
 
+__device__
+void kodes::StepState::resetStep()
+{
+    setDeltaT(deltaTTry[INDEXVEC(0)]);
+}
+

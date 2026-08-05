@@ -19,6 +19,14 @@ void adaptive_solve
     IntegratorDeviceResources* resources,
     kodes::IntegratorControls controls
 );
+
+template<class IntegratorDeviceResources>
+__global__
+void setDeltaT
+(
+    const scalar deltaT, 
+    IntegratorDeviceResources* resources
+);
 }
 
 namespace kodes
@@ -38,8 +46,6 @@ protected:
 
     IntegratorControls controls_;
 
-    scalar* deltaTMinDevice_;
-
 public:
 
     Integrator
@@ -53,6 +59,8 @@ public:
     virtual ~Integrator();
 
     const IntegratorControls& controls() const { return controls_; }
+
+    void setDeltaT(const scalar deltaT);
 
     void solve(scalar deltaT, label realBatchSize);
 };

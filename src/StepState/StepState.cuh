@@ -42,6 +42,9 @@ namespace kodes
 
         __device__
         void setDeltaT(const scalar deltaT);
+
+        __device__
+        void resetStep();
     };
 }
 

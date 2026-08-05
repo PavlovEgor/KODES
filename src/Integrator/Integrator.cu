@@ -11,10 +11,7 @@ void kodes::adaptive_solve
 {
     if ((INDEXVEC(0) < controls.realBatchSize) && (resources->vectors[INDEXVEC(0)] > controls.Treact))
     {
-        if (controls.batchIndex == 0)
-        {
-            resources->setDeltaT(controls.deltaT);
-        }
+        resources->resetStep();
 
         const label maxSteps_ = controls.maxSteps;
 
@@ -74,6 +71,12 @@ void kodes::adaptive_solve
     }
 }
 
+template<class IntegratorDeviceResources>
+__global__
+void kodes::setDeltaT(const scalar deltaT, IntegratorDeviceResources* resources)
+{
+    resources->setDeltaT(deltaT);
+}
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::Integrator
@@ -106,15 +109,19 @@ kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::Inte
         fprintf(stderr, "Integrator ctor error at %s:%d: batchSize != threads * blocks\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
-
-    CUDA_CHECK(cudaMalloc(&deltaTMinDevice_, sizeof(scalar)));
 }
 
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::~Integrator()
 {
-    CUDA_CHECK(cudaFree(deltaTMinDevice_));
+}
+
+template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::setDeltaT(const scalar deltaT)
+{
+    kodes::setDeltaT<IntegratorDeviceResources><<<blocks, threads, sharedMemSize>>>(deltaT, resources_);
+    CUDA_CHECK_LAST();
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
@@ -122,9 +129,8 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
 {
     controls_.realBatchSize = realBatchSize;
     controls_.deltaT = deltaT;
-    ++controls_.batchIndex;
 
-    adaptive_solve<ODESystem, IntegrationMethod, IntegratorDeviceResources>
+    kodes::adaptive_solve<ODESystem, IntegrationMethod, IntegratorDeviceResources>
         <<<blocks, threads, sharedMemSize>>>
         (ode_, resources_, controls_);
     CUDA_CHECK_LAST();
