@@ -52,6 +52,14 @@ namespace kodes
 template<class ODESystem>
 class Seulex
 {
+private:
+    Seulex() = delete;
+
+    ~Seulex() = delete;
+
+    Seulex(const Seulex&) = delete;
+
+    Seulex& operator=(const Seulex&) = delete;
 
 public:
 

@@ -1,21 +1,5 @@
 
 
-template<class IntegratorDeviceResources>
-__global__
-void kodes::resetDeltaTMinKernel(IntegratorDeviceResources* resources)
-{
-    resources->setDeltaTMinToGreat();
-}
-
-
-template<class IntegratorDeviceResources>
-__global__
-void kodes::fetchDeltaTMinKernel(IntegratorDeviceResources* resources, scalar* deltaTMin)
-{
-    *deltaTMin = resources->deltaTMin;
-}
-
-
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __global__
 void kodes::adaptive_solve
@@ -86,8 +70,6 @@ void kodes::adaptive_solve
         {
             y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
         }
-
-        resources->findMinDeltaT();
     }
 }
 
@@ -132,26 +114,6 @@ template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResourc
 kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::~Integrator()
 {
     CUDA_CHECK(cudaFree(deltaTMinDevice_));
-}
-
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
-void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::resetDeltaTMin()
-{
-    resetDeltaTMinKernel<IntegratorDeviceResources><<<1, 1>>>(resources_);
-    CUDA_CHECK_LAST();
-}
-
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
-scalar kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::deltaTMin()
-{
-    scalar minDeltaT = GREAT;
-
-    fetchDeltaTMinKernel<IntegratorDeviceResources><<<1, 1>>>(resources_, deltaTMinDevice_);
-    CUDA_CHECK_LAST();
-
-    CUDA_CHECK(cudaMemcpy(&minDeltaT, deltaTMinDevice_, sizeof(scalar), cudaMemcpyDeviceToHost));
-
-    return minDeltaT;
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>

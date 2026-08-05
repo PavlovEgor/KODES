@@ -10,15 +10,6 @@
 
 namespace kodes
 {
-template<class IntegratorDeviceResources>
-__global__
-void resetDeltaTMinKernel(IntegratorDeviceResources* resources);
-
-
-template<class IntegratorDeviceResources>
-__global__
-void fetchDeltaTMinKernel(IntegratorDeviceResources* resources, scalar* deltaTMin);
-
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __global__
@@ -64,10 +55,6 @@ public:
     virtual ~Integrator();
 
     const IntegratorControls& controls() const { return controls_; }
-
-    scalar deltaTMin();
-
-    void resetDeltaTMin();
 
     void solve(scalar deltaT, label realBatchSize);
 };

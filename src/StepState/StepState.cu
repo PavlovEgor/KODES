@@ -44,10 +44,3 @@ void kodes::StepState::setDeltaT(const scalar deltaT)
     prevReject[INDEXVEC(0)] = false;
 }
 
-__device__
-scalar kodes::StepState::findMinDeltaT()
-{
-    atomicMinScalar(&deltaTMin, deltaTTry[INDEXVEC(0)]);
-
-    return deltaTMin;
-}
