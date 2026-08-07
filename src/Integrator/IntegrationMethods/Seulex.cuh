@@ -39,7 +39,7 @@ public:
     );
 
     __device__
-    static void extrapolate (const label k,const label sizeOfSystem, scalar* table, scalar* y, const scalar* coeff_, const label iMaxx_);
+    static void extrapolate (const label k,const label sizeOfSystem, scalar* __restrict__ table, scalar* __restrict__ y);
 
     __device__
     static void step

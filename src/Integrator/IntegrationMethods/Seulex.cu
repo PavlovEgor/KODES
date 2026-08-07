@@ -10,17 +10,17 @@ bool kodes::Seulex<ODESystem>::seul (
     scalar& theta
 )
 {
-    scalar* dfdy_  = resources->dfdy();
-    scalar* a_     = resources->a();
-    label* pivotIndices_ = resources->pivotIndices();
+    scalar* __restrict__ dfdy_  = resources->dfdy();
+    scalar* __restrict__ a_     = resources->a();
+    label* __restrict__ pivotIndices_ = resources->pivotIndices();
     
-    scalar* y0_    = resources->y0();
-    scalar* scale = resources->scale();
+    scalar* __restrict__ y0_    = resources->y0();
+    scalar* __restrict__ scale = resources->scale();
     
-    scalar* dy_    = resources->dy();
-    scalar* yTemp_ = resources->yTemp();
-    scalar* dydt_  = resources->dydt();
-    scalar* y      = resources->ySequence();
+    scalar* __restrict__ dy_    = resources->dy();
+    scalar* __restrict__ yTemp_ = resources->yTemp();
+    scalar* __restrict__ dydt_  = resources->dydt();
+    scalar* __restrict__ y      = resources->ySequence();
 
     const label systemSize = resources->systemSize();
 
@@ -101,7 +101,7 @@ bool kodes::Seulex<ODESystem>::seul (
 
 template<class ODESystem>
 __device__
-void kodes::Seulex<ODESystem>::extrapolate (const label k,const label systemSize, scalar* table, scalar* y, const scalar* coeff_, const label iMaxx_)
+void kodes::Seulex<ODESystem>::extrapolate (const label k, const label systemSize, scalar* __restrict__ table, scalar* __restrict__ y)
 {
     for (label j=k-1; j>0; j--)
     {
@@ -137,17 +137,17 @@ void kodes::Seulex<ODESystem>::step
     scalar theta_, logTol;
     label kTarg_;
 
-    scalar* table_ = resources->table();
-    scalar* dfdt_  = resources->dfdt();
-    scalar* dfdy_  = resources->dfdy();
+    scalar* __restrict__ table_ = resources->table();
+    scalar* __restrict__ dfdt_  = resources->dfdt();
+    scalar* __restrict__ dfdy_  = resources->dfdy();
     
-    scalar* dtOpt_ = resources->dtOpt();
-    scalar* temp_  = resources->temp();
-    scalar* y0_    = resources->y0();
-    scalar* ySequence_ = resources->ySequence();
-    scalar* scale_ = resources->scale();
+    scalar* __restrict__ dtOpt_ = resources->dtOpt();
+    scalar* __restrict__ temp_  = resources->temp();
+    scalar* __restrict__ y0_    = resources->y0();
+    scalar* __restrict__ ySequence_ = resources->ySequence();
+    scalar* __restrict__ scale_ = resources->scale();
     
-    scalar* y      = resources->vectors;
+    scalar* __restrict__ y      = resources->vectors;
     scalar& t      = resources->currentT[INDEXVEC(0)];
 
     temp_[INDEXVEC(0)] = GREAT;
@@ -221,7 +221,7 @@ void kodes::Seulex<ODESystem>::step
 
             if (k != 0)
             {
-                extrapolate(k, systemSize, table_, y, coeff_, resources->iMaxx_);
+                extrapolate(k, systemSize, table_, y);
                 scalar err = 0;
                 for (label i=0; i<systemSize; ++i)
                 {
