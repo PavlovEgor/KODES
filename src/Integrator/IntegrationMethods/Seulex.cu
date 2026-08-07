@@ -24,7 +24,7 @@ bool kodes::Seulex<ODESystem>::seul (
 
     const label systemSize = resources->systemSize();
 
-    label nSteps = resources->nSeq_[k];
+    label nSteps = nSeq_[k];
     scalar dt = dtTot/nSteps;
     
     for (label i=0; i<systemSize; i++)
@@ -149,12 +149,6 @@ void kodes::Seulex<ODESystem>::step
     
     scalar* y      = resources->vectors;
     scalar& t      = resources->currentT[INDEXVEC(0)];
-
-
-    const label kMaxx_ = resources->kMaxx_;
-    const label* nSeq_  = resources->nSeq_;
-    const scalar* gpu_   = resources->gpu_;
-    const scalar* coeff_ = resources->coeff_;
 
     temp_[INDEXVEC(0)] = GREAT;
     scalar dt = resources->deltaTTry[INDEXVEC(0)];

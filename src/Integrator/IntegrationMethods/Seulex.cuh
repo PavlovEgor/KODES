@@ -1,7 +1,3 @@
-
-
-
-
 #ifndef Seulex_H
 #define Seulex_H
 
