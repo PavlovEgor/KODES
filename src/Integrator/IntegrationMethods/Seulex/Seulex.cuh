@@ -29,6 +29,8 @@ private:
 
 public:
 
+    static const bool useAdaptiveStep = false;
+
     __device__
     static bool seul (
         SeulexDeviceResources* resources,

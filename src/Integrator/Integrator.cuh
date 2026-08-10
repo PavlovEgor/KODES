@@ -62,6 +62,14 @@ public:
 
     void setDeltaT(const scalar deltaT);
 
+    __device__
+    static void adaptiveStep
+    (
+        ODESystem* ode,
+        IntegratorDeviceResources* resources,
+        IntegratorControls controls
+    );
+
     void solve(scalar deltaT, label realBatchSize);
 };
 

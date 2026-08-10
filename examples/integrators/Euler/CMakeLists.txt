@@ -12,14 +12,14 @@ set(SRC_DIR ${ROOT_DIR}/src)
 set(CMAKE_CUDA_ARCHITECTURES "120")  # для RTX 20xx, 30xx, 40xx, 50xx
 
 # Исправлено: правильный синтаксис для путей к файлам
-add_executable( seulex5
-    seulex5.cu
+add_executable( euler1
+    euler1.cu
     ${SRC_DIR}/basic_linalg.cu
     ${SRC_DIR}/StepState/StepState.cu
-    ${SRC_DIR}/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu
+    ${SRC_DIR}/Resources/IntegratorDeviceResources/Euler/EulerDeviceResources.cu
+    ${SRC_DIR}/Resources/AdaptiveDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
     ${SRC_DIR}/Resources/HostResources.cu
-    ${SRC_DIR}/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu
     ${SRC_DIR}/ODESystem/pyJacSystem.cu
     ${SRC_DIR}/ODESystem/grimech/out/chem_utils.cu
     ${SRC_DIR}/ODESystem/grimech/out/dydt.cu
@@ -47,7 +47,7 @@ add_executable( seulex5
     )
 
 
-target_include_directories(seulex5 PRIVATE
+target_include_directories(euler1 PRIVATE
     ${SRC_DIR}
     ${SRC_DIR}/StepState
     ${SRC_DIR}/ODESystem
@@ -56,29 +56,29 @@ target_include_directories(seulex5 PRIVATE
     ${SRC_DIR}/ODESystem/grimech/out/rates
     ${SRC_DIR}/Integrator
     ${SRC_DIR}/Resources
-    ${SRC_DIR}/Resources/IntegratorDeviceResources/Seulex
+    ${SRC_DIR}/Resources/IntegratorDeviceResources/Euler
     ${SRC_DIR}/Integrator/IntegratorControls
     ${SRC_DIR}/Integrator/IntegrationMethods
-    ${SRC_DIR}/Integrator/IntegrationMethods/Seulex
+    ${SRC_DIR}/Integrator/IntegrationMethods/Euler
 )
 
 # Дополнительные рекомендации:
 
 # 1. Для CUDA-оптимизаций при работе с жёсткими ОДУ
-target_compile_options(seulex5 PRIVATE 
+target_compile_options(euler1 PRIVATE 
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
     $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
 )
 
 # 2. Если используете double precision (рекомендуется для этой задачи)
-set_target_properties(seulex5 PROPERTIES
+set_target_properties(euler1 PROPERTIES
     CUDA_ARCHITECTURES "120"
     CUDA_SEPARABLE_COMPILATION ON
 )
 
 # 3. Для отладки (опционально)
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(seulex5 PRIVATE 
+    target_compile_options(euler1 PRIVATE 
         $<$<COMPILE_LANGUAGE:CUDA>:-G -lineinfo>
     )
 endif()

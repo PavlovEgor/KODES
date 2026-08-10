@@ -52,9 +52,9 @@ void swap(T& a, T& b) {
 
 __device__ inline
 scalar normalizeError (
-    const scalar* y0, 
-    const scalar* y, 
-    const scalar* err, 
+    const scalar* __restrict__ y0, 
+    const scalar* __restrict__ y, 
+    const scalar* __restrict__ err, 
     const label sizeOfSystem, 
     const scalar absTol, 
     const scalar relTol)

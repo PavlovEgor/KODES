@@ -1,0 +1,18 @@
+#pragma once
+
+#include "basic_linalg.cuh"
+#include "EulerDeviceResources.cuh"
+#include "pyJacSystem.cuh"
+#include "HostResources.cuh"
+#include "Operator.cuh"
+#include "Euler.cuh"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <cuda/cmath>
+#include <cuda_runtime.h>
+#include <iostream>
+#include <chrono> 
+#include "gpu_memory.cuh"
+#include "mechanism.cuh"
+#include "Integrator.cuh"

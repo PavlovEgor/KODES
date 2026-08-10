@@ -11,6 +11,12 @@ public:
     scalar Treact;
     label  maxSteps;
 
+    scalar safeScale = 0.9;
+    scalar alphaIncrease = 0.2;  
+    scalar alphaDecrease = 0.25;
+    scalar minScale = 0.2; 
+    scalar maxScale = 10;
+
     label realBatchSize;
     label batchIndex;
 

@@ -397,5 +397,3 @@ void kodes::Seulex<ODESystem>::step
     resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
 }
 
-
-

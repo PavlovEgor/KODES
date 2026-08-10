@@ -753,53 +753,53 @@ home/pavlovep/KODES/src/Resources/HostResources.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.s
 .PHONY : home/pavlovep/KODES/src/Resources/HostResources.cu.s
 
-home/pavlovep/KODES/src/Resources/SeulexConstants.o: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.o
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.o: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.o
 
 # target to build an object file
-home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.o
 
-home/pavlovep/KODES/src/Resources/SeulexConstants.i: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.i
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.i: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.i
 
-home/pavlovep/KODES/src/Resources/SeulexConstants.s: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.s
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.s: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu.s
 
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.o: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.o
 
 # target to build an object file
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.o
 
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.i: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.i
 
 # target to preprocess a source file
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.i
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.i
 
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.s: home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.s
 
 # target to generate assembly for a file
-home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
-.PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.s
+home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu.s
 
 home/pavlovep/KODES/src/StepState/StepState.o: home/pavlovep/KODES/src/StepState/StepState.cu.o
 .PHONY : home/pavlovep/KODES/src/StepState/StepState.o
@@ -960,12 +960,12 @@ help:
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.s"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.o"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.i"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.s"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i"
-	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.o"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.i"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.s"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.o"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.i"
+	@echo "... home/pavlovep/KODES/src/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.s"
 	@echo "... home/pavlovep/KODES/src/StepState/StepState.o"
 	@echo "... home/pavlovep/KODES/src/StepState/StepState.i"
 	@echo "... home/pavlovep/KODES/src/StepState/StepState.s"

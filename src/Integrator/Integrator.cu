@@ -1,5 +1,4 @@
 
-
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __global__
 void kodes::adaptive_solve
@@ -33,7 +32,14 @@ void kodes::adaptive_solve
                 resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
             }
 
-            IntegrationMethod::step(ode, resources, controls);
+            if constexpr (IntegrationMethod::useAdaptiveStep)
+            {
+                Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::adaptiveStep(ode, resources, controls);
+            }
+            else
+            {
+                IntegrationMethod::step(ode, resources, controls);
+            }
 
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
@@ -76,6 +82,74 @@ __global__
 void kodes::setDeltaT(const scalar deltaT, IntegratorDeviceResources* resources)
 {
     resources->setDeltaT(deltaT);
+}
+
+template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+__device__
+void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::adaptiveStep
+(
+    ODESystem* ode,
+    IntegratorDeviceResources* resources,
+    kodes::IntegratorControls controls
+)
+{
+    const label systemSize = resources->systemSize();
+
+    const scalar safeScale_ = controls.safeScale;
+    const scalar alphaInc_ = controls.alphaIncrease;
+    const scalar alphaDec_ = controls.alphaDecrease;
+    const scalar minScale_ = controls.minScale;
+    const scalar maxScale_ = controls.maxScale;
+
+    scalar* __restrict__ yTemp_ = resources->yTemp();
+    scalar* __restrict__ dydx0_ = resources->dydx0();
+
+    scalar* __restrict__ y      = resources->vectors;
+    scalar& t      = resources->currentT[INDEXVEC(0)];
+
+    scalar dt = resources->deltaTTry[INDEXVEC(0)];
+    scalar err = 0.0;
+
+    ode->derivatives(t, resources->parameters[INDEXVEC(0)], y, dydx0_);
+
+    // Loop over solver and adjust step-size as necessary
+    // to achieve desired error
+    do
+    {
+        // Solve step and provide error estimate
+        err = IntegrationMethod::step(ode, resources, controls);
+
+        // If error is large reduce dx
+        if (err > 1)
+        {
+            scalar scale = max(safeScale_*pow(err, -alphaDec_), minScale_);
+            dt *= scale;
+
+            if (dt < SMALL)
+            {
+                printf
+                (
+                    "thread: %d stepsize underflow \n",
+                    INDEXVEC(0)
+                );
+            }
+        }
+    } while (err > 1);
+
+    // Update the state
+    t += dt;
+    copyVec(y, yTemp_, systemSize);
+
+    // If the error is small increase the step-size
+    if (err > pow(maxScale_/safeScale_, -1.0/alphaInc_))
+    {
+        scalar scale = safeScale_*pow(err, -alphaInc_);
+        resources->deltaTTry[INDEXVEC(0)] = clamp(scale, minScale_, maxScale_)*dt;
+    }
+    else
+    {
+        resources->deltaTTry[INDEXVEC(0)] = safeScale_*maxScale_*dt;
+    }
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
