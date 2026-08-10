@@ -31,21 +31,6 @@ protected:
 
 public:
 
-    static constexpr label  kMaxx_ = 12,
-                            iMaxx_ = kMaxx_ + 1;
-
-    static constexpr scalar stepFactor1_ = 0.6,
-                            stepFactor2_ = 0.93,
-                            stepFactor3_ = 0.1,
-                            stepFactor4_ = 4,
-                            stepFactor5_ = 0.5,
-                            kFactor1_ = 0.7,
-                            kFactor2_ = 0.9;
-
-    label nSeq_[iMaxx_];
-    scalar gpu_[iMaxx_];
-    scalar coeff_[iMaxx_ * iMaxx_];
-
     __device__ __host__
     SeulexDeviceResources(const label ensembleSize, const label systemSize, const label parameterSize)
         : DeviceResources(ensembleSize, systemSize, parameterSize) {}
@@ -104,21 +89,5 @@ public:
 };
 
 }
-
-#define kMaxx_ (12)
-#define iMaxx_ (kMaxx_ + 1)
-
-__constant__ scalar stepFactor1_ = 0.6;
-__constant__ scalar stepFactor2_ = 0.4;
-__constant__ scalar stepFactor3_ = 0.3;
-__constant__ scalar stepFactor4_ = 0.2;
-__constant__ scalar stepFactor5_ = 0.1;
-__constant__ scalar kFactor1_ = 0.5;
-__constant__ scalar kFactor2_ = 0.5;
-
-__constant__ label nSeq_[iMaxx_];
-__constant__ scalar gpu_[iMaxx_];
-__constant__ scalar coeff_[iMaxx_ * iMaxx_];
-
 
 #endif 

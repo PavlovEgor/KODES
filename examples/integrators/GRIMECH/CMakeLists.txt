@@ -19,6 +19,7 @@ add_executable( seulex5
     ${SRC_DIR}/Resources/SeulexDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
     ${SRC_DIR}/Resources/HostResources.cu
+    ${SRC_DIR}/Resources/SeulexConstants.cu
     ${SRC_DIR}/ODESystem/pyJacSystem.cu
     ${SRC_DIR}/ODESystem/grimech/out/chem_utils.cu
     ${SRC_DIR}/ODESystem/grimech/out/dydt.cu

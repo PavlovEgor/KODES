@@ -9,6 +9,7 @@
 #include "IntegratorControls.cuh"
 #include "ODESystem.cuh"
 #include "SeulexDeviceResources.cuh"
+#include "SeulexConstants.cuh"
 
 #pragma once
 

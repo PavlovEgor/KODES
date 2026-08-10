@@ -753,6 +753,30 @@ home/pavlovep/KODES/src/Resources/HostResources.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/HostResources.cu.s
 .PHONY : home/pavlovep/KODES/src/Resources/HostResources.cu.s
 
+home/pavlovep/KODES/src/Resources/SeulexConstants.o: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.o
+
+# target to build an object file
+home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.o
+
+home/pavlovep/KODES/src/Resources/SeulexConstants.i: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.i
+
+# target to preprocess a source file
+home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.i
+
+home/pavlovep/KODES/src/Resources/SeulexConstants.s: home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.s
+
+# target to generate assembly for a file
+home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/seulex5.dir/build.make CMakeFiles/seulex5.dir/home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
+.PHONY : home/pavlovep/KODES/src/Resources/SeulexConstants.cu.s
+
 home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o: home/pavlovep/KODES/src/Resources/SeulexDeviceResources.cu.o
 .PHONY : home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o
 
@@ -936,6 +960,9 @@ help:
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/HostResources.s"
+	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.o"
+	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.i"
+	@echo "... home/pavlovep/KODES/src/Resources/SeulexConstants.s"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.o"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.i"
 	@echo "... home/pavlovep/KODES/src/Resources/SeulexDeviceResources.s"
