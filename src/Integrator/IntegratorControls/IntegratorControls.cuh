@@ -17,10 +17,15 @@ public:
     scalar minScale = 0.2; 
     scalar maxScale = 10;
 
-    label realBatchSize;
+    label realBatchSize = 0;
     label batchIndex;
 
-    scalar deltaT;
+    // Index, within the current batch, of the system the calling thread is
+    // integrating. Set by the solve kernel on every grid-stride iteration and
+    // used to address the state space arrays (see INDEXSTATE).
+    label system = 0;
+
+    scalar deltaT = 0;
 
     __device__ __host__
     IntegratorControls

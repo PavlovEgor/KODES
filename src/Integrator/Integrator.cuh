@@ -7,6 +7,7 @@
 
 #include "basic_types.cuh"
 #include "IntegratorControls.cuh"
+#include "LaunchConfig.cuh"
 
 namespace kodes
 {
@@ -24,8 +25,32 @@ template<class IntegratorDeviceResources>
 __global__
 void setDeltaT
 (
-    const scalar deltaT, 
+    const scalar deltaT,
     IntegratorDeviceResources* resources
+);
+
+// Number of systems the device can integrate at the same time with this
+// (ODESystem, IntegrationMethod, Resources) combination. Queried from the
+// occupancy of the solve kernel, so it accounts for the registers and shared
+// memory the mechanism needs.
+template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+__host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
+
+// Full plan for a run: how many threads to launch (and therefore how many
+// scratch slots to allocate) and how many systems to ship per batch so that the
+// free VRAM is used without over-allocating the per thread temporaries.
+//
+// `extraScratchBytesPerThread` covers scratch owned outside the resources
+// object - for a pyJac mechanism that is required_mechanism_size().
+template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+__host__ LaunchConfig planLaunch
+(
+    const label ensembleSize,
+    const label systemSize,
+    const label parameterSize,
+    const size_t extraScratchBytesPerThread = 0,
+    const double memoryFraction = 0.8,
+    const label threads = KODES_BLOCK_SIZE
 );
 }
 
@@ -37,9 +62,7 @@ class Integrator
 {
 
 protected:
-    label threads;
-    label blocks;
-    size_t sharedMemSize;
+    LaunchConfig config_;
 
     ODESystem* ode_;
     IntegratorDeviceResources* resources_;
@@ -52,13 +75,15 @@ public:
     (
         ODESystem* ode,
         IntegratorDeviceResources* resources,
-        label batchSize,
+        const LaunchConfig& config,
         const IntegratorControls& controls = IntegratorControls()
     );
 
     virtual ~Integrator();
 
     const IntegratorControls& controls() const { return controls_; }
+
+    const LaunchConfig& config() const { return config_; }
 
     void setDeltaT(const scalar deltaT);
 

@@ -1,54 +1,66 @@
 #include "SeulexDeviceResources.cuh"
 #include "SeulexConstants.cuh"
 
-__global__ void 
-constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label batchSize, const label systemSize, const label parameterSize)
+__global__ void
+constructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes, const label batchSize, const label scratchSize, const label systemSize, const label parameterSize)
 {
-    new (devRes) kodes::SeulexDeviceResources(batchSize, systemSize, parameterSize);
+    new (devRes) kodes::SeulexDeviceResources(batchSize, scratchSize, systemSize, parameterSize);
 }
 
-__global__ void 
+__global__ void
 destructSeulexDeviceResources(kodes::SeulexDeviceResources* devRes) {
     devRes->~SeulexDeviceResources();
 }
 
-__host__  kodes::SeulexDeviceResources* 
-kodes::SeulexDeviceResources::create(const label batchSize, const label systemSize, const label parameterSize, kodes::SeulexDeviceResources* hostStub) {
+__host__  kodes::SeulexDeviceResources*
+kodes::SeulexDeviceResources::create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize, kodes::SeulexDeviceResources* hostStub) {
     if (!hostStub)
     {
         fprintf(stderr, "SeulexDeviceResources::create error at %s:%d: hostStub is null\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
 
+    if (batchSize <= 0 || scratchSize <= 0)
+    {
+        fprintf(stderr, "SeulexDeviceResources::create error at %s:%d: batchSize/scratchSize <= 0\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
     SeulexDeviceResources* devPtr;
-    
+
     CUDA_CHECK(cudaMalloc(&devPtr, sizeof(SeulexDeviceResources)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->vectors, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->parameters, parameterSize * batchSize * sizeof(scalar)));
+    // state space: one slot per system of the batch
+    CUDA_CHECK(cudaMalloc(&hostStub->vectors, size_t(systemSize) * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->parameters, size_t(parameterSize) * batchSize * sizeof(scalar)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->table_, 12 * systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dfdt_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dfdy_, systemSize * systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->a_, systemSize * systemSize * batchSize * sizeof(scalar)));
+    // scratch space: one slot per resident thread
+    const label orderSize = orderStorage(systemSize);
 
-    CUDA_CHECK(cudaMalloc(&hostStub->pivotIndices_, systemSize * batchSize * sizeof(label)));
+    CUDA_CHECK(cudaMalloc(&hostStub->y_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->param_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->dtOpt_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->temp_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->y0_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->ySequence_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->scale_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dy_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dydt_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->y_, systemSize * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->table_, 12 * size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dfdt_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dfdy_, size_t(systemSize) * systemSize * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->a_, size_t(systemSize) * systemSize * scratchSize * sizeof(scalar)));
+
+    CUDA_CHECK(cudaMalloc(&hostStub->pivotIndices_, size_t(systemSize) * scratchSize * sizeof(label)));
+
+    CUDA_CHECK(cudaMalloc(&hostStub->dtOpt_, size_t(orderSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->temp_, size_t(orderSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->y0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->ySequence_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->scale_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dy_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dydt_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
     hostStub->allocate(batchSize);
 
     CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice));
-    
-    constructSeulexDeviceResources<<<1, 1>>>(devPtr, batchSize, systemSize, parameterSize);
+
+    constructSeulexDeviceResources<<<1, 1>>>(devPtr, batchSize, scratchSize, systemSize, parameterSize);
 
     // The gpu time factors for the major parts of the algorithm
     const scalar gpuFunc = 2, gpuJac = 40, gpuLU = 17, gpuSolve = 1;
@@ -98,6 +110,9 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         CUDA_CHECK(cudaFree(hostStub->vectors));
         CUDA_CHECK(cudaFree(hostStub->parameters));
 
+        CUDA_CHECK(cudaFree(hostStub->y_));
+        CUDA_CHECK(cudaFree(hostStub->param_));
+
         CUDA_CHECK(cudaFree(hostStub->table_));
         CUDA_CHECK(cudaFree(hostStub->dfdt_));
         CUDA_CHECK(cudaFree(hostStub->dfdy_));
@@ -113,7 +128,6 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         CUDA_CHECK(cudaFree(hostStub->dy_));
         CUDA_CHECK(cudaFree(hostStub->yTemp_));
         CUDA_CHECK(cudaFree(hostStub->dydt_));
-        CUDA_CHECK(cudaFree(hostStub->y_));
 
         hostStub->deallocate();
 

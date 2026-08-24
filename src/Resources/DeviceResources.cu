@@ -1,25 +1,25 @@
 #include "DeviceResources.cuh"
 
-namespace kodes 
+namespace kodes
 {
 
-__global__ void 
-constructDeviceResources(kodes::DeviceResources* devRes, const label batchSize, const label systemSize, const label parameterSize)
+__global__ void
+constructDeviceResources(kodes::DeviceResources* devRes, const label batchSize, const label scratchSize, const label systemSize, const label parameterSize)
 {
-    new (devRes) kodes::DeviceResources(batchSize, systemSize, parameterSize);
+    new (devRes) kodes::DeviceResources(batchSize, scratchSize, systemSize, parameterSize);
 }
 
-__global__ void 
+__global__ void
 destructDeviceResources(kodes::DeviceResources* devRes) {
-    delete devRes;
+    devRes->~DeviceResources();
 }
 
-__host__  kodes::DeviceResources* 
-kodes::DeviceResources::create(const label batchSize, const label systemSize, const label parameterSize) {
+__host__  kodes::DeviceResources*
+kodes::DeviceResources::create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize) {
     DeviceResources* ptr;
     CUDA_CHECK(cudaMalloc(&ptr, sizeof(DeviceResources)));
 
-    constructDeviceResources<<<1, 1>>>(ptr, batchSize, systemSize, parameterSize);
+    constructDeviceResources<<<1, 1>>>(ptr, batchSize, scratchSize, systemSize, parameterSize);
     CUDA_CHECK_LAST();
     CUDA_CHECK(cudaDeviceSynchronize());
 
@@ -44,11 +44,11 @@ kodes::DeviceResources::destroy(kodes::DeviceResources* devRes) {
     }
 }
 
-__host__ __device__ void 
+__host__ __device__ void
 DeviceResources::printVectori(const label i) const
 {
     for (label j = 0; j < systemSize_; ++j) {
-        printf("%0.2f ", this->vectors[(j)]);
+        printf("%0.2f ", this->vectors[INDEXSTATE(i, j, ensembleSize_)]);
     }
     printf("\n");
 }

@@ -11,17 +11,36 @@ int main(){
 
     host_res.printVectori(0);
 
+    // How many systems the device can integrate at the same time (from the
+    // occupancy of the solve kernel for this mechanism) and how many fit in a
+    // batch. required_mechanism_size() is pyJac's own per thread scratch.
+    kodes::LaunchConfig config = kodes::planLaunch
+    <
+        kodes::pyJacSystem,
+        kodes::Seulex<kodes::pyJacSystem>,
+        kodes::SeulexDeviceResources
+    >
+    (
+        ensembleSize,
+        host_res.systemSize(),
+        host_res.parameterSize(),
+        required_mechanism_size()
+    );
+
+    config.print("seulex5");
+
+    label batchSize = config.batchSize;
+    label numOfBatches = config.numOfBatches(ensembleSize);
+
     mechanism_memory *h_mem = (mechanism_memory*)malloc(sizeof(mechanism_memory));
     mechanism_memory *d_mem = nullptr;
 
-    label batchSize = 8192;
-    label numOfBatches = (ensembleSize + batchSize - 1) / batchSize;
+    // pyJac's scratch is per thread, so it is padded to the resident threads
+    initialize_gpu_memory(config.scratchSize, &h_mem, &d_mem);
 
-    initialize_gpu_memory(batchSize, &h_mem, &d_mem);
+    kodes::SeulexDeviceResources   host_res_dev(batchSize, config.scratchSize, host_res.systemSize(), host_res.parameterSize());
 
-    kodes::SeulexDeviceResources   host_res_dev(batchSize, host_res.systemSize(), host_res.parameterSize());
-
-    kodes::SeulexDeviceResources*   res_prt = kodes::SeulexDeviceResources::create(batchSize, host_res.systemSize(), host_res.parameterSize(), &host_res_dev);
+    kodes::SeulexDeviceResources*   res_prt = kodes::SeulexDeviceResources::create(batchSize, config.scratchSize, host_res.systemSize(), host_res.parameterSize(), &host_res_dev);
 
     kodes::pyJacSystem* ode_prt = kodes::pyJacSystem::createGPU(d_mem);
 
@@ -29,7 +48,7 @@ int main(){
 
     kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
 
-    kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources> solver(ode_prt, res_prt, batchSize, controls);
+    kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources> solver(ode_prt, res_prt, config, controls);
 
     scalar xEnd = 10.0;
     solver.setDeltaT(xEnd);
@@ -45,6 +64,9 @@ int main(){
 
     kodes::pyJacSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
+
+    free_gpu_memory(&h_mem, &d_mem);
+    free(h_mem);
 
     return 0;
 }

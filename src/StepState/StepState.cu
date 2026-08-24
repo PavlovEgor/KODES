@@ -32,21 +32,21 @@ void kodes::StepState::deallocate()
 }
 
 __device__
-void kodes::StepState::setDeltaT(const scalar deltaT)
+void kodes::StepState::setDeltaT(const scalar deltaT, const label system)
 {
-    forward[INDEXVEC(0)] = deltaT > 0.0 ? true : false;
-    deltaTTry[INDEXVEC(0)] = deltaT;
-    deltaTDid[INDEXVEC(0)] = 0.0;
-    currentT[INDEXVEC(0)] = 0.0;
-    first[INDEXVEC(0)] = true;
-    last[INDEXVEC(0)]  = false;
-    reject[INDEXVEC(0)]= false;
-    prevReject[INDEXVEC(0)] = false;
+    forward[system] = deltaT > 0.0 ? true : false;
+    deltaTTry[system] = deltaT;
+    deltaTDid[system] = 0.0;
+    currentT[system] = 0.0;
+    first[system] = true;
+    last[system]  = false;
+    reject[system]= false;
+    prevReject[system] = false;
 }
 
 __device__
-void kodes::StepState::resetStep()
+void kodes::StepState::resetStep(const label system)
 {
-    setDeltaT(deltaTTry[INDEXVEC(0)]);
+    setDeltaT(deltaTTry[system], system);
 }
 

@@ -7,9 +7,12 @@
 
 namespace kodes
 {
+    // Per system step bookkeeping. Lives in state space: every array holds one
+    // entry per system of the batch and is indexed by the system index, not by
+    // the thread index (a thread integrates several systems in turn).
     class StepState
     {
-    public: 
+    public:
 
         label batchSize_;
 
@@ -40,11 +43,17 @@ namespace kodes
         __host__
         void deallocate();
 
-        __device__
-        void setDeltaT(const scalar deltaT);
+        // Device memory occupied by one system
+        __host__ static size_t bytesPerSystem()
+        {
+            return 3 * sizeof(scalar) + 5 * sizeof(bool);
+        }
 
         __device__
-        void resetStep();
+        void setDeltaT(const scalar deltaT, const label system);
+
+        __device__
+        void resetStep(const label system);
     };
 }
 

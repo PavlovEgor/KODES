@@ -1,19 +1,19 @@
 #include "AdaptiveDeviceResources.cuh"
 
 
-__global__ void 
-constructAdaptiveDeviceResources(kodes::AdaptiveDeviceResources* devRes, const label batchSize, const label systemSize, const label parameterSize)
+__global__ void
+constructAdaptiveDeviceResources(kodes::AdaptiveDeviceResources* devRes, const label batchSize, const label scratchSize, const label systemSize, const label parameterSize)
 {
-    new (devRes) kodes::AdaptiveDeviceResources(batchSize, systemSize, parameterSize);
+    new (devRes) kodes::AdaptiveDeviceResources(batchSize, scratchSize, systemSize, parameterSize);
 }
 
-__global__ void 
+__global__ void
 destructAdaptiveDeviceResources(kodes::AdaptiveDeviceResources* devRes) {
     devRes->~AdaptiveDeviceResources();
 }
 
-__host__  kodes::AdaptiveDeviceResources* 
-kodes::AdaptiveDeviceResources::create(const label batchSize, const label systemSize, const label parameterSize, kodes::AdaptiveDeviceResources* hostStub) {
+__host__  kodes::AdaptiveDeviceResources*
+kodes::AdaptiveDeviceResources::create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize, kodes::AdaptiveDeviceResources* hostStub) {
     if (!hostStub)
     {
         fprintf(stderr, "AdaptiveDeviceResources::create error at %s:%d: hostStub is null\n", __FILE__, __LINE__);
@@ -21,24 +21,27 @@ kodes::AdaptiveDeviceResources::create(const label batchSize, const label system
     }
 
     AdaptiveDeviceResources* devPtr;
-    
+
     CUDA_CHECK(cudaMalloc(&devPtr, sizeof(AdaptiveDeviceResources)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->vectors, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->parameters, parameterSize * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->vectors, size_t(systemSize) * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->parameters, size_t(parameterSize) * batchSize * sizeof(scalar)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dydx0_, systemSize * batchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->y_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->param_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
+
+    CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dydx0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
     hostStub->allocate(batchSize);
 
     CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(AdaptiveDeviceResources), cudaMemcpyHostToDevice));
-    
-    constructAdaptiveDeviceResources<<<1, 1>>>(devPtr, batchSize, systemSize, parameterSize);
+
+    constructAdaptiveDeviceResources<<<1, 1>>>(devPtr, batchSize, scratchSize, systemSize, parameterSize);
 
     CUDA_CHECK_LAST();
     CUDA_CHECK(cudaDeviceSynchronize());
-    
+
     return devPtr;
 }
 
@@ -49,8 +52,11 @@ kodes::AdaptiveDeviceResources::destroy(kodes::AdaptiveDeviceResources* devRes, 
         CUDA_CHECK(cudaFree(hostStub->vectors));
         CUDA_CHECK(cudaFree(hostStub->parameters));
 
-        CUDA_CHECK(cudaFree(devRes->yTemp_));
-        CUDA_CHECK(cudaFree(devRes->dydx0_));
+        CUDA_CHECK(cudaFree(hostStub->y_));
+        CUDA_CHECK(cudaFree(hostStub->param_));
+
+        CUDA_CHECK(cudaFree(hostStub->yTemp_));
+        CUDA_CHECK(cudaFree(hostStub->dydx0_));
 
         hostStub->deallocate();
 

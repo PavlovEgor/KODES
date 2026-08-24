@@ -10,6 +10,9 @@ bool kodes::Seulex<ODESystem>::seul (
     scalar& theta
 )
 {
+    // Everything used here lives in scratch space (one slot per resident
+    // thread), so INDEXVEC/INDEXMAT address it directly - which is also the
+    // layout the ODE system's derivatives()/jacobian() expect.
     scalar* __restrict__ dfdy_  = resources->dfdy();
     scalar* __restrict__ a_     = resources->a();
     label* __restrict__ pivotIndices_ = resources->pivotIndices();
@@ -39,7 +42,7 @@ bool kodes::Seulex<ODESystem>::seul (
     LUDecompose(a_, pivotIndices_, systemSize);
 
     scalar xnew = x0 + dt;
-    ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], y0_, dy_);
+    ode->derivatives(xnew, resources->param()[INDEXVEC(0)], y0_, dy_);
 
     LUBacksubstitute(a_, pivotIndices_, dy_, systemSize);
 
@@ -60,7 +63,7 @@ bool kodes::Seulex<ODESystem>::seul (
             }
             dy1 = sqrt(dy1);
 
-            ode->derivatives(x0 + dt, resources->parameters[INDEXVEC(0)], yTemp_, dydt_);
+            ode->derivatives(x0 + dt, resources->param()[INDEXVEC(0)], yTemp_, dydt_);
             for (label i=0; i<systemSize; i++)
             {
                 dy_[INDEXVEC(i)] = dydt_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dt;
@@ -90,7 +93,7 @@ bool kodes::Seulex<ODESystem>::seul (
             }
         }
 
-        ode->derivatives(xnew, resources->parameters[INDEXVEC(0)], yTemp_, dy_);
+        ode->derivatives(xnew, resources->param()[INDEXVEC(0)], yTemp_, dy_);
         LUBacksubstitute(a_, pivotIndices_, dy_, systemSize);
     }
 
@@ -147,20 +150,25 @@ void kodes::Seulex<ODESystem>::step
     scalar* __restrict__ ySequence_ = resources->ySequence();
     scalar* __restrict__ scale_ = resources->scale();
     
-    scalar* __restrict__ y      = resources->vectors;
-    scalar& t      = resources->currentT[INDEXVEC(0)];
+    // Working state of the system this thread currently handles: scratch
+    // space, addressed with INDEXVEC. The step bookkeeping on the other hand
+    // is stored per system of the batch, addressed with `system`.
+    const label system = controls.system;
+
+    scalar* __restrict__ y      = resources->y();
+    scalar& t      = resources->currentT[system];
 
     temp_[INDEXVEC(0)] = GREAT;
-    scalar dt = resources->deltaTTry[INDEXVEC(0)];
+    scalar dt = resources->deltaTTry[system];
     copyVec(y0_, y, systemSize);
     dtOpt_[INDEXVEC(0)] = fabs(0.1*dt);
 
-    if (resources->first[INDEXVEC(0)] || resources->prevReject[INDEXVEC(0)])
+    if (resources->first[system] || resources->prevReject[system])
     {
         theta_ = 2*jacRedo_;
     }
 
-    if (resources->first[INDEXVEC(0)] )
+    if (resources->first[system] )
     {
         logTol = -log10(relTol_ + absTol_)*0.6 + 0.5;
         kTarg_ = max(1, min(kMaxx_ - 1, label(logTol)));
@@ -175,7 +183,7 @@ void kodes::Seulex<ODESystem>::step
 
     if (theta_ > jacRedo_)
     {
-        ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+        ode->jacobian(t, resources->param()[INDEXVEC(0)], y, dfdt_, dfdy_);
         jacUpdated = true;
     }
 
@@ -183,11 +191,11 @@ void kodes::Seulex<ODESystem>::step
     scalar dtNew = fabs(dt);
     bool firstk = true;
 
-    while (firstk || resources->reject[INDEXVEC(0)])
+    while (firstk || resources->reject[system])
     {
-        dt = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+        dt = resources->forward[system] ? dtNew : -dtNew;
         firstk = false;
-        resources->reject[INDEXVEC(0)] = false;
+        resources->reject[system] = false;
 
         if (fabs(dt) <= fabs(t) * sqr(SMALL))
         {
@@ -202,7 +210,7 @@ void kodes::Seulex<ODESystem>::step
 
             if (!success)
             {
-                resources->reject[INDEXVEC(0)] = true;
+                resources->reject[system] = true;
                 dtNew = fabs(dt)*stepFactor5_;
                 break;
             }
@@ -231,7 +239,7 @@ void kodes::Seulex<ODESystem>::step
                 err = sqrt(err/systemSize);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
-                    resources->reject[INDEXVEC(0)] = true;
+                    resources->reject[system] = true;
                     dtNew = fabs(dt)*stepFactor5_;
                     break;
                 }
@@ -251,7 +259,7 @@ void kodes::Seulex<ODESystem>::step
                 dtOpt_[INDEXVEC(k)] = fabs(dt*fac);
                 temp_[INDEXVEC(k)] = gpu_[k]/dtOpt_[INDEXVEC(k)];
 
-                if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
+                if ((resources->first[system] || resources->last[system]) && err <= 1)
                 {
                     break;
                 }
@@ -259,8 +267,8 @@ void kodes::Seulex<ODESystem>::step
                 if
                 (
                     k == kTarg_ - 1
-                && !resources->prevReject[INDEXVEC(0)]
-                && !resources->first[INDEXVEC(0)] && !resources->last[INDEXVEC(0)]
+                && !resources->prevReject[system]
+                && !resources->first[system] && !resources->last[system]
                 )
                 {
                     if (err <= 1)
@@ -269,7 +277,7 @@ void kodes::Seulex<ODESystem>::step
                     }
                     else if (err > nSeq_[kTarg_]*nSeq_[kTarg_ + 1]*4)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
+                        resources->reject[system] = true;
                         kTarg_ = k;
                         if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                         {
@@ -288,7 +296,7 @@ void kodes::Seulex<ODESystem>::step
                     }
                     else if (err > nSeq_[k + 1]*2)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
+                        resources->reject[system] = true;
                         if (kTarg_>1 && temp_[INDEXVEC(k-1)] < kFactor1_*temp_[INDEXVEC(k)])
                         {
                             kTarg_--;
@@ -302,7 +310,7 @@ void kodes::Seulex<ODESystem>::step
                 {
                     if (err > 1)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
+                        resources->reject[system] = true;
                         if
                         (
                             kTarg_ > 1
@@ -317,16 +325,16 @@ void kodes::Seulex<ODESystem>::step
                 }
             }
         } 
-        if (resources->reject[INDEXVEC(0)])
+        if (resources->reject[system])
         {
-            resources->prevReject[INDEXVEC(0)] = true;
+            resources->prevReject[system] = true;
             if (!jacUpdated)
             {
                 theta_ = 2*jacRedo_;
 
                 if (theta_ > jacRedo_ && !jacUpdated)
                 {
-                    ode->jacobian(t, resources->parameters[INDEXVEC(0)], y, dfdt_, dfdy_);
+                    ode->jacobian(t, resources->param()[INDEXVEC(0)], y, dfdt_, dfdy_);
                     jacUpdated = true;
                 }
             }
@@ -335,7 +343,7 @@ void kodes::Seulex<ODESystem>::step
     }
     jacUpdated = false;
     
-    resources->deltaTDid[INDEXVEC(0)] = dt;
+    resources->deltaTDid[system] = dt;
     t += dt;
 
     label kopt;
@@ -368,11 +376,11 @@ void kodes::Seulex<ODESystem>::step
         }
     }
     
-    if (resources->prevReject[INDEXVEC(0)])
+    if (resources->prevReject[system])
     {
         kTarg_ = min(kopt, k);
         dtNew = min(fabs(dt), dtOpt_[INDEXVEC(kTarg_)]);
-        resources->prevReject[INDEXVEC(0)] = false;
+        resources->prevReject[system] = false;
     }
     else
     {
@@ -394,6 +402,6 @@ void kodes::Seulex<ODESystem>::step
         kTarg_ = kopt;
     }
     
-    resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+    resources->deltaTTry[system] = resources->forward[system] ? dtNew : -dtNew;
 }
 
