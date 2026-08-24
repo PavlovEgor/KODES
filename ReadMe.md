@@ -168,20 +168,36 @@ A warp runs at the speed of its stiffest member: if one lane needs 400 steps and
 similar cells next to each other, and since a thread picks up positions `T_ID`, `T_ID + GRID_DIM`,
 … the 32 lanes of a warp always get 32 *neighbours* of that order.
 
-- **`kodes::Balancer`** (`Balancer/Balancer.cuh`/`.cu`) — abstract base holding the two arrays the
-  ordering needs, both `batchSize` long: `keys` (`scalar`) and `order` (`label`, the traversal
-  order, i.e. `order[i]` is the system to integrate at position `i`). Subclasses implement the one
-  abstract function, `__device__ scalar key(resources, system)`. `balance()` runs the whole pass:
-  a kernel fills `keys` through that virtual call, the keys come back to the host, `quickSortByKey`
-  sorts them carrying `order` along, and the resulting order is uploaded. The batch itself is never
-  moved — only the order in which the kernel walks it — so `Operator` is untouched.
-- **`kodes::quickSortByKey`** (`Balancer/Balancer.cuh`) — in-place quicksort of the keys applying
-  every move to the index array as well. Iterative (explicit stack, always recursing into the
-  smaller half so the stack stays under `log2(size)` entries), median-of-three pivot, Hoare
-  partitioning so that runs of equal keys — a cold field is mostly one temperature — stay O(n log n),
-  and a final insertion pass for short ranges. Host side: it costs one round trip of the keys per
-  batch (~80 ms per million systems). If it ever shows up in a profile, `thrust::sort_by_key` is a
-  drop-in replacement inside `balance()`.
+- **`kodes::Balancer`** (`Balancer/Balancer.cuh`/`.cu`) — abstract base holding the arrays the
+  ordering needs, all `batchSize` long: `keys` (`scalar`), `bucket` (`label`, which bucket each
+  system fell in) and `order` (`label`, the traversal order, i.e. `order[i]` is the system to
+  integrate at position `i`), plus the `KODES_BALANCER_BUCKETS`-long histogram. Subclasses
+  implement the one abstract function, `__device__ scalar key(resources, system)`. The batch itself
+  is never moved — only the order in which the kernel walks it — so `Operator` is untouched.
+- **`balance()`** — a bucket sort, four kernels on the default stream, no host round trip and no
+  synchronisation before the solve that follows:
+  1. `computeKeys` fills `keys` through the virtual call and reduces their range. A warp folds its
+     own lanes with `__shfl_down_sync` first, so the range costs one pair of atomics per warp; and
+     since there is no `atomicMin` for `double`, the keys are compared as the unsigned integers of
+     the same order (`orderedBits`).
+  2. `fillBuckets` puts each system in one of `KODES_BALANCER_BUCKETS` equal bins of that range and
+     counts how many land in each.
+  3. `scanBuckets` turns the histogram into the offset each bucket starts at — one block walking it
+     in chunks, carrying the running total in shared memory. A few thousand entries do not repay a
+     second kernel for the block offsets.
+  4. `scatterOrder` gives every system the next free slot of its bucket, with one `atomicAdd`.
+
+  The order is therefore exact *between* buckets and arbitrary *inside* one: the batch comes out
+  sorted to within one bucket width, and a bucket is ~60 systems, two warps, for a batch of a
+  million. That is the whole point of the balancing, so a comparison sort would only buy a
+  distinction the warps cannot feel. It also means the pass is O(n) rather than O(n log n) and that
+  the keys never leave the device — the previous host quicksort cost a round trip of ~80 ms per
+  million systems. What it does *not* give is a reproducible permutation: which system of a bucket
+  lands in which of its slots depends on the order the atomics happen to fire in. The results do
+  not depend on it, since the systems are integrated independently.
+
+  A key that is not a number — a system that has already blown up — is kept out of the range and
+  binned first, where it cannot drag a warp of healthy cells along.
 - **`kodes::TemperatureBalancer`** (`Balancer/TemperatureBalancer.cuh`/`.cu`) — the simplest useful
   key: component 0 of the state vector, the temperature. Built with the same `create`/`destroy`
   host-stub pair as the device resources. Unlike those, its stub can also be asked for with

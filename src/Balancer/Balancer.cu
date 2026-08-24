@@ -1,45 +1,181 @@
 #include "Balancer.cuh"
 
-namespace kodes
-{
+// Lanes of a warp. Fixed on every NVIDIA device, and needed as a constant so
+// the shuffle reduction below can be unrolled.
+#define KODES_WARP 32
 
 __global__ void
-computeKeys(Balancer* balancer, const DeviceResources* resources, const label realBatchSize)
+kodes::computeKeys
+(
+    kodes::Balancer* balancer,
+    const kodes::DeviceResources* resources,
+    const label realBatchSize
+)
 {
     scalar* __restrict__ keys = balancer->keys();
 
+    unsigned long long lo = 0xFFFFFFFFFFFFFFFFULL;
+    unsigned long long hi = 0ULL;
+
     for (label system = T_ID; system < realBatchSize; system += GRID_DIM)
     {
-        keys[system] = balancer->key(resources, system);
+        const scalar key = balancer->key(resources, system);
+        keys[system] = key;
+
+        // a system that has already blown up must not stretch the range over
+        // which the finite keys are then binned
+        if (isfinite(key))
+        {
+            const unsigned long long bits = orderedBits(key);
+
+            if (bits < lo) lo = bits;
+            if (bits > hi) hi = bits;
+        }
+    }
+
+    // The range is a reduction over the whole grid. Folding each warp first
+    // leaves one pair of atomics per warp instead of one per thread. Every
+    // thread reaches this - the loop above is the only branch - so the full
+    // mask is the right one.
+    for (label offset = KODES_WARP/2; offset > 0; offset /= 2)
+    {
+        const unsigned long long otherLo = __shfl_down_sync(0xFFFFFFFFu, lo, offset);
+        const unsigned long long otherHi = __shfl_down_sync(0xFFFFFFFFu, hi, offset);
+
+        if (otherLo < lo) lo = otherLo;
+        if (otherHi > hi) hi = otherHi;
+    }
+
+    if ((threadIdx.x & (KODES_WARP - 1)) == 0)
+    {
+        atomicMin(balancer->keyMin(), lo);
+        atomicMax(balancer->keyMax(), hi);
     }
 }
 
+__global__ void
+kodes::fillBuckets(kodes::Balancer* balancer, const label realBatchSize)
+{
+    const scalar* __restrict__ keys = balancer->keys();
+    label* __restrict__ bucket = balancer->bucket();
+    label* __restrict__ counts = balancer->counts();
+
+    const scalar lo = unorderedBits(*balancer->keyMin());
+    const scalar hi = unorderedBits(*balancer->keyMax());
+
+    const label numOfBuckets = balancer->numOfBuckets();
+
+    for (label system = T_ID; system < realBatchSize; system += GRID_DIM)
+    {
+        const label bin = binOf(keys[system], lo, hi, numOfBuckets);
+
+        bucket[system] = bin;
+
+        atomicAdd(&counts[bin], 1);
+    }
+}
+
+__global__ void
+kodes::scanBuckets(kodes::Balancer* balancer)
+{
+    __shared__ label buffer[2][KODES_BALANCER_SCAN_BLOCK];
+    __shared__ label running;
+
+    const label* __restrict__ counts = balancer->counts();
+    label* __restrict__ cursor = balancer->cursor();
+
+    const label numOfBuckets = balancer->numOfBuckets();
+    const label lane = label(threadIdx.x);
+
+    if (lane == 0)
+    {
+        running = 0;
+    }
+    __syncthreads();
+
+    // One block walks the histogram in chunks, scanning each chunk in shared
+    // memory and carrying the total of the previous ones in `running`. The
+    // histogram is a few thousand entries, so a single block is plenty and a
+    // second kernel for the block offsets would cost more than it saves.
+    for (label base = 0; base < numOfBuckets; base += KODES_BALANCER_SCAN_BLOCK)
+    {
+        const label bucket = base + lane;
+        const label count = bucket < numOfBuckets ? counts[bucket] : 0;
+
+        label source = 0;
+
+        buffer[0][lane] = count;
+        __syncthreads();
+
+        for (label offset = 1; offset < KODES_BALANCER_SCAN_BLOCK; offset *= 2)
+        {
+            buffer[1 - source][lane] =
+                buffer[source][lane] + (lane >= offset ? buffer[source][lane - offset] : 0);
+
+            source = 1 - source;
+            __syncthreads();
+        }
+
+        // inclusive scan of the chunk, minus this bucket's own count, is where
+        // the bucket starts
+        if (bucket < numOfBuckets)
+        {
+            cursor[bucket] = running + buffer[source][lane] - count;
+        }
+
+        const label chunkTotal = buffer[source][KODES_BALANCER_SCAN_BLOCK - 1];
+        __syncthreads();
+
+        if (lane == 0)
+        {
+            running += chunkTotal;
+        }
+        __syncthreads();
+    }
+}
+
+__global__ void
+kodes::scatterOrder(kodes::Balancer* balancer, const label realBatchSize)
+{
+    const label* __restrict__ bucket = balancer->bucket();
+    label* __restrict__ cursor = balancer->cursor();
+    label* __restrict__ order = balancer->order();
+
+    for (label system = T_ID; system < realBatchSize; system += GRID_DIM)
+    {
+        // whichever thread gets there first takes the next slot of the bucket:
+        // the systems of one bucket come out in an arbitrary order, which is
+        // exactly the order the balancing does not care about
+        order[atomicAdd(&cursor[bucket[system]], 1)] = system;
+    }
 }
 
 __host__ void
 kodes::Balancer::allocate(const label batchSize)
 {
     CUDA_CHECK(cudaMalloc(&keys_, size_t(batchSize) * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&bucket_, size_t(batchSize) * sizeof(label)));
     CUDA_CHECK(cudaMalloc(&order_, size_t(batchSize) * sizeof(label)));
 
-    hostKeys_ = (scalar*)malloc(size_t(batchSize) * sizeof(scalar));
-    hostOrder_ = (label*)malloc(size_t(batchSize) * sizeof(label));
+    CUDA_CHECK(cudaMalloc(&keyMin_, sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMalloc(&keyMax_, sizeof(unsigned long long)));
 
-    if (!hostKeys_ || !hostOrder_)
-    {
-        fprintf(stderr, "Balancer::allocate error at %s:%d: out of host memory\n", __FILE__, __LINE__);
-        std::exit(EXIT_FAILURE);
-    }
+    CUDA_CHECK(cudaMalloc(&counts_, size_t(numOfBuckets_) * sizeof(label)));
+    CUDA_CHECK(cudaMalloc(&cursor_, size_t(numOfBuckets_) * sizeof(label)));
 }
 
 __host__ void
 kodes::Balancer::deallocate()
 {
     CUDA_CHECK(cudaFree(keys_));
+    CUDA_CHECK(cudaFree(bucket_));
     CUDA_CHECK(cudaFree(order_));
 
-    free(hostKeys_);
-    free(hostOrder_);
+    CUDA_CHECK(cudaFree(keyMin_));
+    CUDA_CHECK(cudaFree(keyMax_));
+
+    CUDA_CHECK(cudaFree(counts_));
+    CUDA_CHECK(cudaFree(cursor_));
 }
 
 __host__ void
@@ -57,130 +193,26 @@ kodes::Balancer::balance
         std::exit(EXIT_FAILURE);
     }
 
-    kodes::computeKeys<<<config.blocks, config.threads>>>(devBalancer, resources, realBatchSize);
+    // an empty histogram, and a range that any finite key widens
+    CUDA_CHECK(cudaMemset(counts_, 0, size_t(numOfBuckets_) * sizeof(label)));
+    CUDA_CHECK(cudaMemset(keyMin_, 0xFF, sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMemset(keyMax_, 0x00, sizeof(unsigned long long)));
+
+    // The key kernel is given the same grid and the same dynamic shared memory
+    // as the solve: a key is free to evaluate the right hand side, and a
+    // generated mechanism reads both the thread indexing and that shared block.
+    kodes::computeKeys<<<config.blocks, config.threads, config.sharedMemSize>>>
+    (
+        devBalancer, resources, realBatchSize
+    );
     CUDA_CHECK_LAST();
 
-    CUDA_CHECK(cudaMemcpy(hostKeys_, keys_, size_t(realBatchSize) * sizeof(scalar), cudaMemcpyDeviceToHost));
+    kodes::fillBuckets<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
+    CUDA_CHECK_LAST();
 
-    for (label i = 0; i < realBatchSize; ++i)
-    {
-        hostOrder_[i] = i;
-    }
+    kodes::scanBuckets<<<1, KODES_BALANCER_SCAN_BLOCK>>>(devBalancer);
+    CUDA_CHECK_LAST();
 
-    quickSortByKey(hostKeys_, hostOrder_, realBatchSize);
-
-    CUDA_CHECK(cudaMemcpy(order_, hostOrder_, size_t(realBatchSize) * sizeof(label), cudaMemcpyHostToDevice));
-}
-
-namespace
-{
-
-inline void swapItems(scalar* keys, label* order, const label i, const label j)
-{
-    const scalar key = keys[i];
-    keys[i] = keys[j];
-    keys[j] = key;
-
-    const label index = order[i];
-    order[i] = order[j];
-    order[j] = index;
-}
-
-// Ranges shorter than this are left to the final insertion pass
-const label insertionLimit = 16;
-
-// Sorting a range never needs more than log2(size) entries, because the larger
-// half is pushed and the smaller one is looped on
-const label maxDepth = 64;
-
-}
-
-__host__ void
-kodes::quickSortByKey(scalar* keys, label* order, const label size)
-{
-    if (size < 2)
-    {
-        return;
-    }
-
-    struct Range { label first; label last; };
-
-    Range stack[maxDepth];
-    label top = 0;
-
-    stack[top++] = {0, size - 1};
-
-    while (top > 0)
-    {
-        Range range = stack[--top];
-
-        while (range.last - range.first >= insertionLimit)
-        {
-            // median of the first, middle and last element, parked at `first`
-            const label middle = range.first + (range.last - range.first) / 2;
-
-            if (keys[middle] < keys[range.first])   swapItems(keys, order, middle, range.first);
-            if (keys[range.last] < keys[range.first]) swapItems(keys, order, range.last, range.first);
-            if (keys[range.last] < keys[middle])    swapItems(keys, order, range.last, middle);
-
-            swapItems(keys, order, middle, range.first);
-
-            const scalar pivot = keys[range.first];
-
-            label i = range.first - 1;
-            label j = range.last + 1;
-
-            while (true)
-            {
-                do { ++i; } while (keys[i] < pivot);
-                do { --j; } while (keys[j] > pivot);
-
-                if (i >= j)
-                {
-                    break;
-                }
-
-                swapItems(keys, order, i, j);
-            }
-
-            // recurse into the smaller half, loop on the larger one
-            if (j - range.first < range.last - j)
-            {
-                if (top == maxDepth)
-                {
-                    fprintf(stderr, "kodes::quickSortByKey error at %s:%d: stack overflow\n", __FILE__, __LINE__);
-                    std::exit(EXIT_FAILURE);
-                }
-                stack[top++] = {label(j + 1), range.last};
-                range.last = j;
-            }
-            else
-            {
-                if (top == maxDepth)
-                {
-                    fprintf(stderr, "kodes::quickSortByKey error at %s:%d: stack overflow\n", __FILE__, __LINE__);
-                    std::exit(EXIT_FAILURE);
-                }
-                stack[top++] = {range.first, j};
-                range.first = label(j + 1);
-            }
-        }
-
-        for (label i = range.first + 1; i <= range.last; ++i)
-        {
-            const scalar key = keys[i];
-            const label index = order[i];
-
-            label j = i - 1;
-            while (j >= range.first && keys[j] > key)
-            {
-                keys[j + 1] = keys[j];
-                order[j + 1] = order[j];
-                --j;
-            }
-
-            keys[j + 1] = key;
-            order[j + 1] = index;
-        }
-    }
+    kodes::scatterOrder<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
+    CUDA_CHECK_LAST();
 }
