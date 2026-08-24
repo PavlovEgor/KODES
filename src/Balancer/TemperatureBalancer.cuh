@@ -34,6 +34,17 @@ public:
 
     __host__ static void
     destroy(TemperatureBalancer* devBalancer, TemperatureBalancer* hostStub);
+
+    // The host side stub, built here rather than by the caller. key() only
+    // exists on the device, so the vtable of a host object can only be emitted
+    // by a compiler that invents a host stub for a device-only virtual - nvcc
+    // does, nvc++ -cuda does not. Keeping the construction in this .cu leaves
+    // callers holding nothing but a pointer, which needs no vtable at all.
+    __host__ static TemperatureBalancer*
+    createStub(const label batchSize);
+
+    __host__ static void
+    destroyStub(TemperatureBalancer* hostStub);
 };
 
 }

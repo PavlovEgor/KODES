@@ -184,7 +184,13 @@ similar cells next to each other, and since a thread picks up positions `T_ID`, 
   drop-in replacement inside `balance()`.
 - **`kodes::TemperatureBalancer`** (`Balancer/TemperatureBalancer.cuh`/`.cu`) — the simplest useful
   key: component 0 of the state vector, the temperature. Built with the same `create`/`destroy`
-  host-stub pair as the device resources.
+  host-stub pair as the device resources. Unlike those, its stub can also be asked for with
+  `createStub`/`destroyStub` instead of being declared by the caller: `key()` is a *device-only
+  virtual*, so the vtable of a host side object can only be emitted by a compiler that invents a
+  host stub for one — nvcc does, `nvc++ -cuda` does not and stops with an undefined
+  `TemperatureBalancer::key` in the vtable. A caller compiled by anything other than nvcc (an
+  OpenFOAM chemistry model, say) must therefore hold the stub as a pointer and let this `.cu`
+  construct it. The same goes for any other `Balancer` subclass.
 
 `Integrator::setBalancer(balancer, hostStub)` points the resources at the balancer's order array
 and rebalances at the start of every `solve()`, since a new batch brings new cells. Without it the
