@@ -39,13 +39,13 @@ kodes::pyJacSystem::destroyGPU(kodes::pyJacSystem* system) {
 }
 
 __device__
-void kodes::pyJacSystem::derivatives(const scalar x, const scalar pressure, const scalar* y, scalar* dydx) const
+void kodes::pyJacSystem::derivatives(const scalar t, const scalar pressure, const scalar* y, scalar* dy) const
 {
-    dydt(x, pressure, y, dydx, device_memory);
+    dydt(t, pressure, y, dy, device_memory);
 }
 
 __device__
-void kodes::pyJacSystem::jacobian(const scalar x, const scalar pressure, const scalar* y, scalar* dfdx, scalar* dfdy) const
+void kodes::pyJacSystem::jacobian(const scalar t, const scalar pressure, const scalar* y, scalar* dfdt, scalar* dfdy) const
 {
-    eval_jacob(x, pressure, y, dfdy, device_memory);
+    eval_jacob(t, pressure, y, dfdy, device_memory);
 }

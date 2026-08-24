@@ -18,16 +18,16 @@ public:
     __device__ __host__
     virtual ~ODESystem() = default;
 
-    __device__ virtual void 
+    __device__ virtual void
     derivatives
     (
-        const scalar x, const scalar param, const scalar* y, scalar* dydx
+        const scalar t, const scalar parameter, const scalar* y, scalar* dydt
     ) const = 0;
 
-    __device__ virtual void 
+    __device__ virtual void
     jacobian
     (
-        const scalar x, const scalar param, const scalar* y, scalar* dfdx, scalar* dfdy
+        const scalar t, const scalar parameter, const scalar* y, scalar* dfdt, scalar* dfdy
     ) const = 0;
 };
 }

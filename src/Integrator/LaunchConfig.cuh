@@ -4,39 +4,100 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <string.h>
 
 #include "basic_types.cuh"
+
+// Fraction of the free VRAM a plan may claim, whatever share is asked for
+#define KODES_MEMORY_HEADROOM 0.8
 
 namespace kodes
 {
 
+// Named shares of the device. Extend this table to add a name.
+struct DeviceShare
+{
+    const char* name;
+    scalar      value;
+};
+
+inline constexpr DeviceShare deviceShares[] =
+{
+    {"best", 1.0},   // everything the device offers
+    {"half", 0.5}    // one half of it, to leave room for another process
+};
+
 // How a solve is mapped onto the device.
 //
-//  * `threads`*`blocks` == `scratchSize` threads are launched. That is the
-//    number of systems being integrated *at the same time*, so it is also the
-//    number of slots allocated for the per thread temporaries (Jacobian, LU
-//    matrix, ...), whose size grows as systemSize^2.
+//  * threads*blocks == scratchSize threads are launched. That is the number of
+//    systems integrated at the same time, hence the number of slots allocated
+//    for the per thread temporaries, whose size grows as systemSize^2.
 //
-//  * `batchSize` systems are shipped to the device per cudaMemcpy round. Only
-//    the state (systemSize + parameterSize scalars plus the step bookkeeping)
+//  * batchSize systems are shipped to the device per transfer. Only the state
 //    is stored per system, so the batch can be far larger than scratchSize and
-//    fill the free VRAM, which keeps the number of host<->device transfers low.
+//    fill the free VRAM, which keeps the number of transfers low.
 //
-// Each thread walks its share of the batch in a grid-stride loop.
-struct LaunchConfig
+// Constructed either from a share name ("best", "half", ... see deviceShares)
+// or from explicit sizes; planLaunch() turns it into the final plan.
+class LaunchConfig
 {
-    label  threads       = KODES_BLOCK_SIZE; // threads per block
-    label  blocks        = 0;                // blocks launched
-    label  scratchSize   = 0;                // threads*blocks resident slots
-    label  batchSize     = 0;                // systems per host->device batch
-    size_t sharedMemSize = 0;                // dynamic shared memory per block
+public:
 
-    label numOfBatches(const label ensembleSize) const
+    label  threads       = KODES_BLOCK_SIZE;
+    label  blocks        = 0;
+    label  scratchSize   = 0;
+    label  batchSize     = 0;
+    size_t sharedMemSize = 0;
+
+    __host__ explicit LaunchConfig
+    (
+        const char* shareName = "best",
+        const label threadsPerBlock = KODES_BLOCK_SIZE
+    )
+    :
+    threads(threadsPerBlock)
+    {
+        for (const DeviceShare& share : deviceShares)
+        {
+            if (strcmp(share.name, shareName) == 0)
+            {
+                share_ = share.value;
+                return;
+            }
+        }
+
+        fprintf(stderr, "LaunchConfig error at %s:%d: unknown share \"%s\", known are", __FILE__, __LINE__, shareName);
+        for (const DeviceShare& share : deviceShares)
+        {
+            fprintf(stderr, " \"%s\"", share.name);
+        }
+        fprintf(stderr, "\n");
+        std::exit(EXIT_FAILURE);
+    }
+
+    __host__ LaunchConfig
+    (
+        const label concurrentSystems,
+        const label systemsPerBatch,
+        const label threadsPerBlock = KODES_BLOCK_SIZE
+    )
+    :
+    threads(threadsPerBlock),
+    scratchSize(concurrentSystems),
+    batchSize(systemsPerBatch),
+    byHand_(true)
+    {}
+
+    __host__ scalar share() const { return share_; }
+
+    __host__ bool setByHand() const { return byHand_; }
+
+    __host__ label numOfBatches(const label ensembleSize) const
     {
         return (ensembleSize + batchSize - 1) / batchSize;
     }
 
-    void print(const char* name = "kodes") const
+    __host__ void print(const char* name = "kodes") const
     {
         printf
         (
@@ -45,25 +106,31 @@ struct LaunchConfig
             name, blocks, threads, scratchSize, batchSize, sharedMemSize
         );
     }
+
+private:
+
+    scalar share_ = 1.0;
+    bool   byHand_ = false;
 };
 
-// Turn the device's numbers into a plan. Kept free of any CUDA call so that it
-// can be exercised on its own; planLaunch() below feeds it the queried values.
+// Turn the device's numbers into a plan. Free of any CUDA call, so it can be
+// exercised on its own; planLaunch() feeds it the queried values.
 //
 //  concurrentThreads - threads the device can keep resident at the same time
 //  scratchPerThread  - device memory one resident thread needs for temporaries
 //  statePerSystem    - device memory one system of the batch needs
-//  budget            - device memory this run may use
 __host__ inline LaunchConfig makePlan
 (
+    const LaunchConfig& request,
     const label ensembleSize,
-    const label threads,
     const label concurrentThreads,
     const size_t scratchPerThread,
     const size_t statePerSystem,
-    const size_t budget
+    const size_t freeMemory
 )
 {
+    const label threads = request.threads;
+
     if (ensembleSize <= 0 || threads <= 0 || concurrentThreads < threads
      || scratchPerThread == 0 || statePerSystem == 0)
     {
@@ -71,12 +138,53 @@ __host__ inline LaunchConfig makePlan
         std::exit(EXIT_FAILURE);
     }
 
-    LaunchConfig config;
-    config.threads = threads;
+    LaunchConfig config = request;
     config.sharedMemSize = sharedMemorySize(threads);
 
+    if (request.setByHand())
+    {
+        if (config.scratchSize <= 0 || config.scratchSize % threads != 0 || config.batchSize <= 0)
+        {
+            fprintf
+            (
+                stderr,
+                "kodes::makePlan error at %s:%d: scratchSize %d must be a positive "
+                "multiple of %d threads and batchSize %d must be positive\n",
+                __FILE__, __LINE__, config.scratchSize, threads, config.batchSize
+            );
+            std::exit(EXIT_FAILURE);
+        }
+
+        const size_t asked = size_t(config.scratchSize) * scratchPerThread
+                           + size_t(config.batchSize) * statePerSystem;
+
+        if (asked > freeMemory)
+        {
+            fprintf
+            (
+                stderr,
+                "kodes::makePlan error at %s:%d: %zu MiB asked for by hand, only "
+                "%zu MiB free on the device\n",
+                __FILE__, __LINE__, asked >> 20, freeMemory >> 20
+            );
+            std::exit(EXIT_FAILURE);
+        }
+
+        config.blocks = config.scratchSize / threads;
+
+        return config;
+    }
+
+    const size_t budget = size_t(double(freeMemory) * KODES_MEMORY_HEADROOM * request.share());
+
+    label concurrency = label(concurrentThreads * request.share());
+    if (concurrency < threads)
+    {
+        concurrency = threads;
+    }
+
     // never launch more threads than there are systems to integrate
-    label blocks = concurrentThreads / threads;
+    label blocks = concurrency / threads;
     const label neededBlocks = (ensembleSize + threads - 1) / threads;
     if (blocks > neededBlocks)
     {
@@ -112,9 +220,9 @@ __host__ inline LaunchConfig makePlan
 
     const size_t scratchBytes = size_t(config.scratchSize) * scratchPerThread;
 
-    // Spend what is left of the budget on the batch: the state of one system is
-    // tiny, so this is what fills the VRAM and keeps the transfer count low.
-    // By construction this is at least scratchSize systems.
+    // Whatever is left of the budget goes to the batch: the state of one system
+    // is tiny, so this is what fills the VRAM and keeps the transfer count low.
+    // By construction it is at least scratchSize systems.
     size_t batchSize = (budget - scratchBytes) / statePerSystem;
 
     if (batchSize > size_t(ensembleSize))
@@ -135,9 +243,9 @@ __host__ inline LaunchConfig makePlan
     return config;
 }
 
-// Number of threads of `kernel` that the current device can keep resident at
-// the same time. Depends on the kernel's register and shared memory footprint,
-// hence on the mechanism being integrated, so it has to be queried at run time.
+// Threads of `kernel` the current device can keep resident at the same time.
+// Depends on the kernel's register and shared memory footprint, hence on the
+// mechanism being integrated, so it has to be queried at run time.
 __host__ inline label maxConcurrentThreads
 (
     const void* kernel,

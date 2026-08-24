@@ -26,11 +26,11 @@ kodes::EulerDeviceResources::create(const label batchSize, const label scratchSi
     CUDA_CHECK(cudaMalloc(&hostStub->vectors, size_t(systemSize) * batchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->parameters, size_t(parameterSize) * batchSize * sizeof(scalar)));
 
-    CUDA_CHECK(cudaMalloc(&hostStub->y_, size_t(systemSize) * scratchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->param_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->currentVector_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->currentParameters_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
 
     CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, size_t(systemSize) * scratchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->dydx0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->dydt0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->err_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
     hostStub->allocate(batchSize);
@@ -52,11 +52,11 @@ kodes::EulerDeviceResources::destroy(kodes::EulerDeviceResources* devRes, kodes:
         CUDA_CHECK(cudaFree(hostStub->vectors));
         CUDA_CHECK(cudaFree(hostStub->parameters));
 
-        CUDA_CHECK(cudaFree(hostStub->y_));
-        CUDA_CHECK(cudaFree(hostStub->param_));
+        CUDA_CHECK(cudaFree(hostStub->currentVector_));
+        CUDA_CHECK(cudaFree(hostStub->currentParameters_));
 
         CUDA_CHECK(cudaFree(hostStub->yTemp_));
-        CUDA_CHECK(cudaFree(hostStub->dydx0_));
+        CUDA_CHECK(cudaFree(hostStub->dydt0_));
         CUDA_CHECK(cudaFree(hostStub->err_));
 
         hostStub->deallocate();

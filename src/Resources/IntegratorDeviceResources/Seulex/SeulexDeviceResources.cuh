@@ -8,9 +8,7 @@
 namespace kodes
 {
 
-// All the arrays added here are scratch space: they are sized with
-// scratchSize (the number of threads that can be resident at the same time),
-// *not* with the batch size, and are indexed with INDEXVEC/INDEXMAT.
+// Everything added here is scratch space, sized with scratchSize
 class SeulexDeviceResources
     :
     public DeviceResources

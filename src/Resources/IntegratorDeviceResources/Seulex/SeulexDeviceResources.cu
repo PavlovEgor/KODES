@@ -30,15 +30,13 @@ kodes::SeulexDeviceResources::create(const label batchSize, const label scratchS
 
     CUDA_CHECK(cudaMalloc(&devPtr, sizeof(SeulexDeviceResources)));
 
-    // state space: one slot per system of the batch
     CUDA_CHECK(cudaMalloc(&hostStub->vectors, size_t(systemSize) * batchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->parameters, size_t(parameterSize) * batchSize * sizeof(scalar)));
 
-    // scratch space: one slot per resident thread
     const label orderSize = orderStorage(systemSize);
 
-    CUDA_CHECK(cudaMalloc(&hostStub->y_, size_t(systemSize) * scratchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&hostStub->param_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->currentVector_, size_t(systemSize) * scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&hostStub->currentParameters_, size_t(parameterSize) * scratchSize * sizeof(scalar)));
 
     CUDA_CHECK(cudaMalloc(&hostStub->table_, 12 * size_t(systemSize) * scratchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->dfdt_, size_t(systemSize) * scratchSize * sizeof(scalar)));
@@ -110,8 +108,8 @@ kodes::SeulexDeviceResources::destroy(kodes::SeulexDeviceResources* devRes, kode
         CUDA_CHECK(cudaFree(hostStub->vectors));
         CUDA_CHECK(cudaFree(hostStub->parameters));
 
-        CUDA_CHECK(cudaFree(hostStub->y_));
-        CUDA_CHECK(cudaFree(hostStub->param_));
+        CUDA_CHECK(cudaFree(hostStub->currentVector_));
+        CUDA_CHECK(cudaFree(hostStub->currentParameters_));
 
         CUDA_CHECK(cudaFree(hostStub->table_));
         CUDA_CHECK(cudaFree(hostStub->dfdt_));

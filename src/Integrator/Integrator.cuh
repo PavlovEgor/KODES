@@ -29,19 +29,17 @@ void setDeltaT
     IntegratorDeviceResources* resources
 );
 
-// Number of systems the device can integrate at the same time with this
-// (ODESystem, IntegrationMethod, Resources) combination. Queried from the
-// occupancy of the solve kernel, so it accounts for the registers and shared
-// memory the mechanism needs.
+// Systems the device can integrate at the same time with this (ODESystem,
+// IntegrationMethod, Resources) combination, from the occupancy of the solve
+// kernel - so it accounts for the registers and shared memory the mechanism
+// needs.
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
 
-// Full plan for a run: how many threads to launch (and therefore how many
-// scratch slots to allocate) and how many systems to ship per batch so that the
-// free VRAM is used without over-allocating the per thread temporaries.
-//
-// `extraScratchBytesPerThread` covers scratch owned outside the resources
-// object - for a pyJac mechanism that is required_mechanism_size().
+// Resolve `request` against this device: how many threads to launch (and
+// therefore how many scratch slots to allocate) and how many systems to ship
+// per batch. `extraScratchBytesPerThread` covers scratch owned outside the
+// resources object - for a pyJac mechanism that is required_mechanism_size().
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __host__ LaunchConfig planLaunch
 (
@@ -49,8 +47,7 @@ __host__ LaunchConfig planLaunch
     const label systemSize,
     const label parameterSize,
     const size_t extraScratchBytesPerThread = 0,
-    const double memoryFraction = 0.8,
-    const label threads = KODES_BLOCK_SIZE
+    const LaunchConfig& request = LaunchConfig()
 );
 }
 

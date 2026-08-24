@@ -7,9 +7,8 @@
 
 namespace kodes
 {
-    // Per system step bookkeeping. Lives in state space: every array holds one
-    // entry per system of the batch and is indexed by the system index, not by
-    // the thread index (a thread integrates several systems in turn).
+    // Per system step bookkeeping, in state space: one entry per system of
+    // the batch, indexed by the system and not by the thread
     class StepState
     {
     public:

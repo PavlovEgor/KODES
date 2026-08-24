@@ -1,8 +1,7 @@
 
-// Every thread owns one scratch slot and walks its share of the batch in a
-// grid-stride loop: system `system` is pulled into the slot, integrated there
-// (all temporaries are addressed with INDEXVEC/INDEXMAT, i.e. relative to the
-// slot) and written back.
+// Each thread owns one scratch slot and walks its share of the batch in a
+// grid-stride loop, pulling one system into the slot, integrating it there and
+// writing it back.
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __global__
 void kodes::adaptive_solve
@@ -17,13 +16,11 @@ void kodes::adaptive_solve
     const label systemSize = resources->systemSize();
     const label maxSteps_ = ctrl.maxSteps;
 
-    scalar* __restrict__ y = resources->y();
+    scalar* __restrict__ y = resources->currentVector();
 
     for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
     {
-        // Not reacting: leave the state of this system untouched, without
-        // even pulling it into scratch
-        if (resources->state(system, 0) <= ctrl.Treact)
+        if (resources->vectorComponent(system, 0) <= ctrl.Treact)
         {
             continue;
         }
@@ -128,15 +125,15 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
     const scalar maxScale_ = controls.maxScale;
 
     scalar* __restrict__ yTemp_ = resources->yTemp();
-    scalar* __restrict__ dydx0_ = resources->dydx0();
+    scalar* __restrict__ dydt0_ = resources->dydt0();
 
-    scalar* __restrict__ y      = resources->y();
+    scalar* __restrict__ y      = resources->currentVector();
     scalar& t      = resources->currentT[system];
 
     scalar dt = resources->deltaTTry[system];
     scalar err = 0.0;
 
-    ode->derivatives(t, resources->param()[INDEXVEC(0)], y, dydx0_);
+    ode->derivatives(t, resources->currentParameter(0), y, dydt0_);
 
     // Loop over solver and adjust step-size as necessary
     // to achieve desired error
@@ -145,7 +142,7 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
         // Solve step and provide error estimate
         err = IntegrationMethod::step(ode, resources, controls);
 
-        // If error is large reduce dx and retry the step
+        // If error is large reduce dt and retry the step
         if (err > 1)
         {
             scalar scale = max(safeScale_*pow(err, -alphaDec_), minScale_);
@@ -197,11 +194,10 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const label systemSize,
     const label parameterSize,
     const size_t extraScratchBytesPerThread,
-    const double memoryFraction,
-    const label threads
+    const LaunchConfig& request
 )
 {
-    if (ensembleSize <= 0 || systemSize <= 0 || threads <= 0)
+    if (ensembleSize <= 0 || systemSize <= 0 || request.threads <= 0)
     {
         fprintf(stderr, "kodes::planLaunch error at %s:%d: non-positive ensembleSize/systemSize/threads\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
@@ -209,14 +205,13 @@ __host__ kodes::LaunchConfig kodes::planLaunch
 
     return makePlan
     (
+        request,
         ensembleSize,
-        threads,
-        // how many threads can actually run at the same time
-        maxConcurrentSystems<ODESystem, IntegrationMethod, IntegratorDeviceResources>(threads),
+        maxConcurrentSystems<ODESystem, IntegrationMethod, IntegratorDeviceResources>(request.threads),
         IntegratorDeviceResources::scratchBytesPerThread(systemSize, parameterSize)
       + extraScratchBytesPerThread,
         IntegratorDeviceResources::stateBytesPerSystem(systemSize, parameterSize),
-        size_t(double(freeDeviceMemory()) * memoryFraction)
+        freeDeviceMemory()
     );
 }
 

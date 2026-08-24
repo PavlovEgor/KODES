@@ -43,10 +43,11 @@ arbitrarily large ensemble run on a fixed amount of VRAM:
   pure waste, and for a large mechanism they are what actually exhausts the VRAM.
 
 A thread walks its share of the batch in a grid-stride loop: `DeviceResources::loadSystem(system)`
-pulls one system into the thread's scratch slot, the integrator works entirely in scratch space
-(which is also the layout pyJac's generated `dydt`/`eval_jacob` expect — its `INDEX` macro is
-identical to `INDEXVEC`), and `storeSystem(system)` writes the result back. Both directions stay
-coalesced: consecutive threads touch consecutive systems.
+pulls one system into the thread's scratch slot (`currentVector`/`currentParameters`), the
+integrator works entirely in scratch space (which is also the layout pyJac's generated
+`dydt`/`eval_jacob` expect — its `INDEX` macro is identical to `INDEXVEC`), and
+`storeSystem(system)` writes the result back. Both directions stay coalesced: consecutive threads
+touch consecutive systems.
 
 The grid size — and hence the number of scratch slots — is determined at run time from the
 occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` below.
@@ -62,15 +63,29 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 - **`kodes::LaunchConfig`** (`Integrator/LaunchConfig.cuh`) — how a solve is mapped onto the
   device: `threads`×`blocks` (`== scratchSize`, the systems integrated *simultaneously*, and thus
   the number of scratch slots to allocate), `batchSize` (systems per host↔device transfer) and the
-  dynamic shared memory per block. `maxConcurrentThreads()` answers the first half by asking
+  dynamic shared memory per block. It is *requested* by one of two constructors and *resolved* by
+  `planLaunch`:
+
+  ```cpp
+  kodes::LaunchConfig("best")            // everything the device offers (default)
+  kodes::LaunchConfig("half")            // one half of it, to share the GPU with another process
+  kodes::LaunchConfig("best", 128)       // ... with 128 threads per block
+  kodes::LaunchConfig(8192, 1000000)     // concurrent systems and batch size set by hand
+  ```
+
+  The named shares live in the `kodes::deviceShares` table — add a line there to add a name. A
+  share scales both the concurrency and the memory budget; sizes set by hand are only checked
+  against the free VRAM. `KODES_MEMORY_HEADROOM` caps how much of the free VRAM any plan may claim.
+- **`kodes::planLaunch<ODESystem, IntegrationMethod, Resources>(...)`** (declared in
+  `Integrator.cuh`) — resolves a request against the device. `maxConcurrentThreads()` asks
   `cudaOccupancyMaxActiveBlocksPerMultiprocessor` how many blocks of the *actual solve kernel* fit
   on an SM — that depends on the kernel's register and shared-memory footprint and therefore on the
-  mechanism, so it can only be known at run time. `kodes::planLaunch<ODESystem, IntegrationMethod,
-  Resources>(...)` (declared in `Integrator.cuh`) combines it with `cudaMemGetInfo` and the
-  resource class's `scratchBytesPerThread`/`stateBytesPerSystem` into a complete plan: shrink the
-  grid until the temporaries fit, then spend the rest of the memory budget on the batch. Pass any
-  scratch owned outside the resources object (for a pyJac mechanism, `required_mechanism_size()`)
-  as `extraScratchBytesPerThread`, and pad that allocation to `scratchSize`, not to `batchSize`.
+  mechanism, so it can only be known at run time. That, `cudaMemGetInfo` and the resource class's
+  `scratchBytesPerThread`/`stateBytesPerSystem` go into `makePlan()`, which holds all the sizing
+  arithmetic and no CUDA call: cap the grid at what the budget affords, then spend the rest on the
+  batch. Pass any scratch owned outside the resources object (for a pyJac mechanism,
+  `required_mechanism_size()`) as `extraScratchBytesPerThread`, and pad that allocation to
+  `scratchSize`, not to `batchSize`.
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
   the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
@@ -121,8 +136,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   them directly — no ownership transfer, so callers can point straight at their own arrays).
 - **`kodes::DeviceResources`** (`Resources/DeviceResources.cuh`/`.cu`) — the device-side
   counterpart, and the place where the two address spaces meet. State space: `vectors` and
-  `parameters`, sized `systemSize*batchSize` and `parameterSize*batchSize`. Scratch space: `y_` and
-  `param_`, the working copy of the system a thread currently integrates, sized with `scratchSize`.
+  `parameters`, sized `systemSize*batchSize` and `parameterSize*batchSize`. Scratch space:
+  `currentVector()` and `currentParameter(i)`, the working copy of the system a thread is
+  integrating right now, sized with `scratchSize`.
   `loadSystem(system)`/`storeSystem(system)` move one system between the two. Built via a
   `create`/`destroy` pair (the object itself lives in device memory, constructed by a placement-new
   kernel). The static `stateBytesPerSystem`/`scratchBytesPerThread` report the per-system and
@@ -172,7 +188,8 @@ kodes::LaunchConfig config = kodes::planLaunch
 >
 (
     ensembleSize, host_res.systemSize(), host_res.parameterSize(),
-    required_mechanism_size()          // pyJac's own per-thread scratch
+    required_mechanism_size(),         // pyJac's own per-thread scratch
+    kodes::LaunchConfig("best")        // or "half", or explicit sizes
 );
 
 // 2) per-thread scratch is padded to the resident threads, not to the batch
@@ -188,12 +205,12 @@ auto* res = kodes::SeulexDeviceResources::create
 kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources>
     solver(ode, res, config, controls);
 
-solver.setDeltaT(xEnd);
+solver.setDeltaT(tEnd);
 
 for (label i = 0; i < config.numOfBatches(ensembleSize); i++)
 {
     op.cpyHostToDevice(i);
-    solver.solve(xEnd, op.getRealBatchSize(i));
+    solver.solve(tEnd, op.getRealBatchSize(i));
     op.cpyDeviceToHost(i);
 }
 ```

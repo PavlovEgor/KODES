@@ -4,15 +4,12 @@ __device__
 bool kodes::Seulex<ODESystem>::seul (
     kodes::SeulexDeviceResources* resources,
     ODESystem* ode,
-    const scalar x0,
+    const scalar t0,
     const scalar dtTot,
     const label k,
     scalar& theta
 )
 {
-    // Everything used here lives in scratch space (one slot per resident
-    // thread), so INDEXVEC/INDEXMAT address it directly - which is also the
-    // layout the ODE system's derivatives()/jacobian() expect.
     scalar* __restrict__ dfdy_  = resources->dfdy();
     scalar* __restrict__ a_     = resources->a();
     label* __restrict__ pivotIndices_ = resources->pivotIndices();
@@ -41,8 +38,8 @@ bool kodes::Seulex<ODESystem>::seul (
     
     LUDecompose(a_, pivotIndices_, systemSize);
 
-    scalar xnew = x0 + dt;
-    ode->derivatives(xnew, resources->param()[INDEXVEC(0)], y0_, dy_);
+    scalar tNew = t0 + dt;
+    ode->derivatives(tNew, resources->currentParameter(0), y0_, dy_);
 
     LUBacksubstitute(a_, pivotIndices_, dy_, systemSize);
 
@@ -52,7 +49,7 @@ bool kodes::Seulex<ODESystem>::seul (
     {
         sumVec(yTemp_, yTemp_, dy_, systemSize);
 
-        xnew += dt;
+        tNew += dt;
 
         if (nn == 1 && k<=1)
         {
@@ -63,7 +60,7 @@ bool kodes::Seulex<ODESystem>::seul (
             }
             dy1 = sqrt(dy1);
 
-            ode->derivatives(x0 + dt, resources->param()[INDEXVEC(0)], yTemp_, dydt_);
+            ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp_, dydt_);
             for (label i=0; i<systemSize; i++)
             {
                 dy_[INDEXVEC(i)] = dydt_[INDEXVEC(i)] - dy_[INDEXVEC(i)]/dt;
@@ -93,7 +90,7 @@ bool kodes::Seulex<ODESystem>::seul (
             }
         }
 
-        ode->derivatives(xnew, resources->param()[INDEXVEC(0)], yTemp_, dy_);
+        ode->derivatives(tNew, resources->currentParameter(0), yTemp_, dy_);
         LUBacksubstitute(a_, pivotIndices_, dy_, systemSize);
     }
 
@@ -150,12 +147,9 @@ void kodes::Seulex<ODESystem>::step
     scalar* __restrict__ ySequence_ = resources->ySequence();
     scalar* __restrict__ scale_ = resources->scale();
     
-    // Working state of the system this thread currently handles: scratch
-    // space, addressed with INDEXVEC. The step bookkeeping on the other hand
-    // is stored per system of the batch, addressed with `system`.
     const label system = controls.system;
 
-    scalar* __restrict__ y      = resources->y();
+    scalar* __restrict__ y      = resources->currentVector();
     scalar& t      = resources->currentT[system];
 
     temp_[INDEXVEC(0)] = GREAT;
@@ -183,7 +177,7 @@ void kodes::Seulex<ODESystem>::step
 
     if (theta_ > jacRedo_)
     {
-        ode->jacobian(t, resources->param()[INDEXVEC(0)], y, dfdt_, dfdy_);
+        ode->jacobian(t, resources->currentParameter(0), y, dfdt_, dfdy_);
         jacUpdated = true;
     }
 
@@ -334,7 +328,7 @@ void kodes::Seulex<ODESystem>::step
 
                 if (theta_ > jacRedo_ && !jacUpdated)
                 {
-                    ode->jacobian(t, resources->param()[INDEXVEC(0)], y, dfdt_, dfdy_);
+                    ode->jacobian(t, resources->currentParameter(0), y, dfdt_, dfdy_);
                     jacUpdated = true;
                 }
             }

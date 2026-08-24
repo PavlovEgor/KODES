@@ -34,16 +34,16 @@ public:
         return ptr;
     }
 
-    __device__ void 
+    __device__ void
     derivatives
     (
-        const scalar x, const scalar rho, const scalar* y, scalar* dydx
+        const scalar t, const scalar pressure, const scalar* y, scalar* dy
     ) const override;
 
-    __device__ void 
+    __device__ void
     jacobian
     (
-        const scalar x, const scalar rho, const scalar* y, scalar* dfdx, scalar* dfdy
+        const scalar t, const scalar pressure, const scalar* y, scalar* dfdt, scalar* dfdy
     ) const override;
 };
 }

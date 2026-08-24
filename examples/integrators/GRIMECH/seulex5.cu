@@ -11,9 +11,9 @@ int main(){
 
     host_res.printVectori(0);
 
-    // How many systems the device can integrate at the same time (from the
-    // occupancy of the solve kernel for this mechanism) and how many fit in a
-    // batch. required_mechanism_size() is pyJac's own per thread scratch.
+    // kodes::LaunchConfig("best")  - take the whole device
+    // kodes::LaunchConfig("half")  - take one half of it
+    // kodes::LaunchConfig(8192, 1000000) - concurrent systems and batch by hand
     kodes::LaunchConfig config = kodes::planLaunch
     <
         kodes::pyJacSystem,
@@ -24,7 +24,8 @@ int main(){
         ensembleSize,
         host_res.systemSize(),
         host_res.parameterSize(),
-        required_mechanism_size()
+        required_mechanism_size(),
+        kodes::LaunchConfig("best")
     );
 
     config.print("seulex5");
@@ -50,13 +51,13 @@ int main(){
 
     kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources> solver(ode_prt, res_prt, config, controls);
 
-    scalar xEnd = 10.0;
-    solver.setDeltaT(xEnd);
+    scalar tEnd = 10.0;
+    solver.setDeltaT(tEnd);
 
     for (label i=0; i < numOfBatches; i++)
     {
         op.cpyHostToDevice(i);
-        solver.solve(xEnd, op.getRealBatchSize(i));
+        solver.solve(tEnd, op.getRealBatchSize(i));
         op.cpyDeviceToHost(i);
     }
 

@@ -14,18 +14,17 @@ scalar kodes::Euler<ODESystem>::step
     const scalar relTol_ = controls.relTol;
 
     scalar* __restrict__ yTemp_ = resources->yTemp();
-    scalar* __restrict__ dydx0_ = resources->dydx0();
+    scalar* __restrict__ dydt0_ = resources->dydt0();
     scalar* __restrict__ err_  = resources->err();
 
-    scalar* __restrict__ y      = resources->y();
+    scalar* __restrict__ y      = resources->currentVector();
     scalar dt = resources->deltaTTry[system];
 
-    // The trial state goes to yTemp_, the accepted one is copied back into y by
-    // Integrator::adaptiveStep, so that a rejected step can simply be retried
-    // from the untouched y
+    // the trial state goes to yTemp_, adaptiveStep copies the accepted one back
+    // into y, so a rejected step is retried from an untouched y
     for(label i=0; i<systemSize; ++i)
     {
-        err_[INDEXVEC(i)] = dt*dydx0_[INDEXVEC(i)];
+        err_[INDEXVEC(i)] = dt*dydt0_[INDEXVEC(i)];
         yTemp_[INDEXVEC(i)] = y[INDEXVEC(i)] + err_[INDEXVEC(i)];
     }
 

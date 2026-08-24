@@ -21,7 +21,8 @@ int main(){
         ensembleSize,
         host_res.systemSize(),
         host_res.parameterSize(),
-        required_mechanism_size()
+        required_mechanism_size(),
+        kodes::LaunchConfig("best")
     );
 
     config.print("euler1");
@@ -47,13 +48,13 @@ int main(){
 
     kodes::Integrator<kodes::pyJacSystem, kodes::Euler<kodes::pyJacSystem>, kodes::EulerDeviceResources> solver(ode_prt, res_prt, config, controls);
 
-    scalar xEnd = 10.0;
+    scalar tEnd = 10.0;
     solver.setDeltaT(1e-10);
 
     for (label i=0; i < numOfBatches; i++)
     {
         op.cpyHostToDevice(i);
-        solver.solve(xEnd, op.getRealBatchSize(i));
+        solver.solve(tEnd, op.getRealBatchSize(i));
         op.cpyDeviceToHost(i);
     }
 

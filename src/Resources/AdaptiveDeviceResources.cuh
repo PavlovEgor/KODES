@@ -11,9 +11,8 @@ class AdaptiveDeviceResources
     public DeviceResources
 {
 protected:
-    // scratch space: one slot per resident thread
     scalar* yTemp_;
-    scalar* dydx0_;
+    scalar* dydt0_;
 
 public:
 
@@ -46,7 +45,7 @@ public:
     yTemp() { return yTemp_; }
 
     __device__ scalar* __restrict__
-    dydx0() { return dydx0_; }
+    dydt0() { return dydt0_; }
 
 };
 
