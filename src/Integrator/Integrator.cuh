@@ -8,6 +8,7 @@
 #include "basic_types.cuh"
 #include "IntegratorControls.cuh"
 #include "LaunchConfig.cuh"
+#include "Balancer.cuh"
 
 namespace kodes
 {
@@ -29,6 +30,14 @@ void setDeltaT
     IntegratorDeviceResources* resources
 );
 
+template<class IntegratorDeviceResources>
+__global__
+void useOrder
+(
+    IntegratorDeviceResources* resources,
+    const label* order
+);
+
 // Systems the device can integrate at the same time with this (ODESystem,
 // IntegrationMethod, Resources) combination, from the occupancy of the solve
 // kernel - so it accounts for the registers and shared memory the mechanism
@@ -38,8 +47,9 @@ __host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
 
 // Resolve `request` against this device: how many threads to launch (and
 // therefore how many scratch slots to allocate) and how many systems to ship
-// per batch. `extraScratchBytesPerThread` covers scratch owned outside the
-// resources object - for a pyJac mechanism that is required_mechanism_size().
+// per batch. The two extras cover memory owned outside the resources object -
+// for a pyJac mechanism required_mechanism_size() per thread, and for a sorted
+// batch Balancer::bytesPerSystem() per system.
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __host__ LaunchConfig planLaunch
 (
@@ -47,6 +57,7 @@ __host__ LaunchConfig planLaunch
     const label systemSize,
     const label parameterSize,
     const size_t extraScratchBytesPerThread = 0,
+    const size_t extraStateBytesPerSystem = 0,
     const LaunchConfig& request = LaunchConfig()
 );
 }
@@ -63,6 +74,9 @@ protected:
 
     ODESystem* ode_;
     IntegratorDeviceResources* resources_;
+
+    Balancer* balancer_;
+    Balancer* balancerStub_;
 
     IntegratorControls controls_;
 
@@ -81,6 +95,10 @@ public:
     const IntegratorControls& controls() const { return controls_; }
 
     const LaunchConfig& config() const { return config_; }
+
+    // Integrate the batch in the order this balancer sorts it into. Rebalanced
+    // at the start of every solve(); pass nulls to go back to the copy order.
+    void setBalancer(Balancer* balancer, Balancer* hostStub);
 
     void setDeltaT(const scalar deltaT);
 

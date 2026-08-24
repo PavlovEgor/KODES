@@ -1,7 +1,8 @@
 
 // Each thread owns one scratch slot and walks its share of the batch in a
 // grid-stride loop, pulling one system into the slot, integrating it there and
-// writing it back.
+// writing it back. It walks the balanced order, so the systems a warp picks up
+// are 32 neighbours of that order.
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 __global__
 void kodes::adaptive_solve
@@ -18,8 +19,10 @@ void kodes::adaptive_solve
 
     scalar* __restrict__ y = resources->currentVector();
 
-    for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
+    for (label i = T_ID; i < controls.realBatchSize; i += GRID_DIM)
     {
+        const label system = resources->systemAt(i);
+
         if (resources->vectorComponent(system, 0) <= ctrl.Treact)
         {
             continue;
@@ -99,6 +102,13 @@ __global__
 void kodes::setDeltaT(const scalar deltaT, IntegratorDeviceResources* resources)
 {
     resources->setDeltaT(deltaT);
+}
+
+template<class IntegratorDeviceResources>
+__global__
+void kodes::useOrder(IntegratorDeviceResources* resources, const label* order)
+{
+    resources->useOrder(order);
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
@@ -188,6 +198,7 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const label systemSize,
     const label parameterSize,
     const size_t extraScratchBytesPerThread,
+    const size_t extraStateBytesPerSystem,
     const LaunchConfig& request
 )
 {
@@ -204,7 +215,8 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         maxConcurrentSystems<ODESystem, IntegrationMethod, IntegratorDeviceResources>(request.threads),
         IntegratorDeviceResources::scratchBytesPerThread(systemSize, parameterSize)
       + extraScratchBytesPerThread,
-        IntegratorDeviceResources::stateBytesPerSystem(systemSize, parameterSize),
+        IntegratorDeviceResources::stateBytesPerSystem(systemSize, parameterSize)
+      + extraStateBytesPerSystem,
         freeDeviceMemory()
     );
 }
@@ -217,7 +229,8 @@ kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::Inte
     const LaunchConfig& config,
     const IntegratorControls& controls
 )
-: config_(config), ode_(ode), resources_(resources), controls_(controls)
+: config_(config), ode_(ode), resources_(resources),
+  balancer_(nullptr), balancerStub_(nullptr), controls_(controls)
 {
     if (!ode_ || !resources_)
     {
@@ -251,6 +264,30 @@ kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::~Int
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::setBalancer
+(
+    Balancer* balancer,
+    Balancer* hostStub
+)
+{
+    if (bool(balancer) != bool(hostStub))
+    {
+        fprintf(stderr, "Integrator::setBalancer error at %s:%d: need both the device balancer and its host stub\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
+    balancer_ = balancer;
+    balancerStub_ = hostStub;
+
+    kodes::useOrder<IntegratorDeviceResources><<<1, 1>>>
+    (
+        resources_, hostStub ? hostStub->order() : nullptr
+    );
+    CUDA_CHECK_LAST();
+    CUDA_CHECK(cudaDeviceSynchronize());
+}
+
+template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
 void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>::setDeltaT(const scalar deltaT)
 {
     kodes::setDeltaT<IntegratorDeviceResources>
@@ -266,6 +303,11 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
     {
         fprintf(stderr, "Integrator::solve error at %s:%d: realBatchSize > batchSize\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
+    }
+
+    if (balancerStub_)
+    {
+        balancerStub_->balance(balancer_, resources_, realBatchSize, config_);
     }
 
     controls_.realBatchSize = realBatchSize;

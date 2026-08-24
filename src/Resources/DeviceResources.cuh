@@ -35,6 +35,10 @@ protected:
     scalar*        currentVector_;
     scalar*        currentParameters_;
 
+    // Traversal order of the batch, owned by a Balancer. Null means the
+    // systems are taken in the order they were copied in.
+    const label*   order_;
+
 public:
 
     __device__ __host__
@@ -47,7 +51,8 @@ public:
     )
         : Resources(batchSize, systemSize, parameterSize),
           StepState(),
-          scratchSize_(scratchSize)
+          scratchSize_(scratchSize),
+          order_(nullptr)
     {}
 
     __device__ __host__
@@ -76,6 +81,11 @@ public:
     {
         return currentParameters_[INDEXVEC(i)];
     }
+
+    __device__ void useOrder(const label* order) { order_ = order; }
+
+    // Index of the system sitting at position i of the balanced traversal
+    __device__ label systemAt(const label i) const { return order_ ? order_[i] : i; }
 
     __device__ scalar vectorComponent(const label system, const label i) const
     {

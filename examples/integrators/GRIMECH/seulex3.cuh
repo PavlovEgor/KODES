@@ -16,3 +16,4 @@
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
 #include "Integrator.cuh"
+#include "TemperatureBalancer.cuh"

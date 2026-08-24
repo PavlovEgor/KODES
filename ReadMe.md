@@ -45,7 +45,8 @@ arbitrarily large ensemble run on a fixed amount of VRAM:
   currently in the slot — a later batch would overwrite it anyway — so none of it is kept per
   system.
 
-A thread walks its share of the batch in a grid-stride loop: `DeviceResources::loadSystem(system)`
+A thread walks its share of the batch in a grid-stride loop over the *balanced* order (see
+`Balancer` below, identity order when none is set): `DeviceResources::loadSystem(system)`
 pulls one system into the thread's scratch slot (`currentVector`/`currentParameters`), the
 integrator works entirely in scratch space (which is also the layout pyJac's generated
 `dydt`/`eval_jacob` expect — its `INDEX` macro is identical to `INDEXVEC`), and
@@ -86,9 +87,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   mechanism, so it can only be known at run time. That, `cudaMemGetInfo` and the resource class's
   `scratchBytesPerThread`/`stateBytesPerSystem` go into `makePlan()`, which holds all the sizing
   arithmetic and no CUDA call: cap the grid at what the budget affords, then spend the rest on the
-  batch. Pass any scratch owned outside the resources object (for a pyJac mechanism,
-  `required_mechanism_size()`) as `extraScratchBytesPerThread`, and pad that allocation to
-  `scratchSize`, not to `batchSize`.
+  batch. Memory owned outside the resources object is declared through the two extras — scratch per
+  thread (for a pyJac mechanism, `required_mechanism_size()`; pad that allocation to `scratchSize`,
+  not to `batchSize`) and state per system (`Balancer::bytesPerSystem()` when the batch is sorted).
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
   the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
@@ -160,6 +161,35 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   pointers and the device's flat state-space layout. `getRealBatchSize(batchIndex)` gives the size
   of that batch — the last one is normally shorter than `batchSize`.
 
+### `Balancer` — who runs next to whom
+
+A warp runs at the speed of its stiffest member: if one lane needs 400 steps and the other 31 need
+12, the whole warp pays 400. Sorting the batch by a scalar property before integrating it puts
+similar cells next to each other, and since a thread picks up positions `T_ID`, `T_ID + GRID_DIM`,
+… the 32 lanes of a warp always get 32 *neighbours* of that order.
+
+- **`kodes::Balancer`** (`Balancer/Balancer.cuh`/`.cu`) — abstract base holding the two arrays the
+  ordering needs, both `batchSize` long: `keys` (`scalar`) and `order` (`label`, the traversal
+  order, i.e. `order[i]` is the system to integrate at position `i`). Subclasses implement the one
+  abstract function, `__device__ scalar key(resources, system)`. `balance()` runs the whole pass:
+  a kernel fills `keys` through that virtual call, the keys come back to the host, `quickSortByKey`
+  sorts them carrying `order` along, and the resulting order is uploaded. The batch itself is never
+  moved — only the order in which the kernel walks it — so `Operator` is untouched.
+- **`kodes::quickSortByKey`** (`Balancer/Balancer.cuh`) — in-place quicksort of the keys applying
+  every move to the index array as well. Iterative (explicit stack, always recursing into the
+  smaller half so the stack stays under `log2(size)` entries), median-of-three pivot, Hoare
+  partitioning so that runs of equal keys — a cold field is mostly one temperature — stay O(n log n),
+  and a final insertion pass for short ranges. Host side: it costs one round trip of the keys per
+  batch (~80 ms per million systems). If it ever shows up in a profile, `thrust::sort_by_key` is a
+  drop-in replacement inside `balance()`.
+- **`kodes::TemperatureBalancer`** (`Balancer/TemperatureBalancer.cuh`/`.cu`) — the simplest useful
+  key: component 0 of the state vector, the temperature. Built with the same `create`/`destroy`
+  host-stub pair as the device resources.
+
+`Integrator::setBalancer(balancer, hostStub)` points the resources at the balancer's order array
+and rebalances at the start of every `solve()`, since a new batch brings new cells. Without it the
+traversal is the copy order.
+
 ### `Integrators` — advancing the ODEs
 
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — template
@@ -192,8 +222,9 @@ kodes::LaunchConfig config = kodes::planLaunch
 >
 (
     ensembleSize, host_res.systemSize(), host_res.parameterSize(),
-    required_mechanism_size(),         // pyJac's own per-thread scratch
-    kodes::LaunchConfig("best")        // or "half", or explicit sizes
+    required_mechanism_size(),            // pyJac's own per-thread scratch
+    kodes::Balancer::bytesPerSystem(),    // the sorted order, per system
+    kodes::LaunchConfig("best")           // or "half", or explicit sizes
 );
 
 // 2) per-thread scratch is padded to the resident threads, not to the batch
@@ -205,9 +236,13 @@ auto* res = kodes::SeulexDeviceResources::create
     config.batchSize, config.scratchSize, systemSize, parameterSize, &stub
 );
 
-// 3) solve batch by batch
+// 3) solve batch by batch, each one sorted by temperature first
 kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources>
     solver(ode, res, config, controls);
+
+kodes::TemperatureBalancer balancerStub(config.batchSize);
+auto* balancer = kodes::TemperatureBalancer::create(config.batchSize, &balancerStub);
+solver.setBalancer(balancer, &balancerStub);
 
 solver.setDeltaT(tEnd);
 

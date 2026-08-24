@@ -22,6 +22,7 @@ int main(){
         host_res.systemSize(),
         host_res.parameterSize(),
         required_mechanism_size(),
+        0,
         kodes::LaunchConfig("best")
     );
 

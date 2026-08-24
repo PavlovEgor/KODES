@@ -25,6 +25,7 @@ int main(){
         host_res.systemSize(),
         host_res.parameterSize(),
         required_mechanism_size(),
+        kodes::Balancer::bytesPerSystem(),
         kodes::LaunchConfig("best")
     );
 
@@ -45,11 +46,17 @@ int main(){
 
     kodes::pyJacSystem* ode_prt = kodes::pyJacSystem::createGPU(d_mem);
 
+    kodes::TemperatureBalancer   balancer_dev(batchSize);
+
+    kodes::TemperatureBalancer*  balancer_prt = kodes::TemperatureBalancer::create(batchSize, &balancer_dev);
+
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
     kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
 
     kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources> solver(ode_prt, res_prt, config, controls);
+
+    solver.setBalancer(balancer_prt, &balancer_dev);
 
     scalar tEnd = 10.0;
     solver.setDeltaT(tEnd);
@@ -63,6 +70,7 @@ int main(){
 
     host_res.printVectori(0);
 
+    kodes::TemperatureBalancer::destroy(balancer_prt, &balancer_dev);
     kodes::pyJacSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 
