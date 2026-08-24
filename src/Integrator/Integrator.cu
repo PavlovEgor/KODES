@@ -21,16 +21,16 @@ void kodes::adaptive_solve
 
     for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
     {
-        ctrl.system = system;
-
-        resources->loadSystem(system);
-
-        if (y[INDEXVEC(0)] <= ctrl.Treact)
+        // Not reacting: leave the state of this system untouched, without
+        // even pulling it into scratch
+        if (resources->state(system, 0) <= ctrl.Treact)
         {
-            // Not reacting: leave the state of this system untouched
             continue;
         }
 
+        ctrl.system = system;
+
+        resources->loadSystem(system);
         resources->resetStep(system);
 
         scalar tStart = 0;
@@ -101,7 +101,9 @@ template<class IntegratorDeviceResources>
 __global__
 void kodes::setDeltaT(const scalar deltaT, IntegratorDeviceResources* resources)
 {
-    for (label system = T_ID; system < resources->batchSize(); system += GRID_DIM)
+    const label batchSize = resources->batchSize();
+
+    for (label system = T_ID; system < batchSize; system += GRID_DIM)
     {
         resources->setDeltaT(deltaT, system);
     }
@@ -205,79 +207,17 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         std::exit(EXIT_FAILURE);
     }
 
-    LaunchConfig config;
-    config.threads = threads;
-    config.sharedMemSize = sharedMemorySize(threads);
-
-    // 1) how many threads can actually run at the same time
-    const label concurrent =
-        maxConcurrentSystems<ODESystem, IntegrationMethod, IntegratorDeviceResources>(threads);
-
-    // never launch more threads than there are systems to integrate
-    label blocks = concurrent / threads;
-    const label neededBlocks = (ensembleSize + threads - 1) / threads;
-    if (blocks > neededBlocks)
-    {
-        blocks = neededBlocks;
-    }
-
-    // 2) shrink the grid until the per thread scratch fits in memory
-    const size_t scratchPerThread =
+    return makePlan
+    (
+        ensembleSize,
+        threads,
+        // how many threads can actually run at the same time
+        maxConcurrentSystems<ODESystem, IntegrationMethod, IntegratorDeviceResources>(threads),
         IntegratorDeviceResources::scratchBytesPerThread(systemSize, parameterSize)
-      + extraScratchBytesPerThread;
-
-    const size_t statePerSystem =
-        IntegratorDeviceResources::stateBytesPerSystem(systemSize, parameterSize);
-
-    const size_t budget = size_t(double(freeDeviceMemory()) * memoryFraction);
-
-    while (blocks > 1 && size_t(blocks) * threads * scratchPerThread > budget)
-    {
-        blocks /= 2;
-    }
-
-    config.blocks = blocks;
-    config.scratchSize = blocks * threads;
-
-    const size_t scratchBytes = size_t(config.scratchSize) * scratchPerThread;
-
-    if (scratchBytes >= budget)
-    {
-        fprintf
-        (
-            stderr,
-            "kodes::planLaunch error at %s:%d: %zu MiB of scratch for a single "
-            "block of %d threads does not fit in the %zu MiB budget\n",
-            __FILE__, __LINE__, scratchBytes >> 20, threads, budget >> 20
-        );
-        std::exit(EXIT_FAILURE);
-    }
-
-    // 3) spend what is left of the budget on the batch: the state of one system
-    //    is tiny, so this is what fills the VRAM and keeps the transfer count low
-    size_t batchSize = (budget - scratchBytes) / statePerSystem;
-
-    // a batch smaller than the grid would leave threads idle
-    if (batchSize < size_t(config.scratchSize))
-    {
-        batchSize = size_t(config.scratchSize);
-    }
-
-    if (batchSize > size_t(ensembleSize))
-    {
-        batchSize = size_t(ensembleSize);
-    }
-
-    // keep the batch a whole number of blocks, so the state loads of a warp
-    // stay contiguous
-    if (batchSize > size_t(threads))
-    {
-        batchSize -= batchSize % size_t(threads);
-    }
-
-    config.batchSize = label(batchSize);
-
-    return config;
+      + extraScratchBytesPerThread,
+        IntegratorDeviceResources::stateBytesPerSystem(systemSize, parameterSize),
+        size_t(double(freeDeviceMemory()) * memoryFraction)
+    );
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>

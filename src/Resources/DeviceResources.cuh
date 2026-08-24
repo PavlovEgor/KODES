@@ -73,6 +73,12 @@ public:
     // Working copy of the parameters of that system
     __device__ scalar* __restrict__ param() { return param_; }
 
+    // Component i of system `system`, read straight from the batch
+    __device__ scalar state(const label system, const label i) const
+    {
+        return vectors[INDEXSTATE(system, i, batchSize_)];
+    }
+
     // Pull system `system` of the batch into this thread's scratch slot.
     // Consecutive threads read consecutive addresses, so the transfer stays
     // coalesced.

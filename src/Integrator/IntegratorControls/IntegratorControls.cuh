@@ -35,7 +35,7 @@ public:
         const label maxSteps = 10000,
         const scalar Treact = 0
     )
-    : absTol(absTol), relTol(relTol), maxSteps(maxSteps), Treact(Treact), batchIndex(-1) {}
+    : absTol(absTol), relTol(relTol), Treact(Treact), maxSteps(maxSteps), batchIndex(-1) {}
 };
 }
 #endif
