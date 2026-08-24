@@ -32,15 +32,18 @@ host and device layouts is the `Operator`'s job (see below).
 On the device there are two distinct address spaces, and keeping them apart is what lets an
 arbitrarily large ensemble run on a fixed amount of VRAM:
 
-- **state space** — the batch itself: `vectors` (`systemSize * batchSize`), `parameters` and the
-  per-system step bookkeeping. One slot per *system*, stride `batchSize`, addressed with
-  `INDEXSTATE(system, component, batchSize)`. Only a few dozen bytes per system, so a batch can be
-  made large enough to fill the free VRAM, which keeps the number of `cudaMemcpy` rounds low.
-- **scratch space** — the per-thread temporaries an implicit method needs (Jacobian and LU work
-  matrix, both `systemSize^2`, the extrapolation table, the pivot indices, ...). One slot per
-  *resident thread*, stride `GRID_DIM` (the number of threads actually launched), addressed with
-  `INDEXVEC`/`INDEXMAT`. Allocating more of these than the device can keep resident at once is
-  pure waste, and for a large mechanism they are what actually exhausts the VRAM.
+- **state space** — the batch itself: `vectors` (`systemSize * batchSize`) and `parameters`. One
+  slot per *system*, stride `batchSize`, addressed with `INDEXSTATE(system, component, batchSize)`.
+  A handful of scalars per system, so a batch can be made large enough to fill the free VRAM, which
+  keeps the number of `cudaMemcpy` rounds low.
+- **scratch space** — the working copy of the system a thread is integrating, its step state
+  (`StepState`) and the temporaries an implicit method needs (Jacobian and LU work matrix, both
+  `systemSize^2`, the extrapolation table, the pivot indices, ...). One slot per *resident thread*,
+  stride `GRID_DIM` (the number of threads actually launched), addressed with `INDEXVEC`/`INDEXMAT`.
+  Allocating more of these than the device can keep resident at once is pure waste, and for a large
+  mechanism they are what actually exhausts the VRAM. Nothing here outlives the system that is
+  currently in the slot — a later batch would overwrite it anyway — so none of it is kept per
+  system.
 
 A thread walks its share of the batch in a grid-stride loop: `DeviceResources::loadSystem(system)`
 pulls one system into the thread's scratch slot (`currentVector`/`currentParameters`), the
@@ -165,7 +168,8 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   loop over the batch, the outer step-count loop that walks one system from local time 0 to the
   target end-time, and — for methods that declare `useAdaptiveStep` — the step-size controller
   `adaptiveStep`. `solve(deltaT, realBatchSize)` launches it for one batch, `setDeltaT` seeds the
-  step state of the whole batch.
+  step state of every thread slot. `resetStep()` reseeds a slot for its next system from the trial
+  step the previous one ended with, so each system starts warm from its predecessor in that slot.
 - **`kodes::Seulex`** (`Integrator/IntegrationMethods/Seulex/…`) — a GPU port of the semi-implicit
   Bulirsch-Stoer extrapolation method (the same algorithm as OpenFOAM's own `seulex` ODE solver).
   `step()` advances the system the calling thread currently holds in its scratch slot, using

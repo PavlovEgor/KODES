@@ -33,7 +33,7 @@ kodes::AdaptiveDeviceResources::create(const label batchSize, const label scratc
     CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, size_t(systemSize) * scratchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->dydt0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
-    hostStub->allocate(batchSize);
+    hostStub->allocate(scratchSize);
 
     CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(AdaptiveDeviceResources), cudaMemcpyHostToDevice));
 

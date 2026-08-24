@@ -1,21 +1,21 @@
 #include "StepState.cuh"
 
 __device__ __host__
-kodes::StepState::StepState(label batchSize)
-: batchSize_(batchSize), deltaTMin(GREAT)
+kodes::StepState::StepState()
+: deltaTMin(GREAT)
 {}
 
 __host__
-void kodes::StepState::allocate(const label batchSize)
+void kodes::StepState::allocate(const label scratchSize)
 {
-    CUDA_CHECK(cudaMalloc(&forward, batchSize * sizeof(bool)));
-    CUDA_CHECK(cudaMalloc(&deltaTTry, batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&deltaTDid, batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&currentT, batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&first, batchSize * sizeof(bool)));
-    CUDA_CHECK(cudaMalloc(&last, batchSize * sizeof(bool)));
-    CUDA_CHECK(cudaMalloc(&reject, batchSize * sizeof(bool)));
-    CUDA_CHECK(cudaMalloc(&prevReject, batchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&forward, scratchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&deltaTTry, scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&deltaTDid, scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&currentT, scratchSize * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&first, scratchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&last, scratchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&reject, scratchSize * sizeof(bool)));
+    CUDA_CHECK(cudaMalloc(&prevReject, scratchSize * sizeof(bool)));
 }
 
 __host__
@@ -32,21 +32,20 @@ void kodes::StepState::deallocate()
 }
 
 __device__
-void kodes::StepState::setDeltaT(const scalar deltaT, const label system)
+void kodes::StepState::setDeltaT(const scalar deltaT)
 {
-    forward[system] = deltaT > 0.0 ? true : false;
-    deltaTTry[system] = deltaT;
-    deltaTDid[system] = 0.0;
-    currentT[system] = 0.0;
-    first[system] = true;
-    last[system]  = false;
-    reject[system]= false;
-    prevReject[system] = false;
+    forward[INDEXVEC(0)] = deltaT > 0.0 ? true : false;
+    deltaTTry[INDEXVEC(0)] = deltaT;
+    deltaTDid[INDEXVEC(0)] = 0.0;
+    currentT[INDEXVEC(0)] = 0.0;
+    first[INDEXVEC(0)] = true;
+    last[INDEXVEC(0)]  = false;
+    reject[INDEXVEC(0)]= false;
+    prevReject[INDEXVEC(0)] = false;
 }
 
 __device__
-void kodes::StepState::resetStep(const label system)
+void kodes::StepState::resetStep()
 {
-    setDeltaT(deltaTTry[system], system);
+    setDeltaT(deltaTTry[INDEXVEC(0)]);
 }
-

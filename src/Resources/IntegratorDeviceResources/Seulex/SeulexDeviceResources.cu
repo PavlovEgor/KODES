@@ -54,7 +54,7 @@ kodes::SeulexDeviceResources::create(const label batchSize, const label scratchS
     CUDA_CHECK(cudaMalloc(&hostStub->yTemp_, size_t(systemSize) * scratchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->dydt_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
-    hostStub->allocate(batchSize);
+    hostStub->allocate(scratchSize);
 
     CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(SeulexDeviceResources), cudaMemcpyHostToDevice));
 

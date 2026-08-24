@@ -28,24 +28,24 @@ void kodes::adaptive_solve
         ctrl.system = system;
 
         resources->loadSystem(system);
-        resources->resetStep(system);
+        resources->resetStep();
 
         scalar tStart = 0;
         scalar tEnd   = ctrl.deltaT;
-        resources->currentT[system] = tStart;
-        scalar& t = resources->currentT[system];
+        resources->currentT[INDEXVEC(0)] = tStart;
+        scalar& t = resources->currentT[INDEXVEC(0)];
 
         bool reachedEnd = false;
 
         for (label nStep = 0; nStep < maxSteps_; ++nStep)
         {
-            scalar dtTry0 = resources->deltaTTry[system];
-            resources->reject[system] = false;
+            scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
+            resources->reject[INDEXVEC(0)] = false;
 
-            if ((t + resources->deltaTTry[system] - tEnd)*(t + resources->deltaTTry[system] - tStart) > 0)
+            if ((t + resources->deltaTTry[INDEXVEC(0)] - tEnd)*(t + resources->deltaTTry[INDEXVEC(0)] - tStart) > 0)
             {
-                resources->last[system] = true;
-                resources->deltaTTry[system] = tEnd - t;
+                resources->last[INDEXVEC(0)] = true;
+                resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
             }
 
             if constexpr (IntegrationMethod::useAdaptiveStep)
@@ -59,19 +59,19 @@ void kodes::adaptive_solve
 
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
-                if (nStep > 0 && resources->last[system])
+                if (nStep > 0 && resources->last[INDEXVEC(0)])
                 {
-                    resources->deltaTTry[system] = dtTry0;
+                    resources->deltaTTry[INDEXVEC(0)] = dtTry0;
                 }
                 reachedEnd = true;
                 break;
             }
 
-            resources->first[system] = false;
+            resources->first[INDEXVEC(0)] = false;
 
-            if (resources->reject[system])
+            if (resources->reject[INDEXVEC(0)])
             {
-                resources->prevReject[system] = true;
+                resources->prevReject[INDEXVEC(0)] = true;
             }
         }
 
@@ -81,7 +81,7 @@ void kodes::adaptive_solve
             (
                 "Integration steps greater than maximum %d : system %d, "
                 "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps_, system, t, tEnd, resources->deltaTDid[system]
+                maxSteps_, system, t, tEnd, resources->deltaTDid[INDEXVEC(0)]
             );
         }
 
@@ -98,12 +98,7 @@ template<class IntegratorDeviceResources>
 __global__
 void kodes::setDeltaT(const scalar deltaT, IntegratorDeviceResources* resources)
 {
-    const label batchSize = resources->batchSize();
-
-    for (label system = T_ID; system < batchSize; system += GRID_DIM)
-    {
-        resources->setDeltaT(deltaT, system);
-    }
+    resources->setDeltaT(deltaT);
 }
 
 template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
@@ -116,7 +111,6 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
 )
 {
     const label systemSize = resources->systemSize();
-    const label system = controls.system;
 
     const scalar safeScale_ = controls.safeScale;
     const scalar alphaInc_ = controls.alphaIncrease;
@@ -128,9 +122,9 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
     scalar* __restrict__ dydt0_ = resources->dydt0();
 
     scalar* __restrict__ y      = resources->currentVector();
-    scalar& t      = resources->currentT[system];
+    scalar& t      = resources->currentT[INDEXVEC(0)];
 
-    scalar dt = resources->deltaTTry[system];
+    scalar dt = resources->deltaTTry[INDEXVEC(0)];
     scalar err = 0.0;
 
     ode->derivatives(t, resources->currentParameter(0), y, dydt0_);
@@ -147,14 +141,14 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
         {
             scalar scale = max(safeScale_*pow(err, -alphaDec_), minScale_);
             dt *= scale;
-            resources->deltaTTry[system] = dt;
+            resources->deltaTTry[INDEXVEC(0)] = dt;
 
             if (dt < SMALL)
             {
                 printf
                 (
                     "system: %d stepsize underflow \n",
-                    system
+                    controls.system
                 );
             }
         }
@@ -168,11 +162,11 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
     if (err > pow(maxScale_/safeScale_, -1.0/alphaInc_))
     {
         scalar scale = safeScale_*pow(err, -alphaInc_);
-        resources->deltaTTry[system] = clamp(scale, minScale_, maxScale_)*dt;
+        resources->deltaTTry[INDEXVEC(0)] = clamp(scale, minScale_, maxScale_)*dt;
     }
     else
     {
-        resources->deltaTTry[system] = safeScale_*maxScale_*dt;
+        resources->deltaTTry[INDEXVEC(0)] = safeScale_*maxScale_*dt;
     }
 }
 

@@ -33,7 +33,7 @@ kodes::EulerDeviceResources::create(const label batchSize, const label scratchSi
     CUDA_CHECK(cudaMalloc(&hostStub->dydt0_, size_t(systemSize) * scratchSize * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&hostStub->err_, size_t(systemSize) * scratchSize * sizeof(scalar)));
 
-    hostStub->allocate(batchSize);
+    hostStub->allocate(scratchSize);
 
     CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(EulerDeviceResources), cudaMemcpyHostToDevice));
 

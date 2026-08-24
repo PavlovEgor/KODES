@@ -13,7 +13,8 @@ namespace kodes
 //    batchSize, addressed with INDEXSTATE
 //  * currentVector/currentParameters hold the system a thread is integrating
 //    right now, one slot per resident thread, stride scratchSize, addressed
-//    with INDEXVEC - as is every temporary an integrator adds on top of them
+//    with INDEXVEC - as are the step state and every temporary an integrator
+//    adds on top of them
 //
 // Since scratchSize only covers the threads that can run at the same time, the
 // systemSize^2 temporaries stay small for a batch of millions of systems.
@@ -45,7 +46,7 @@ public:
         const label parameterSize
     )
         : Resources(batchSize, systemSize, parameterSize),
-          StepState(batchSize),
+          StepState(),
           scratchSize_(scratchSize)
     {}
 
@@ -78,7 +79,7 @@ public:
 
     __device__ scalar vectorComponent(const label system, const label i) const
     {
-        return vectors[INDEXSTATE(system, i, batchSize_)];
+        return vectors[INDEXSTATE(system, i, batchSize())];
     }
 
     // Consecutive threads touch consecutive systems, so both transfers between
@@ -87,12 +88,12 @@ public:
     {
         for (label i = 0; i < systemSize_; ++i)
         {
-            currentVector_[INDEXVEC(i)] = vectors[INDEXSTATE(system, i, batchSize_)];
+            currentVector_[INDEXVEC(i)] = vectors[INDEXSTATE(system, i, batchSize())];
         }
 
         for (label i = 0; i < parameterSize_; ++i)
         {
-            currentParameters_[INDEXVEC(i)] = parameters[INDEXSTATE(system, i, batchSize_)];
+            currentParameters_[INDEXVEC(i)] = parameters[INDEXSTATE(system, i, batchSize())];
         }
     }
 
@@ -100,19 +101,19 @@ public:
     {
         for (label i = 0; i < systemSize_; ++i)
         {
-            vectors[INDEXSTATE(system, i, batchSize_)] = currentVector_[INDEXVEC(i)];
+            vectors[INDEXSTATE(system, i, batchSize())] = currentVector_[INDEXVEC(i)];
         }
     }
 
     __host__ static size_t stateBytesPerSystem(const label systemSize, const label parameterSize)
     {
-        return size_t(systemSize + parameterSize) * sizeof(scalar)
-             + StepState::bytesPerSystem();
+        return size_t(systemSize + parameterSize) * sizeof(scalar);
     }
 
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return size_t(systemSize + parameterSize) * sizeof(scalar);
+        return size_t(systemSize + parameterSize) * sizeof(scalar)
+             + StepState::bytesPerThread();
     }
 };
 

@@ -8,7 +8,6 @@ scalar kodes::Euler<ODESystem>::step
 )
 {
     const label systemSize = resources->systemSize();
-    const label system = controls.system;
 
     const scalar absTol_ = controls.absTol;
     const scalar relTol_ = controls.relTol;
@@ -18,7 +17,7 @@ scalar kodes::Euler<ODESystem>::step
     scalar* __restrict__ err_  = resources->err();
 
     scalar* __restrict__ y      = resources->currentVector();
-    scalar dt = resources->deltaTTry[system];
+    scalar dt = resources->deltaTTry[INDEXVEC(0)];
 
     // the trial state goes to yTemp_, adaptiveStep copies the accepted one back
     // into y, so a rejected step is retried from an untouched y

@@ -21,8 +21,8 @@ public:
     label batchIndex;
 
     // Index, within the current batch, of the system the calling thread is
-    // integrating. Set by the solve kernel on every grid-stride iteration and
-    // used to address the state space arrays (see INDEXSTATE).
+    // integrating. Set by the solve kernel on every grid-stride iteration, for
+    // diagnostics only - the working data is addressed by thread slot.
     label system = 0;
 
     scalar deltaT = 0;
