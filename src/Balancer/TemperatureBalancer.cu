@@ -1,74 +1,43 @@
 #include "TemperatureBalancer.cuh"
-
-__global__ void
-constructTemperatureBalancer(kodes::TemperatureBalancer* devBalancer, const label batchSize)
-{
-    new (devBalancer) kodes::TemperatureBalancer(batchSize);
-}
-
-__global__ void
-destructTemperatureBalancer(kodes::TemperatureBalancer* devBalancer)
-{
-    devBalancer->~TemperatureBalancer();
-}
+#include "BalancerFactory.cuh"
 
 __host__ kodes::TemperatureBalancer*
-kodes::TemperatureBalancer::create(const label batchSize, kodes::TemperatureBalancer* hostStub)
+kodes::TemperatureBalancer::create
+(
+    const label batchSize,
+    const label scratchSize,
+    const label systemSize,
+    kodes::TemperatureBalancer* hostStub
+)
 {
-    if (!hostStub)
-    {
-        fprintf(stderr, "TemperatureBalancer::create error at %s:%d: hostStub is null\n", __FILE__, __LINE__);
-        std::exit(EXIT_FAILURE);
-    }
+    return kodes::createBalancer(batchSize, scratchSize, systemSize, hostStub);
+}
 
-    if (batchSize <= 0)
-    {
-        fprintf(stderr, "TemperatureBalancer::create error at %s:%d: batchSize <= 0\n", __FILE__, __LINE__);
-        std::exit(EXIT_FAILURE);
-    }
-
-    TemperatureBalancer* devPtr;
-    CUDA_CHECK(cudaMalloc(&devPtr, sizeof(TemperatureBalancer)));
-
-    hostStub->allocate(batchSize);
-
-    CUDA_CHECK(cudaMemcpy(devPtr, hostStub, sizeof(TemperatureBalancer), cudaMemcpyHostToDevice));
-
-    constructTemperatureBalancer<<<1, 1>>>(devPtr, batchSize);
-    CUDA_CHECK_LAST();
-    CUDA_CHECK(cudaDeviceSynchronize());
-
-    return devPtr;
+__host__ void
+kodes::TemperatureBalancer::destroy
+(
+    kodes::TemperatureBalancer* devBalancer,
+    kodes::TemperatureBalancer* hostStub
+)
+{
+    kodes::destroyBalancer(devBalancer, hostStub);
 }
 
 // ::new and ::delete, since the class hides the global operator new behind its
 // own device side placement one
 __host__ kodes::TemperatureBalancer*
-kodes::TemperatureBalancer::createStub(const label batchSize)
+kodes::TemperatureBalancer::createStub
+(
+    const label batchSize,
+    const label scratchSize,
+    const label systemSize
+)
 {
-    return ::new TemperatureBalancer(batchSize);
+    return ::new TemperatureBalancer(batchSize, scratchSize, systemSize);
 }
 
 __host__ void
 kodes::TemperatureBalancer::destroyStub(kodes::TemperatureBalancer* hostStub)
 {
     ::delete hostStub;
-}
-
-__host__ void
-kodes::TemperatureBalancer::destroy(kodes::TemperatureBalancer* devBalancer, kodes::TemperatureBalancer* hostStub)
-{
-    if (hostStub)
-    {
-        hostStub->deallocate();
-    }
-
-    if (devBalancer)
-    {
-        destructTemperatureBalancer<<<1, 1>>>(devBalancer);
-        CUDA_CHECK_LAST();
-        CUDA_CHECK(cudaDeviceSynchronize());
-
-        CUDA_CHECK(cudaFree(devBalancer));
-    }
 }

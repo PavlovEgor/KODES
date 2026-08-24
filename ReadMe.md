@@ -89,7 +89,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   arithmetic and no CUDA call: cap the grid at what the budget affords, then spend the rest on the
   batch. Memory owned outside the resources object is declared through the two extras — scratch per
   thread (for a pyJac mechanism, `required_mechanism_size()`; pad that allocation to `scratchSize`,
-  not to `batchSize`) and state per system (`Balancer::bytesPerSystem()` when the batch is sorted).
+  not to `batchSize`) and state per system. A balancer declares both: `bytesPerSystem()` for the
+  keys and the order, and `scratchBytesPerThread()` for the slot a key that evaluates the right
+  hand side writes into.
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
   the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
@@ -169,19 +171,22 @@ similar cells next to each other, and since a thread picks up positions `T_ID`, 
 … the 32 lanes of a warp always get 32 *neighbours* of that order.
 
 - **`kodes::Balancer`** (`Balancer/Balancer.cuh`/`.cu`) — abstract base holding the arrays the
-  ordering needs, all `batchSize` long: `keys` (`scalar`), `bucket` (`label`, which bucket each
+  ordering needs: `keys` (`scalar`, `numOfKeys*batchSize`), `bucket` (`label`, which bucket each
   system fell in) and `order` (`label`, the traversal order, i.e. `order[i]` is the system to
   integrate at position `i`), plus the `KODES_BALANCER_BUCKETS`-long histogram. Subclasses
-  implement the one abstract function, `__device__ scalar key(resources, system)`. The batch itself
-  is never moved — only the order in which the kernel walks it — so `Operator` is untouched.
+  implement the one abstract function, `__device__ void key(resources, ode, system, key)`, which
+  fills `key[0 … numOfKeys-1]`. The batch itself is never moved — only the order in which the
+  kernel walks it — so `Operator` is untouched.
 - **`balance()`** — a bucket sort, four kernels on the default stream, no host round trip and no
   synchronisation before the solve that follows:
-  1. `computeKeys` fills `keys` through the virtual call and reduces their range. A warp folds its
-     own lanes with `__shfl_down_sync` first, so the range costs one pair of atomics per warp; and
-     since there is no `atomicMin` for `double`, the keys are compared as the unsigned integers of
-     the same order (`orderedBits`).
-  2. `fillBuckets` puts each system in one of `KODES_BALANCER_BUCKETS` equal bins of that range and
-     counts how many land in each.
+  1. `fillKeys` fills `keys` through the virtual call and reduces the range of each of them. A warp
+     folds its own lanes with `__shfl_down_sync` first, so a range costs one pair of atomics per
+     warp; and since there is no `atomicMin` for `double`, the keys are compared as the unsigned
+     integers of the same order (`orderedBits`).
+  2. `fillBuckets` puts each system in one of `KODES_BALANCER_BUCKETS` buckets and counts how many
+     land in each. Every key is cut into the same number of equal bins of its own range, and the
+     bins are mixed into one bucket index most significant first, so the buckets run in
+     lexicographic order: key 1 only ever reorders systems that already share a bin of key 0.
   3. `scanBuckets` turns the histogram into the offset each bucket starts at — one block walking it
      in chunks, carrying the running total in shared memory. A few thousand entries do not repay a
      second kernel for the block offsets.
@@ -198,19 +203,47 @@ similar cells next to each other, and since a thread picks up positions `T_ID`, 
 
   A key that is not a number — a system that has already blown up — is kept out of the range and
   binned first, where it cannot drag a warp of healthy cells along.
-- **`kodes::TemperatureBalancer`** (`Balancer/TemperatureBalancer.cuh`/`.cu`) — the simplest useful
-  key: component 0 of the state vector, the temperature. Built with the same `create`/`destroy`
-  host-stub pair as the device resources. Unlike those, its stub can also be asked for with
-  `createStub`/`destroyStub` instead of being declared by the caller: `key()` is a *device-only
-  virtual*, so the vtable of a host side object can only be emitted by a compiler that invents a
-  host stub for one — nvcc does, `nvc++ -cuda` does not and stops with an undefined
-  `TemperatureBalancer::key` in the vtable. A caller compiled by anything other than nvcc (an
-  OpenFOAM chemistry model, say) must therefore hold the stub as a pointer and let this `.cu`
-  construct it. The same goes for any other `Balancer` subclass.
+
+The bucket budget is shared out between the keys — `binsPerKey` gives 16384 bins to one key, 128
+to each of two, 24 to each of three — so every key added buys a distinction and pays for it in
+resolution on the ones already there. Order them by how much they matter; at most
+`KODES_MAX_KEYS` of them. Three are provided:
+
+- **`kodes::TemperatureBalancer`** — one key, component 0 of the state vector. The cheapest: it is
+  already in the state, so the pass reads one scalar per system and does nothing else.
+- **`kodes::RHSNormBalancer`** — one key, `log10` of the RMS *relative* rate of change of the
+  state, `relativeRHSNorm()`. Where temperature is a proxy for stiffness this is a measurement of
+  it: an inverse time scale, and about as direct a statement of how small a step the system will
+  need as one right-hand-side evaluation can give. Relative because `dT/dt` is orders of magnitude
+  above every `dY_i/dt`, so an absolute norm would report nothing but the temperature; `log10`
+  because the value runs over a dozen decades and the bins are equal in the key. It costs one
+  `derivatives()` call per system per batch — for a generated mechanism, one explicit step's worth
+  of work against a solve of hundreds of implicit ones.
+- **`kodes::StiffnessBalancer`** — two keys: temperature, then the norm inside each band of it.
+  Temperature alone leaves a band holding fresh mixture next to burnt gas, which do not need the
+  same number of steps; the norm alone puts a cold cell and a hot equilibrated one in the same bin
+  though their Jacobians have nothing in common. This is what more than one key is for, and what
+  `examples/integrators/GRIMECH/seulex5.cu` uses.
+
+All three are built with the same `create`/`destroy` host-stub pair as the device resources, and
+all take the same `(batchSize, scratchSize, systemSize)`. Each declares its own
+`bytesPerSystem()`/`scratchBytesPerThread(systemSize)` for `planLaunch` — a key that evaluates the
+right hand side needs a `systemSize` scratch slot per resident thread to write it into.
+
+Unlike the resources, the stub can also be asked for with `createStub`/`destroyStub` instead of
+being declared by the caller: `key()` is a *device-only virtual*, so the vtable of a host side
+object can only be emitted by a compiler that invents a host stub for one — nvcc does, `nvc++
+-cuda` does not and stops with an undefined `key` in the vtable. A caller compiled by anything
+other than nvcc (an OpenFOAM chemistry model, say) must therefore hold the stub as a pointer and
+let the `.cu` construct it. `Balancer/BalancerFactory.cuh` holds those four steps once, and is
+included only by the `.cu` of a subclass — never by a caller, since it is the file that launches
+the kernels. Adding a balancer is a subclass with a `key()`, plus four one-line forwards to it.
 
 `Integrator::setBalancer(balancer, hostStub)` points the resources at the balancer's order array
 and rebalances at the start of every `solve()`, since a new batch brings new cells. Without it the
-traversal is the copy order.
+traversal is the copy order. The integrator hands the balancer its `ODESystem*` on every pass, so
+an `ODESystem` template argument that does not derive from `kodes::ODESystem` can only be used
+with a balancer whose keys stay out of the right hand side.
 
 ### `Integrators` — advancing the ODEs
 
@@ -244,8 +277,9 @@ kodes::LaunchConfig config = kodes::planLaunch
 >
 (
     ensembleSize, host_res.systemSize(), host_res.parameterSize(),
-    required_mechanism_size(),            // pyJac's own per-thread scratch
-    kodes::Balancer::bytesPerSystem(),    // the sorted order, per system
+    // pyJac's own per-thread scratch, plus the slot the norm key writes into
+    required_mechanism_size() + kodes::StiffnessBalancer::scratchBytesPerThread(NSP),
+    kodes::StiffnessBalancer::bytesPerSystem(),   // the keys and the order, per system
     kodes::LaunchConfig("best")           // or "half", or explicit sizes
 );
 
@@ -258,12 +292,15 @@ auto* res = kodes::SeulexDeviceResources::create
     config.batchSize, config.scratchSize, systemSize, parameterSize, &stub
 );
 
-// 3) solve batch by batch, each one sorted by temperature first
+// 3) solve batch by batch, each one sorted by temperature and stiffness first
 kodes::Integrator<kodes::pyJacSystem, kodes::Seulex<kodes::pyJacSystem>, kodes::SeulexDeviceResources>
     solver(ode, res, config, controls);
 
-kodes::TemperatureBalancer balancerStub(config.batchSize);
-auto* balancer = kodes::TemperatureBalancer::create(config.batchSize, &balancerStub);
+kodes::StiffnessBalancer balancerStub(config.batchSize, config.scratchSize, systemSize);
+auto* balancer = kodes::StiffnessBalancer::create
+(
+    config.batchSize, config.scratchSize, systemSize, &balancerStub
+);
 solver.setBalancer(balancer, &balancerStub);
 
 solver.setDeltaT(tEnd);

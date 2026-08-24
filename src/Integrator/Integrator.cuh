@@ -98,6 +98,10 @@ public:
 
     // Integrate the batch in the order this balancer sorts it into. Rebalanced
     // at the start of every solve(); pass nulls to go back to the copy order.
+    //
+    // A balancer whose key evaluates the right hand side is handed `ode` as a
+    // kodes::ODESystem, so an ODESystem template argument that does not derive
+    // from it can only be used with a balancer that does not need one.
     void setBalancer(Balancer* balancer, Balancer* hostStub);
 
     void setDeltaT(const scalar deltaT);

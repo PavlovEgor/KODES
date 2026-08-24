@@ -22,6 +22,8 @@ add_executable( seulex5
     ${SRC_DIR}/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu
     ${SRC_DIR}/Balancer/Balancer.cu
     ${SRC_DIR}/Balancer/TemperatureBalancer.cu
+    ${SRC_DIR}/Balancer/RHSNormBalancer.cu
+    ${SRC_DIR}/Balancer/StiffnessBalancer.cu
     ${SRC_DIR}/ODESystem/pyJacSystem.cu
     ${SRC_DIR}/ODESystem/grimech/out/chem_utils.cu
     ${SRC_DIR}/ODESystem/grimech/out/dydt.cu

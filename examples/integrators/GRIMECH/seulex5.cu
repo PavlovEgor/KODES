@@ -24,8 +24,8 @@ int main(){
         ensembleSize,
         host_res.systemSize(),
         host_res.parameterSize(),
-        required_mechanism_size(),
-        kodes::Balancer::bytesPerSystem(),
+        required_mechanism_size() + kodes::StiffnessBalancer::scratchBytesPerThread(NSP),
+        kodes::StiffnessBalancer::bytesPerSystem(),
         kodes::LaunchConfig("best")
     );
 
@@ -46,9 +46,11 @@ int main(){
 
     kodes::pyJacSystem* ode_prt = kodes::pyJacSystem::createGPU(d_mem);
 
-    kodes::TemperatureBalancer   balancer_dev(batchSize);
+    // temperature first, then the norm of the right hand side inside each band
+    // of it - kodes::TemperatureBalancer is the cheaper single key version
+    kodes::StiffnessBalancer   balancer_dev(batchSize, config.scratchSize, host_res.systemSize());
 
-    kodes::TemperatureBalancer*  balancer_prt = kodes::TemperatureBalancer::create(batchSize, &balancer_dev);
+    kodes::StiffnessBalancer*  balancer_prt = kodes::StiffnessBalancer::create(batchSize, config.scratchSize, host_res.systemSize(), &balancer_dev);
 
     kodes::Operator<kodes::HostResources, kodes::SeulexDeviceResources> op(&host_res, &host_res_dev);
 
@@ -70,7 +72,7 @@ int main(){
 
     host_res.printVectori(0);
 
-    kodes::TemperatureBalancer::destroy(balancer_prt, &balancer_dev);
+    kodes::StiffnessBalancer::destroy(balancer_prt, &balancer_dev);
     kodes::pyJacSystem::destroyGPU(ode_prt);
     kodes::SeulexDeviceResources::destroy(res_prt, &host_res_dev);
 

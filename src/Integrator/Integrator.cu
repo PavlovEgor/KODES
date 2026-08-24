@@ -307,7 +307,7 @@ void kodes::Integrator<ODESystem, IntegrationMethod, IntegratorDeviceResources>:
 
     if (balancerStub_)
     {
-        balancerStub_->balance(balancer_, resources_, realBatchSize, config_);
+        balancerStub_->balance(balancer_, resources_, ode_, realBatchSize, config_);
     }
 
     controls_.realBatchSize = realBatchSize;

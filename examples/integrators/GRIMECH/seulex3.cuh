@@ -17,3 +17,5 @@
 #include "mechanism.cuh"
 #include "Integrator.cuh"
 #include "TemperatureBalancer.cuh"
+#include "RHSNormBalancer.cuh"
+#include "StiffnessBalancer.cuh"

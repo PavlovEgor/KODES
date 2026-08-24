@@ -5,51 +5,78 @@
 #define KODES_WARP 32
 
 __global__ void
-kodes::computeKeys
+kodes::fillKeys
 (
     kodes::Balancer* balancer,
-    const kodes::DeviceResources* resources,
+    kodes::DeviceResources* resources,
+    const kodes::ODESystem* ode,
     const label realBatchSize
 )
 {
     scalar* __restrict__ keys = balancer->keys();
 
-    unsigned long long lo = 0xFFFFFFFFFFFFFFFFULL;
-    unsigned long long hi = 0ULL;
+    const label numOfKeys = balancer->numOfKeys();
+    const label batchSize = balancer->batchSize();
+    const bool  loadSystem = balancer->usesDerivatives();
+
+    unsigned long long lo[KODES_MAX_KEYS];
+    unsigned long long hi[KODES_MAX_KEYS];
+
+    for (label k = 0; k < numOfKeys; ++k)
+    {
+        lo[k] = 0xFFFFFFFFFFFFFFFFULL;
+        hi[k] = 0ULL;
+    }
+
+    scalar key[KODES_MAX_KEYS];
 
     for (label system = T_ID; system < realBatchSize; system += GRID_DIM)
     {
-        const scalar key = balancer->key(resources, system);
-        keys[system] = key;
-
-        // a system that has already blown up must not stretch the range over
-        // which the finite keys are then binned
-        if (isfinite(key))
+        // a key that evaluates the right hand side needs the state where the
+        // mechanism expects it: in this thread's scratch slot
+        if (loadSystem)
         {
-            const unsigned long long bits = orderedBits(key);
+            resources->loadSystem(system);
+        }
 
-            if (bits < lo) lo = bits;
-            if (bits > hi) hi = bits;
+        balancer->key(resources, ode, system, key);
+
+        for (label k = 0; k < numOfKeys; ++k)
+        {
+            keys[k*batchSize + system] = key[k];
+
+            // a system that has already blown up must not stretch the range
+            // over which the finite keys are then binned
+            if (isfinite(key[k]))
+            {
+                const unsigned long long bits = orderedBits(key[k]);
+
+                if (bits < lo[k]) lo[k] = bits;
+                if (bits > hi[k]) hi[k] = bits;
+            }
         }
     }
 
-    // The range is a reduction over the whole grid. Folding each warp first
+    // Each range is a reduction over the whole grid. Folding each warp first
     // leaves one pair of atomics per warp instead of one per thread. Every
     // thread reaches this - the loop above is the only branch - so the full
     // mask is the right one.
-    for (label offset = KODES_WARP/2; offset > 0; offset /= 2)
+    for (label k = 0; k < numOfKeys; ++k)
     {
-        const unsigned long long otherLo = __shfl_down_sync(0xFFFFFFFFu, lo, offset);
-        const unsigned long long otherHi = __shfl_down_sync(0xFFFFFFFFu, hi, offset);
+        for (label offset = KODES_WARP/2; offset > 0; offset /= 2)
+        {
+            const unsigned long long otherLo = __shfl_down_sync(0xFFFFFFFFu, lo[k], offset);
+            const unsigned long long otherHi = __shfl_down_sync(0xFFFFFFFFu, hi[k], offset);
 
-        if (otherLo < lo) lo = otherLo;
-        if (otherHi > hi) hi = otherHi;
-    }
+            if (otherLo < lo[k]) lo[k] = otherLo;
+            if (otherHi > hi[k]) hi[k] = otherHi;
+        }
 
-    if ((threadIdx.x & (KODES_WARP - 1)) == 0)
-    {
-        atomicMin(balancer->keyMin(), lo);
-        atomicMax(balancer->keyMax(), hi);
+        if ((threadIdx.x & (KODES_WARP - 1)) == 0)
+        {
+            atomicMin(balancer->keyMin() + k, lo[k]);
+            atomicMax(balancer->keyMax() + k, hi[k]);
+        }
     }
 }
 
@@ -60,14 +87,27 @@ kodes::fillBuckets(kodes::Balancer* balancer, const label realBatchSize)
     label* __restrict__ bucket = balancer->bucket();
     label* __restrict__ counts = balancer->counts();
 
-    const scalar lo = unorderedBits(*balancer->keyMin());
-    const scalar hi = unorderedBits(*balancer->keyMax());
+    const unsigned long long* __restrict__ keyMin = balancer->keyMin();
+    const unsigned long long* __restrict__ keyMax = balancer->keyMax();
 
-    const label numOfBuckets = balancer->numOfBuckets();
+    const label numOfKeys = balancer->numOfKeys();
+    const label numOfBins = balancer->numOfBins();
+    const label batchSize = balancer->batchSize();
 
     for (label system = T_ID; system < realBatchSize; system += GRID_DIM)
     {
-        const label bin = binOf(keys[system], lo, hi, numOfBuckets);
+        // The keys are mixed in one index, most significant first, so the
+        // buckets run in lexicographic order: key 1 only ever reorders systems
+        // that already share a bin of key 0.
+        label bin = 0;
+
+        for (label k = 0; k < numOfKeys; ++k)
+        {
+            const scalar lo = unorderedBits(keyMin[k]);
+            const scalar hi = unorderedBits(keyMax[k]);
+
+            bin = bin*numOfBins + binOf(keys[k*batchSize + system], lo, hi, numOfBins);
+        }
 
         bucket[system] = bin;
 
@@ -151,17 +191,24 @@ kodes::scatterOrder(kodes::Balancer* balancer, const label realBatchSize)
 }
 
 __host__ void
-kodes::Balancer::allocate(const label batchSize)
+kodes::Balancer::allocate()
 {
-    CUDA_CHECK(cudaMalloc(&keys_, size_t(batchSize) * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&bucket_, size_t(batchSize) * sizeof(label)));
-    CUDA_CHECK(cudaMalloc(&order_, size_t(batchSize) * sizeof(label)));
+    CUDA_CHECK(cudaMalloc(&keys_, size_t(numOfKeys_) * size_t(batchSize_) * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&bucket_, size_t(batchSize_) * sizeof(label)));
+    CUDA_CHECK(cudaMalloc(&order_, size_t(batchSize_) * sizeof(label)));
 
-    CUDA_CHECK(cudaMalloc(&keyMin_, sizeof(unsigned long long)));
-    CUDA_CHECK(cudaMalloc(&keyMax_, sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMalloc(&keyMin_, size_t(numOfKeys_) * sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMalloc(&keyMax_, size_t(numOfKeys_) * sizeof(unsigned long long)));
 
     CUDA_CHECK(cudaMalloc(&counts_, size_t(numOfBuckets_) * sizeof(label)));
     CUDA_CHECK(cudaMalloc(&cursor_, size_t(numOfBuckets_) * sizeof(label)));
+
+    dydt_ = nullptr;
+
+    if (usesDerivatives_)
+    {
+        CUDA_CHECK(cudaMalloc(&dydt_, size_t(scratchSize_) * size_t(systemSize_) * sizeof(scalar)));
+    }
 }
 
 __host__ void
@@ -176,6 +223,11 @@ kodes::Balancer::deallocate()
 
     CUDA_CHECK(cudaFree(counts_));
     CUDA_CHECK(cudaFree(cursor_));
+
+    if (dydt_)
+    {
+        CUDA_CHECK(cudaFree(dydt_));
+    }
 }
 
 __host__ void
@@ -183,6 +235,7 @@ kodes::Balancer::balance
 (
     Balancer* devBalancer,
     DeviceResources* resources,
+    const ODESystem* ode,
     const label realBatchSize,
     const LaunchConfig& config
 )
@@ -193,17 +246,23 @@ kodes::Balancer::balance
         std::exit(EXIT_FAILURE);
     }
 
+    if (usesDerivatives_ && !ode)
+    {
+        fprintf(stderr, "Balancer::balance error at %s:%d: a key needs the right hand side, but no ODE was given\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
     // an empty histogram, and a range that any finite key widens
     CUDA_CHECK(cudaMemset(counts_, 0, size_t(numOfBuckets_) * sizeof(label)));
-    CUDA_CHECK(cudaMemset(keyMin_, 0xFF, sizeof(unsigned long long)));
-    CUDA_CHECK(cudaMemset(keyMax_, 0x00, sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMemset(keyMin_, 0xFF, size_t(numOfKeys_) * sizeof(unsigned long long)));
+    CUDA_CHECK(cudaMemset(keyMax_, 0x00, size_t(numOfKeys_) * sizeof(unsigned long long)));
 
     // The key kernel is given the same grid and the same dynamic shared memory
     // as the solve: a key is free to evaluate the right hand side, and a
     // generated mechanism reads both the thread indexing and that shared block.
-    kodes::computeKeys<<<config.blocks, config.threads, config.sharedMemSize>>>
+    kodes::fillKeys<<<config.blocks, config.threads, config.sharedMemSize>>>
     (
-        devBalancer, resources, realBatchSize
+        devBalancer, resources, ode, realBatchSize
     );
     CUDA_CHECK_LAST();
 
