@@ -20,6 +20,7 @@ add_executable( euler1
     ${SRC_DIR}/Resources/AdaptiveDeviceResources.cu
     ${SRC_DIR}/Resources/DeviceResources.cu
     ${SRC_DIR}/Resources/HostResources.cu
+    ${SRC_DIR}/Balancer/Balancer.cu
     ${SRC_DIR}/ODESystem/pyJacSystem.cu
     ${SRC_DIR}/ODESystem/grimech/out/chem_utils.cu
     ${SRC_DIR}/ODESystem/grimech/out/dydt.cu
@@ -57,6 +58,7 @@ target_include_directories(euler1 PRIVATE
     ${SRC_DIR}/Integrator
     ${SRC_DIR}/Resources
     ${SRC_DIR}/Resources/IntegratorDeviceResources/Euler
+    ${SRC_DIR}/Balancer
     ${SRC_DIR}/Integrator/IntegratorControls
     ${SRC_DIR}/Integrator/IntegrationMethods
     ${SRC_DIR}/Integrator/IntegrationMethods/Euler
