@@ -1,5 +1,27 @@
 {
-    "absTol": 1e-3,
-    "relTol": 1e-1,
-    "maxSteps": 1000
+    "_comment": "Everything kodes::Config can read. The reader is deliberately small - four getters, a key test, and dotted paths - because a caller that needs more than this should be using kodes::Settings, or its own reader.",
+
+    "name": "counterFlowFlame2D",
+    "chemistry": true,
+    "maxSteps": 10000,
+    "absTol": 1e-12,
+
+    "_comment_numbers": "getDouble accepts anything numeric, so a tolerance written 1 or 10 reads back as 1.0 and 10.0 rather than silently falling back to the default",
+    "relTol": 1,
+    "endTime": 10,
+
+    "device": {
+        "share": "best",
+        "threadsPerBlock": 256,
+
+        "limits": {
+            "concurrentSystems": 8192,
+            "batchSize": 1000000
+        }
+    },
+
+    "_comment_types": "asking for the wrong type is not an error - it returns the default, so a mistyped entry behaves like a missing one",
+    "notANumber": "twelve",
+
+    "unusedByThisExample": [1, 2, 3]
 }

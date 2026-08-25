@@ -72,10 +72,24 @@ set(KODES_INCLUDE_DIRS
     ${KODES_SRC_DIR}/Settings
 )
 
+set(KODES_MECHANISM_DIR ${KODES_ROOT_DIR}/data/mechanisms)
+
 # The generated sources of one pyJac mechanism, plus PyJacSystem itself.
+#
+# The mechanisms are data, not library code: they live under data/mechanisms/,
+# each in the directory pyJac wrote it into, together with the input files it
+# was generated from. Nothing in src/ mentions any of them by name - PyJacSystem
+# calls dydt()/eval_jacob() and NSP comes from whichever mechanism.cuh is on the
+# include path - so which one a target uses is decided here and nowhere else.
 function(kodes_pyjac_mechanism name out_sources out_include_dirs)
 
-    set(dir ${KODES_SRC_DIR}/ODESystem/${name}/out)
+    set(dir ${KODES_MECHANISM_DIR}/${name}/out)
+
+    if(NOT EXISTS ${dir})
+        message(FATAL_ERROR
+            "kodes_pyjac_mechanism: no mechanism \"${name}\" in "
+            "${KODES_MECHANISM_DIR}")
+    endif()
 
     set(sources
         ${KODES_SRC_DIR}/ODESystem/PyJacSystem.cu

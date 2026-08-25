@@ -1,5 +1,5 @@
 {
-    "_comment": "Everything the seulex5 run is free to choose. Nothing here is compiled in: the two names are looked up in methodTable.cu and balancerTable.cu when the program starts.",
+    "_comment": "GRI-Mech 3.0: 53 species, 325 reactions. Everything here is read when the program starts - the two names are looked up in method_table.cu and balancer_table.cu, so changing a solver is an edit to this file, not a rebuild.",
 
     "method": "seulex",
     "balancer": "stiffness",

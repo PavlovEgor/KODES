@@ -108,7 +108,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   name of the method, the name of the balancer, the `LaunchConfig` to resolve and the
   `IntegratorControls`. Every entry has a default, and both names are looked up in their table in
   the constructor, so a typo fails before anything has been allocated on the device. See
-  `examples/seulex5/seulex5.json`. It is a source list of its own in
+  `examples/reactors/grimech.json`. It is a source list of its own in
   `cmake/kodes.cmake` — the only part of the library needing rapidjson — because a caller with its
   own settings to read (the OpenFOAM chemistry model reads an OpenFOAM dictionary) passes the same
   names and numbers by hand and never links it.
@@ -150,7 +150,7 @@ chosen together.
   scatter/gather any data. Call it once per rank, right after `MPI_Init`, before creating any
   device-side `kodes` object; `kodes` never calls `MPI_Init`/`MPI_Finalize` itself. A separate
   translation unit from the rest of the library, so targets that don't need MPI never link it — see
-  `examples/mpiDeviceSelect`.
+  `examples/mpi_device_select`.
 
 ### `ODESystem` — the equations being integrated
 
@@ -168,10 +168,13 @@ chosen together.
   last species recovered implicitly from mass conservation, pressure passed as the system parameter.
 
   Which mechanism it is is a compile-time choice, unlike everything else in the library: pyJac
-  generates C for one mechanism, and `NSP` is a macro of its `mechanism.cuh`. Two are in the tree —
-  GRI-Mech 3.0 (53 species, 325 reactions, `src/ODESystem/grimech/out`) and a smaller H2/O2
-  mechanism (`src/ODESystem/h2o2/out`) — and `kodes_pyjac_mechanism(grimech ...)` in
-  `cmake/kodes.cmake` picks one by directory name.
+  generates C for one mechanism, and `NSP` is a macro of its `mechanism.cuh`. It is also the only
+  such choice, and it is made entirely outside `src/` — no file there names a mechanism. The
+  mechanisms are data, and live under `data/mechanisms/<name>/`: the generated code in `out/`,
+  beside the input files it came from. Two are in the tree, GRI-Mech 3.0 (53 species, 325
+  reactions) and a smaller H2/O2 mechanism (9 species, 28 reactions), and
+  `kodes_pyjac_mechanism(grimech ...)` in `cmake/kodes.cmake` selects one by directory name.
+  Dropping a new pyJac output in beside them is enough to make it selectable.
 
 ### `Resources` — state storage, host and device
 
@@ -267,7 +270,7 @@ resolution on the ones already there. Order them by how much they matter; at mos
   Temperature alone leaves a band holding fresh mixture next to burnt gas, which do not need the
   same number of steps; the norm alone puts a cold cell and a hot equilibrated one in the same bin
   though their Jacobians have nothing in common. This is what more than one key is for, and what
-  `examples/seulex5/seulex5.cu` uses.
+  `examples/reactors/reactors.cu` uses.
 
 All three are *device objects* in the sense of the section below, so all three are built the same
 way and picked by name — `"temperature"`, `"rhsNorm"`, `"stiffness"` — out of the table in
@@ -312,13 +315,13 @@ is what the `"none"` name gives — leave the traversal in the copy order.
 
 ## Typical run
 
-See `examples/seulex5/seulex5.cu` and the `seulex5.json` beside it. The order matters:
+See `examples/reactors/reactors.cu` and the `grimech.json` beside it. The order matters:
 plan first (it needs the free VRAM before anything has been allocated), then size every allocation
 from the plan.
 
 ```cpp
 // 1) the method and the balancer are names, read from a file
-kodes::Settings settings("seulex5.json");
+kodes::Settings settings("grimech.json");
 
 const char* method   = settings.method().c_str();     // "seulex"
 const char* balancer = settings.balancer().c_str();   // "stiffness"
@@ -374,8 +377,10 @@ same names and numbers from wherever it got them.
 ```sh
 git submodule update --init external/rapidjson      # only for kodes::Settings
 
-cd examples/seulex5 && cmake -B build && cmake --build build
-./build/seulex5                                     # reads build/seulex5.json
+cd examples/reactors && cmake -B build && cmake --build build
+
+./build/reactors_grimech            # GRI-Mech 3.0, reads build/grimech.json
+./build/reactors_h2o2               # H2/O2,        reads build/h2o2.json
 ```
 
 `cmake/kodes.cmake` holds the library's source and include lists, so an example's `CMakeLists.txt`
@@ -392,8 +397,8 @@ src/
   basic_linalg.{cuh,cu}   LU factorisation and the small device helpers
   mpi_select_device.{cuh,cu}
   Factory/                device_object.cuh, type_table.cuh — the pattern above
-  ODESystem/              ODESystem.cuh, PyJacSystem.*, and the generated
-                          mechanisms grimech/ and h2o2/
+  ODESystem/              ODESystem.cuh, PyJacSystem.* — no mechanism is named
+                          anywhere in src/
   Resources/              Resources, HostResources, DeviceResources and the
                           per-method subclasses, StepState, Operator
   Integrator/             Integrator, LaunchConfig, IntegratorControls
@@ -401,11 +406,16 @@ src/
   Balancer/               Balancer, the three keys, balancer_table
   Settings/               Config (JSON reader), Settings
 
+data/
+  mechanisms/
+    grimech/              GRI-Mech 3.0: the pyJac output in out/, beside the
+    h2o2/                 .dat/.inp files it was generated from
+
 examples/
-  seulex5/                GRI-Mech 3.0 with seulex — the reference example
-  euler1/                 the same program with one name changed
-  config/                 kodes::Config on its own
-  mpiDeviceSelect/        binding one rank per GPU
+  reactors/               an ensemble of reactors — one program, one target per
+                          mechanism, everything else from grimech.json / h2o2.json
+  config/                 everything kodes::Config can read
+  mpi_device_select/      binding one rank per GPU
 ```
 
 A file starting with a capital letter holds the class it is named after; a `snake_case` one holds

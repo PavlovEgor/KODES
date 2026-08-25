@@ -345,7 +345,7 @@ solver.setBalancer(balancing.device(), balancing.host());
 временные массивы — сначала наследник `DeviceResources` с собственными
 `allocate()`/`deallocate()`, по тому же паттерну.
 
-После этого новое имя работает в `seulex5.json` без единой правки в вызывающем
+После этого новое имя работает в `grimech.json` без единой правки в вызывающем
 коде.
 
 ---

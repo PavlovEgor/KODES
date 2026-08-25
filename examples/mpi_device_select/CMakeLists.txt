@@ -14,8 +14,8 @@ set(CMAKE_CUDA_ARCHITECTURES "120")
 find_package(MPI REQUIRED)
 
 # only the device binding helper, none of the solve machinery
-add_executable(mpiDeviceSelect mpiDeviceSelect.cu ${KODES_MPI_SOURCES})
+add_executable(mpi_device_select mpi_device_select.cu ${KODES_MPI_SOURCES})
 
-target_include_directories(mpiDeviceSelect PRIVATE ${KODES_SRC_DIR})
+target_include_directories(mpi_device_select PRIVATE ${KODES_SRC_DIR})
 
-target_link_libraries(mpiDeviceSelect PRIVATE MPI::MPI_CXX)
+target_link_libraries(mpi_device_select PRIVATE MPI::MPI_CXX)

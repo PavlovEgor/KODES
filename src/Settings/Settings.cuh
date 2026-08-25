@@ -14,7 +14,7 @@
 // One JSON file holding everything a run is free to choose, so that changing
 // the method, the balancer or a tolerance does not mean recompiling.
 //
-// See examples/seulex5/seulex5.json for a complete file. Every
+// See examples/reactors/grimech.json for a complete file. Every
 // entry has a default, so a file naming nothing but the method is valid.
 //
 //   {
