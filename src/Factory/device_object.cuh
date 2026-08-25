@@ -5,7 +5,7 @@
 
 #include <cuda_runtime.h>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 // Construction and destruction of a *device object*: a class whose virtual
 // functions are called from inside a kernel, and which therefore has to live in

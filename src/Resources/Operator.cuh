@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 #include "HostResources.cuh"
 #include "DeviceResources.cuh"
 

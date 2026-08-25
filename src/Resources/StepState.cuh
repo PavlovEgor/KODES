@@ -2,7 +2,7 @@
 #define KODES_STEP_STATE
 #include <cuda_runtime.h>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 namespace kodes
 {

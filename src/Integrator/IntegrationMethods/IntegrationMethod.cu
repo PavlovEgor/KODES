@@ -1,6 +1,6 @@
 #include "IntegrationMethod.cuh"
 #include "AdaptiveDeviceResources.cuh"
-#include "basicLinalg.cuh"
+#include "basic_linalg.cuh"
 
 // Was Integrator::adaptiveStep, a static of the Integrator template. It belongs
 // to the method rather than to the driver: it is the half of the step control

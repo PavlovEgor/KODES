@@ -1,4 +1,4 @@
-#include "balancerTable.cuh"
+#include "balancer_table.cuh"
 
 #include "TemperatureBalancer.cuh"
 #include "RHSNormBalancer.cuh"
@@ -33,7 +33,7 @@ __host__ label kodes::balancerTableSize()
 __host__ const kodes::TypeEntry<kodes::Balancer>*
 kodes::balancerType(const char* name)
 {
-    if (!name || !*name || strcmp(name, KODES_NO_BALANCER) == 0)
+    if (!name || !*name || strcmp(name, kNoBalancer) == 0)
     {
         return nullptr;
     }

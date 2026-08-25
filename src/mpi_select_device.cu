@@ -1,4 +1,4 @@
-#include "mpiSelectDevice.cuh"
+#include "mpi_select_device.cuh"
 
 #include <cuda_runtime.h>
 #include <cstdio>

@@ -5,11 +5,11 @@
 
 #include <string>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 #include "Config.cuh"
 #include "LaunchConfig.cuh"
 #include "IntegratorControls.cuh"
-#include "balancerTable.cuh"
+#include "balancer_table.cuh"
 
 // One JSON file holding everything a run is free to choose, so that changing
 // the method, the balancer or a tolerance does not mean recompiling.
@@ -22,7 +22,7 @@
 //       "balancer": "stiffness",    // balancerTable: temperature | rhsNorm
 //                                   //                stiffness | none
 //       "device": {
-//           "share":           "best",   // best | half, see deviceShares
+//           "share":           "best",   // best | half, see kDeviceShares
 //           "threadsPerBlock": 256,
 //
 //           // sizing the run by hand instead - both are needed together and
@@ -85,7 +85,7 @@ public:
     // The name of the entry in balancerTable, or "none"
     const std::string& balancer() const { return balancer_; }
 
-    bool balanceBatches() const { return balancer_ != KODES_NO_BALANCER; }
+    bool balanceBatches() const { return balancer_ != kNoBalancer; }
 
     // The request planLaunch resolves against the device
     LaunchConfig launchRequest() const;

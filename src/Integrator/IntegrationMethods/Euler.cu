@@ -1,5 +1,5 @@
 #include "Euler.cuh"
-#include "basicLinalg.cuh"
+#include "basic_linalg.cuh"
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::Euler)
 

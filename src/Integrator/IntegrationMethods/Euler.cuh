@@ -23,7 +23,7 @@ class Euler
 {
 public:
 
-    static constexpr bool usesAdaptiveStep = true;
+    static constexpr bool kUsesAdaptiveStep = true;
 
     __device__ __host__
     Euler
@@ -36,7 +36,7 @@ public:
         : IntegrationMethod
           (
               batchSize, scratchSize, systemSize, parameterSize,
-              usesAdaptiveStep
+              kUsesAdaptiveStep
           )
     {}
 

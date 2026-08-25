@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "basicTypes.cuh"
-#include "deviceObject.cuh"
+#include "basic_types.cuh"
+#include "device_object.cuh"
 #include "DeviceResources.cuh"
 #include "ODESystem.cuh"
 #include "LaunchConfig.cuh"

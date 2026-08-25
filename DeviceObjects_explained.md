@@ -12,8 +12,8 @@
 
 | файл | что в нём |
 |---|---|
-| `src/Factory/deviceObject.cuh` | как **построить** такой объект (одинаково для всех) |
-| `src/Factory/typeTable.cuh`    | как **выбрать по имени**, какой именно строить |
+| `src/Factory/device_object.cuh` | как **построить** такой объект (одинаково для всех) |
+| `src/Factory/type_table.cuh`    | как **выбрать по имени**, какой именно строить |
 
 Дальше — почему всё именно так, а не проще.
 
@@ -130,7 +130,7 @@ kodes::Balancer* stub;
 
 ## 2. Контракт: что должен предоставить класс
 
-Всё вышеперечисленное написано **один раз** в `Factory/deviceObject.cuh`. Чтобы
+Всё вышеперечисленное написано **один раз** в `Factory/device_object.cuh`. Чтобы
 класс можно было строить этими шаблонами, от него требуется ровно три вещи:
 
 ```cpp
@@ -209,7 +209,7 @@ KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)
 слот для несуществующей на хосте `key()`. Это лишний риск на ровном месте.
 
 Вместо этого один конкретный класс сводится к набору **обычных указателей на
-функции** (`typeTable.cuh`):
+функции** (`type_table.cuh`):
 
 ```cpp
 template<class Base>
@@ -245,7 +245,7 @@ ABI сверх обычных. Поэтому таблицу может испо
 Сами таблицы — по одной на абстрактную базу, в `.cu` библиотеки:
 
 ```cpp
-// src/Balancer/balancerTable.cu
+// src/Balancer/balancer_table.cu
 static const TypeEntry<Balancer> table[] =
 {
     typeEntry<Balancer, TemperatureBalancer>("temperature"),
@@ -255,7 +255,7 @@ static const TypeEntry<Balancer> table[] =
 ```
 
 ```cpp
-// src/Integrator/IntegrationMethods/methodTable.cu — здесь в одной строке
+// src/Integrator/IntegrationMethods/method_table.cu — здесь в одной строке
 // метод и хранилище, потому что выбирать их порознь нельзя: Seulex::step()
 // приводит DeviceResources* к SeulexDeviceResources*
 static const MethodType table[] =
@@ -337,7 +337,7 @@ solver.setBalancer(balancing.device(), balancing.host());
    аргументов, `key()`, парой `stateBytesPerSystem`/`scratchBytesPerThread` и
    строкой `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`.
 2. `src/Balancer/MyBalancer.cu`: `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
-3. Одна строка в `src/Balancer/balancerTable.cu`.
+3. Одна строка в `src/Balancer/balancer_table.cu`.
 4. Одна строка в `cmake/kodes.cmake`.
 
 Метод интегрирования — то же самое, но наследник `IntegrationMethod` с `step()`,

@@ -1,5 +1,5 @@
 #include "SeulexDeviceResources.cuh"
-#include "seulexConstants.cuh"
+#include "seulex_constants.cuh"
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::SeulexDeviceResources)
 

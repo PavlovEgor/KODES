@@ -5,7 +5,7 @@
 
 #include <cuda/cmath>
 #include <cuda_runtime.h>
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 
 typedef double scalar;

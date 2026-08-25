@@ -1,4 +1,4 @@
-#include "basicLinalg.cuh"
+#include "basic_linalg.cuh"
 
 
 __device__

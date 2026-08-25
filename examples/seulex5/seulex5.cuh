@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basicLinalg.cuh"
+#include "basic_linalg.cuh"
 #include "SeulexDeviceResources.cuh"
 #include "PyJacSystem.cuh"
 #include "HostResources.cuh"
@@ -16,6 +16,6 @@
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
 #include "Integrator.cuh"
-#include "methodTable.cuh"
-#include "balancerTable.cuh"
+#include "method_table.cuh"
+#include "balancer_table.cuh"
 #include "Settings.cuh"

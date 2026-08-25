@@ -1,6 +1,6 @@
 #include "Integrator.cuh"
-#include "methodTable.cuh"
-#include "balancerTable.cuh"
+#include "method_table.cuh"
+#include "balancer_table.cuh"
 
 // Each thread owns one scratch slot and walks its share of the batch in a
 // grid-stride loop, pulling one system into the slot, integrating it there and

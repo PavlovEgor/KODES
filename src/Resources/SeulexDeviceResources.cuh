@@ -1,7 +1,7 @@
 #ifndef KODES_SEULEX_DEVICE_RESOURCES
 #define KODES_SEULEX_DEVICE_RESOURCES
 #include "DeviceResources.cuh"
-#include "seulexConstants.cuh"
+#include "seulex_constants.cuh"
 
 #include <array>
 
@@ -52,10 +52,10 @@ public:
     __host__ void deallocate();
 
     // dtOpt_/temp_ are indexed by the extrapolation order k, not by the
-    // component, so they need at least KODES_SEULEX_TABLE_SIZE entries per thread
+    // component, so they need at least kSeulexTableSize entries per thread
     __host__ __device__ static label orderStorage(const label systemSize)
     {
-        return systemSize > KODES_SEULEX_TABLE_SIZE ? systemSize : KODES_SEULEX_TABLE_SIZE;
+        return systemSize > kSeulexTableSize ? systemSize : kSeulexTableSize;
     }
 
     // Device memory needed per resident thread

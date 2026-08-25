@@ -1,4 +1,4 @@
-#include "methodTable.cuh"
+#include "method_table.cuh"
 
 #include "Seulex.cuh"
 #include "SeulexDeviceResources.cuh"

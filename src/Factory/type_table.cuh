@@ -5,7 +5,7 @@
 
 #include <string.h>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 // Choosing a device object by name, at run time.
 //

@@ -1,5 +1,5 @@
 #include "Settings.cuh"
-#include "methodTable.cuh"
+#include "method_table.cuh"
 
 #include <stdexcept>
 
@@ -24,7 +24,7 @@ kodes::Settings::Settings(const std::string& path)
 config_(openOrExit(path)),
 path_(path),
 method_(config_.getString("method", "seulex")),
-balancer_(config_.getString("balancer", KODES_NO_BALANCER))
+balancer_(config_.getString("balancer", kNoBalancer))
 {
     // Both look their name up in the table straight away rather than when the
     // object is built, so a typo fails here - before the plan, before pyJac's

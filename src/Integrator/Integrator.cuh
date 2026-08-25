@@ -4,7 +4,7 @@
 
 #include <cuda_runtime.h>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 #include "IntegratorControls.cuh"
 #include "LaunchConfig.cuh"
 #include "Balancer.cuh"

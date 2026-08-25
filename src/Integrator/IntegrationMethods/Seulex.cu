@@ -1,5 +1,5 @@
 #include "Seulex.cuh"
-#include "basicLinalg.cuh"
+#include "basic_linalg.cuh"
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::Seulex)
 
@@ -27,7 +27,7 @@ bool kodes::Seulex::seul (
 
     const label systemSize = resources->systemSize();
 
-    label nSteps = seulexStepSequence[k];
+    label nSteps = kSeulexStepSequence[k];
     scalar dt = dtTot/nSteps;
 
     for (label i=0; i<systemSize; i++)
@@ -110,13 +110,13 @@ void kodes::Seulex::extrapolate (const label k, const label systemSize, scalar* 
         for (label i=0; i<systemSize; i++)
         {
             table[INDEXMAT(i, j-1, systemSize)] =
-                table[INDEXMAT(i, j, systemSize)] + seulexExtrapolationCoeff[k + j*KODES_SEULEX_TABLE_SIZE]*(table[INDEXMAT(i, j, systemSize)] - table[INDEXMAT(i, j-1, systemSize)]);
+                table[INDEXMAT(i, j, systemSize)] + kSeulexExtrapolationCoeff[k + j*kSeulexTableSize]*(table[INDEXMAT(i, j, systemSize)] - table[INDEXMAT(i, j-1, systemSize)]);
         }
     }
 
     for (label i=0; i<systemSize; i++)
     {
-        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, systemSize)] + seulexExtrapolationCoeff[k]*(table[INDEXMAT(i, 0, systemSize)] - y[INDEXVEC(i)]);
+        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, systemSize)] + kSeulexExtrapolationCoeff[k]*(table[INDEXMAT(i, 0, systemSize)] - y[INDEXVEC(i)]);
     }
 }
 
@@ -168,7 +168,7 @@ scalar kodes::Seulex::step
     if (resources->first[INDEXVEC(0)] )
     {
         logTol = -log10(relTol + absTol)*0.6 + 0.5;
-        kTarg = max(1, min(KODES_SEULEX_MAX_ORDER - 1, label(logTol)));
+        kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
 
     for (label i=0; i < systemSize; ++i)
@@ -208,7 +208,7 @@ scalar kodes::Seulex::step
             if (!success)
             {
                 resources->reject[INDEXVEC(0)] = true;
-                dtNew = fabs(dt)*seulexStepFactor5;
+                dtNew = fabs(dt)*kSeulexStepFactor5;
                 break;
             }
 
@@ -237,12 +237,12 @@ scalar kodes::Seulex::step
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
                     resources->reject[INDEXVEC(0)] = true;
-                    dtNew = fabs(dt)*seulexStepFactor5;
+                    dtNew = fabs(dt)*kSeulexStepFactor5;
                     break;
                 }
                 errOld = min(4*err, 1.0);
                 scalar expo = 1.0/(k + 1);
-                scalar facmin = pow(seulexStepFactor3, expo);
+                scalar facmin = pow(kSeulexStepFactor3, expo);
                 scalar fac;
                 if (err == 0)
                 {
@@ -250,11 +250,11 @@ scalar kodes::Seulex::step
                 }
                 else
                 {
-                    fac = seulexStepFactor2/pow(err/seulexStepFactor1, expo);
-                    fac = max(facmin/seulexStepFactor4, min(1/facmin, fac));
+                    fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
+                    fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
                 }
                 dtOpt[INDEXVEC(k)] = fabs(dt*fac);
-                temp[INDEXVEC(k)] = seulexWorkEstimate[k]/dtOpt[INDEXVEC(k)];
+                temp[INDEXVEC(k)] = kSeulexWorkEstimate[k]/dtOpt[INDEXVEC(k)];
 
                 if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
                 {
@@ -272,11 +272,11 @@ scalar kodes::Seulex::step
                     {
                         break;
                     }
-                    else if (err > seulexStepSequence[kTarg]*seulexStepSequence[kTarg + 1]*4)
+                    else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
                     {
                         resources->reject[INDEXVEC(0)] = true;
                         kTarg = k;
-                        if (kTarg>1 && temp[INDEXVEC(k-1)] < seulexKFactor1*temp[INDEXVEC(k)])
+                        if (kTarg>1 && temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
                         {
                             kTarg--;
                         }
@@ -291,10 +291,10 @@ scalar kodes::Seulex::step
                     {
                         break;
                     }
-                    else if (err > seulexStepSequence[k + 1]*2)
+                    else if (err > kSeulexStepSequence[k + 1]*2)
                     {
                         resources->reject[INDEXVEC(0)] = true;
-                        if (kTarg>1 && temp[INDEXVEC(k-1)] < seulexKFactor1*temp[INDEXVEC(k)])
+                        if (kTarg>1 && temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
                         {
                             kTarg--;
                         }
@@ -311,7 +311,7 @@ scalar kodes::Seulex::step
                         if
                         (
                             kTarg > 1
-                        && temp[INDEXVEC(kTarg-1)] < seulexKFactor1*temp[INDEXVEC(kTarg)]
+                        && temp[INDEXVEC(kTarg-1)] < kSeulexKFactor1*temp[INDEXVEC(kTarg)]
                         )
                         {
                             kTarg--;
@@ -351,25 +351,25 @@ scalar kodes::Seulex::step
     else if (k <= kTarg)
     {
         kopt=k;
-        if (temp[INDEXVEC(k-1)] < seulexKFactor1*temp[INDEXVEC(k)])
+        if (temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
         {
             kopt = k - 1;
         }
-        else if (temp[INDEXVEC(k)] < seulexKFactor2*temp[INDEXVEC(k - 1)])
+        else if (temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(k - 1)])
         {
-            kopt = min(k + 1, KODES_SEULEX_MAX_ORDER - 1);
+            kopt = min(k + 1, kSeulexMaxOrder - 1);
         }
     }
     else
     {
         kopt = k - 1;
-        if (k > 2 && temp[INDEXVEC(k-2)] < seulexKFactor1*temp[INDEXVEC(k - 1)])
+        if (k > 2 && temp[INDEXVEC(k-2)] < kSeulexKFactor1*temp[INDEXVEC(k - 1)])
         {
             kopt = k - 2;
         }
-        if (temp[INDEXVEC(k)] < seulexKFactor2*temp[INDEXVEC(kopt)])
+        if (temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(kopt)])
         {
-            kopt = min(k, KODES_SEULEX_MAX_ORDER - 1);
+            kopt = min(k, kSeulexMaxOrder - 1);
         }
     }
 
@@ -387,13 +387,13 @@ scalar kodes::Seulex::step
         }
         else
         {
-            if (k < kTarg && temp[INDEXVEC(k)] < seulexKFactor2*temp[INDEXVEC(k - 1)])
+            if (k < kTarg && temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(k - 1)])
             {
-                dtNew = dtOpt[INDEXVEC(k)]*seulexWorkEstimate[kopt + 1]/seulexWorkEstimate[k];
+                dtNew = dtOpt[INDEXVEC(k)]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
             }
             else
             {
-                dtNew = dtOpt[INDEXVEC(k)]*seulexWorkEstimate[kopt]/seulexWorkEstimate[k];
+                dtNew = dtOpt[INDEXVEC(k)]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
             }
         }
         kTarg = kopt;

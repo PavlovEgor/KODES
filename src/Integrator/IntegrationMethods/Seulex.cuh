@@ -6,7 +6,7 @@
 
 #include "IntegrationMethod.cuh"
 #include "SeulexDeviceResources.cuh"
-#include "seulexConstants.cuh"
+#include "seulex_constants.cuh"
 
 namespace kodes
 {
@@ -14,7 +14,7 @@ namespace kodes
 // A GPU port of the semi-implicit Bulirsch-Stoer extrapolation method, the same
 // algorithm as OpenFOAM's own seulex ODE solver.
 //
-// It controls its own step size and order, so usesAdaptiveStep is false and
+// It controls its own step size and order, so kUsesAdaptiveStep is false and
 // step() is the whole of one accepted step rather than a trial one.
 //
 // Selected by the name "seulex", see methodTable; the entry pairs it with
@@ -26,7 +26,7 @@ class Seulex
 {
 public:
 
-    static constexpr bool usesAdaptiveStep = false;
+    static constexpr bool kUsesAdaptiveStep = false;
 
     __device__ __host__
     Seulex
@@ -39,14 +39,14 @@ public:
         : IntegrationMethod
           (
               batchSize, scratchSize, systemSize, parameterSize,
-              usesAdaptiveStep
+              kUsesAdaptiveStep
           )
     {}
 
     __device__ __host__
     ~Seulex() = default;
 
-    // One linearly implicit sub-stepping sequence of seulexStepSequence[k] steps over dtTot
+    // One linearly implicit sub-stepping sequence of kSeulexStepSequence[k] steps over dtTot
     __device__ static bool
     seul
     (

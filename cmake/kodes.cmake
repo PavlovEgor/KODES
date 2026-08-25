@@ -2,8 +2,8 @@
 #
 # Every method and every balancer is compiled in, whichever one a given run
 # ends up naming: the choice is made when the program starts, so the code for
-# all of them has to be in the binary. That is what the tables in methodTable.cu
-# and balancerTable.cu refer to.
+# all of them has to be in the binary. That is what the tables in method_table.cu
+# and balancer_table.cu refer to.
 #
 # Include with
 #   include(${CMAKE_CURRENT_SOURCE_DIR}/<path to>/cmake/kodes.cmake)
@@ -16,7 +16,7 @@ set(KODES_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 set(KODES_SRC_DIR ${KODES_ROOT_DIR}/src)
 
 set(KODES_SOURCES
-    ${KODES_SRC_DIR}/basicLinalg.cu
+    ${KODES_SRC_DIR}/basic_linalg.cu
 
     ${KODES_SRC_DIR}/Resources/StepState.cu
     ${KODES_SRC_DIR}/Resources/HostResources.cu
@@ -28,16 +28,16 @@ set(KODES_SOURCES
 
     ${KODES_SRC_DIR}/Integrator/Integrator.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/IntegrationMethod.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/methodTable.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/method_table.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/seulexConstants.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/seulex_constants.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler.cu
 
     ${KODES_SRC_DIR}/Balancer/Balancer.cu
     ${KODES_SRC_DIR}/Balancer/TemperatureBalancer.cu
     ${KODES_SRC_DIR}/Balancer/RHSNormBalancer.cu
     ${KODES_SRC_DIR}/Balancer/StiffnessBalancer.cu
-    ${KODES_SRC_DIR}/Balancer/balancerTable.cu
+    ${KODES_SRC_DIR}/Balancer/balancer_table.cu
 )
 
 # The JSON settings reader, kept apart because it is the one part of the
@@ -58,7 +58,7 @@ set(KODES_SETTINGS_INCLUDE_DIRS
 # Optional MPI device binding, a translation unit of its own so that targets
 # not needing MPI never link it
 set(KODES_MPI_SOURCES
-    ${KODES_SRC_DIR}/mpiSelectDevice.cu
+    ${KODES_SRC_DIR}/mpi_select_device.cu
 )
 
 set(KODES_INCLUDE_DIRS

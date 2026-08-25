@@ -3,7 +3,7 @@
 #define KODES_ODE_SYSTEM
 #pragma once
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 namespace kodes 
 {

@@ -29,9 +29,9 @@ class StiffnessBalancer
 {
 public:
 
-    static constexpr label keyCount = 2;
+    static constexpr label kKeyCount = 2;
 
-    static constexpr bool usesDerivatives = true;
+    static constexpr bool kUsesDerivatives = true;
 
     __device__ __host__
     StiffnessBalancer
@@ -44,7 +44,7 @@ public:
         : Balancer
           (
               batchSize, scratchSize, systemSize, parameterSize,
-              keyCount, usesDerivatives
+              kKeyCount, kUsesDerivatives
           )
     {}
 
@@ -72,13 +72,13 @@ public:
     __host__ static size_t
     stateBytesPerSystem(const label systemSize, const label parameterSize)
     {
-        return Balancer::keyBytesPerSystem(keyCount);
+        return Balancer::keyBytesPerSystem(kKeyCount);
     }
 
     __host__ static size_t
     scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return Balancer::keyScratchBytesPerThread(systemSize, usesDerivatives);
+        return Balancer::keyScratchBytesPerThread(systemSize, kUsesDerivatives);
     }
 
     KODES_DECLARE_DEVICE_OBJECT(StiffnessBalancer)

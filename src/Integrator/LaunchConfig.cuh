@@ -6,7 +6,7 @@
 #include <cuda_runtime.h>
 #include <string.h>
 
-#include "basicTypes.cuh"
+#include "basic_types.cuh"
 
 // Fraction of the free VRAM a plan may claim, whatever share is asked for
 #define KODES_MEMORY_HEADROOM 0.8
@@ -21,7 +21,7 @@ struct DeviceShare
     scalar      value;
 };
 
-inline constexpr DeviceShare deviceShares[] =
+inline constexpr DeviceShare kDeviceShares[] =
 {
     {"best", 1.0},   // everything the device offers
     {"half", 0.5}    // one half of it, to leave room for another process
@@ -37,7 +37,7 @@ inline constexpr DeviceShare deviceShares[] =
 //    is stored per system, so the batch can be far larger than scratchSize and
 //    fill the free VRAM, which keeps the number of transfers low.
 //
-// Constructed either from a share name ("best", "half", ... see deviceShares)
+// Constructed either from a share name ("best", "half", ... see kDeviceShares)
 // or from explicit sizes; planLaunch() turns it into the final plan.
 class LaunchConfig
 {
@@ -57,7 +57,7 @@ public:
     :
     threads(threadsPerBlock)
     {
-        for (const DeviceShare& share : deviceShares)
+        for (const DeviceShare& share : kDeviceShares)
         {
             if (strcmp(share.name, shareName) == 0)
             {
@@ -67,7 +67,7 @@ public:
         }
 
         fprintf(stderr, "LaunchConfig error at %s:%d: unknown share \"%s\", known are", __FILE__, __LINE__, shareName);
-        for (const DeviceShare& share : deviceShares)
+        for (const DeviceShare& share : kDeviceShares)
         {
             fprintf(stderr, " \"%s\"", share.name);
         }

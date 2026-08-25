@@ -65,7 +65,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 
 ### Basic types and utilities
 
-- **`basicTypes.cuh`** — the library's fundamental typedefs: `scalar` (`double`) and `label`
+- **`basic_types.cuh`** — the library's fundamental typedefs: `scalar` (`double`) and `label`
   (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
   values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID` plus
   `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data layout*).
@@ -82,7 +82,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   kodes::LaunchConfig(8192, 1000000)     // concurrent systems and batch size set by hand
   ```
 
-  The named shares live in the `kodes::deviceShares` table — add a line there to add a name. A
+  The named shares live in the `kodes::kDeviceShares` table — add a line there to add a name. A
   share scales both the concurrency and the memory budget; sizes set by hand are only checked
   against the free VRAM. `KODES_MEMORY_HEADROOM` caps how much of the free VRAM any plan may claim.
 - **`kodes::planLaunch(...)`** (declared in `Integrator.cuh`) — resolves a request against the
@@ -96,7 +96,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   exists, which it has to be, since it is the plan that fixes their sizes. Memory owned outside both
   (for a pyJac mechanism, `required_mechanism_size()`; pad that allocation to `scratchSize`, not to
   `batchSize`) goes in the extra.
-- **`basicLinalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
+- **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
   the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
   `clamp`, `swap`, `normalizeError`).
@@ -120,7 +120,7 @@ decisions made when the program starts, and all three are made the same way. The
 worth reading once — **`DeviceObjects_explained.md`** covers them in full, with the reasons — but
 in short:
 
-- **`Factory/deviceObject.cuh`** — how such an object is built. It lives in device memory, because
+- **`Factory/device_object.cuh`** — how such an object is built. It lives in device memory, because
   a virtual call from inside a kernel needs a device vtable, and its buffers are allocated by the
   host into a *host stub* of the same type: allocate on the stub, byte-copy it to the device,
   placement-new on top of the copy. That order is why the constructor of such a class must set
@@ -130,7 +130,7 @@ in short:
   `create`/`destroy`/`createStub`/`destroyStub` — from one line of `KODES_DEFINE_DEVICE_OBJECT` in
   its `.cu`. The host half of the pattern is static polymorphism (the factory is a template, so
   `stub->allocate()` resolves to the concrete one); only the device half uses a vtable.
-- **`Factory/typeTable.cuh`** — how one of them is chosen by name. A `TypeEntry` is a concrete class
+- **`Factory/type_table.cuh`** — how one of them is chosen by name. A `TypeEntry` is a concrete class
   reduced to plain function pointers, so the dispatch needs no host vtable at all: a caller nvcc did
   not compile can still select and own a class whose virtuals only exist on the device. That is the
   reason for `createStub` — `key()` and `step()` are device-only virtuals, and the host vtable of a
@@ -139,10 +139,10 @@ in short:
   holding nothing but a pointer. `Handle<Base>` owns the device object and its stub together and
   returns both to the class that made them.
 
-The tables are `Balancer/balancerTable.cu` and `Integrator/IntegrationMethods/methodTable.cu`; a
+The tables are `Balancer/balancer_table.cu` and `Integrator/IntegrationMethods/method_table.cu`; a
 method's entry names the `DeviceResources` subclass holding its scratch, since the two can only be
 chosen together.
-- **`kodes::mpiSelectDevice`** (`mpiSelectDevice.cuh`/`.cu`) — optional MPI device-binding helper for
+- **`kodes::mpiSelectDevice`** (`mpi_select_device.cuh`/`.cu`) — optional MPI device-binding helper for
   running across an arbitrary number of ranks and an arbitrary number of GPUs (single node or a
   heterogeneous multi-node cluster). Each rank is assumed to already own its own local slice of
   systems (e.g. via the host CFD code's own domain decomposition) — this only binds the calling
@@ -271,7 +271,7 @@ resolution on the ones already there. Order them by how much they matter; at mos
 
 All three are *device objects* in the sense of the section below, so all three are built the same
 way and picked by name — `"temperature"`, `"rhsNorm"`, `"stiffness"` — out of the table in
-`Balancer/balancerTable.cu`, with `"none"` for no balancing at all. Each declares its own
+`Balancer/balancer_table.cu`, with `"none"` for no balancing at all. Each declares its own
 `stateBytesPerSystem`/`scratchBytesPerThread` for `planLaunch`: a key that evaluates the right hand
 side needs a `systemSize` scratch slot per resident thread to write it into.
 
@@ -287,7 +287,7 @@ is what the `"none"` name gives — leave the traversal in the copy order.
 - **`kodes::IntegrationMethod`** (`Integrator/IntegrationMethods/IntegrationMethod.cuh`) — abstract
   base for one numerical method, a device object like the balancer: `__device__ virtual scalar
   step(ode, resources, controls)` advances the system the calling thread holds in its scratch slot,
-  and which subclass runs is a name in `methodTable`. `usesAdaptiveStep()` says whether that step is
+  and which subclass runs is a name in `method_table`. `usesAdaptiveStep()` says whether that step is
   a *trial* step, in which case the base's own `adaptiveStep()` — the step-size controller — retries
   it smaller until the error is inside the tolerance and then grows the next one. A method owns no
   storage: the `DeviceResources` subclass named in the same table entry holds all of it, which is
@@ -297,7 +297,7 @@ is what the `"none"` name gives — leave the traversal in the copy order.
   `step()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and polynomial
   extrapolation (`extrapolate`) to control step size and order, so it controls its own step and
   `usesAdaptiveStep` is false. The step-control coefficients are `__constant__`s in
-  `seulexConstants.cuh`; the tolerances come from `IntegratorControls`, i.e. from the settings file.
+  `seulex_constants.cuh`; the tolerances come from `IntegratorControls`, i.e. from the settings file.
 - **`kodes::Euler`** (`Integrator/IntegrationMethods/Euler/…`) — one explicit step and its error, to
   be accepted or rejected by `adaptiveStep`. The simplest thing the machinery can be checked
   against, not something to point at a stiff mechanism.
@@ -388,17 +388,17 @@ another translation unit.
 
 ```
 src/
-  basicTypes.cuh          scalar, label, the indexing macros
-  basicLinalg.{cuh,cu}    LU factorisation and the small device helpers
-  mpiSelectDevice.{cuh,cu}
-  Factory/                deviceObject.cuh, typeTable.cuh — the pattern above
+  basic_types.cuh         scalar, label, the indexing macros
+  basic_linalg.{cuh,cu}   LU factorisation and the small device helpers
+  mpi_select_device.{cuh,cu}
+  Factory/                device_object.cuh, type_table.cuh — the pattern above
   ODESystem/              ODESystem.cuh, PyJacSystem.*, and the generated
                           mechanisms grimech/ and h2o2/
   Resources/              Resources, HostResources, DeviceResources and the
                           per-method subclasses, StepState, Operator
   Integrator/             Integrator, LaunchConfig, IntegratorControls
-    IntegrationMethods/   IntegrationMethod, Seulex, Euler, methodTable
-  Balancer/               Balancer, the three keys, balancerTable
+    IntegrationMethods/   IntegrationMethod, Seulex, Euler, method_table
+  Balancer/               Balancer, the three keys, balancer_table
   Settings/               Config (JSON reader), Settings
 
 examples/
@@ -408,6 +408,6 @@ examples/
   mpiDeviceSelect/        binding one rank per GPU
 ```
 
-A file starting with a capital letter holds the class it is named after; a lower-case one holds
-free functions, a table or macros. That and the rest of the conventions are in
+A file starting with a capital letter holds the class it is named after; a `snake_case` one holds
+free functions, a table or constants. That and the rest of the conventions are in
 **[`CodingStyle.md`](CodingStyle.md)**.
