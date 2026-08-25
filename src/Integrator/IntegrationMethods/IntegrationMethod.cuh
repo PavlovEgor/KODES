@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "basic_types.cuh"
-#include "DeviceObject.cuh"
+#include "basicTypes.cuh"
+#include "deviceObject.cuh"
 #include "DeviceResources.cuh"
 #include "ODESystem.cuh"
 #include "IntegratorControls.cuh"
@@ -14,7 +14,7 @@ namespace kodes
 
 // One numerical method for advancing a system by one step.
 //
-// A device object in the sense of Factory/DeviceObject.cuh, exactly like a
+// A device object in the sense of Factory/deviceObject.cuh, exactly like a
 // Balancer: it lives in device memory, the solve kernel dispatches on it
 // through its vtable, and which subclass it is is decided at run time by a name
 // out of methodTable. Before, the method was a template argument of the whole

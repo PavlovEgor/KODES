@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Balancer.cuh"
-#include "TypeTable.cuh"
+#include "typeTable.cuh"
 
 // The balancers a name may select, and how to build the one it selects.
 //

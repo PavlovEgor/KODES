@@ -1,6 +1,5 @@
-#ifndef ADAPTDEVRES 
-#define ADAPTDEVRES
-
+#ifndef KODES_ADAPTIVE_DEVICE_RESOURCES
+#define KODES_ADAPTIVE_DEVICE_RESOURCES
 #include "DeviceResources.cuh"
 
 namespace kodes 

@@ -4,7 +4,7 @@
 **все** классы, выбираемые в момент запуска программы: интегратор
 (`IntegrationMethod` → `Seulex`, `Euler`), балансировщик (`Balancer` →
 `TemperatureBalancer`, ...), хранилище (`DeviceResources` → `SeulexDeviceResources`,
-...) и система уравнений (`ODESystem` → `pyJacSystem`).
+...) и система уравнений (`ODESystem` → `PyJacSystem`).
 
 Раньше эти механизмы работали по-разному: балансировщик был виртуальным объектом
 на устройстве, интегратор — шаблонным параметром, то есть выбирался при
@@ -12,8 +12,8 @@
 
 | файл | что в нём |
 |---|---|
-| `src/Factory/DeviceObject.cuh` | как **построить** такой объект (одинаково для всех) |
-| `src/Factory/TypeTable.cuh`    | как **выбрать по имени**, какой именно строить |
+| `src/Factory/deviceObject.cuh` | как **построить** такой объект (одинаково для всех) |
+| `src/Factory/typeTable.cuh`    | как **выбрать по имени**, какой именно строить |
 
 Дальше — почему всё именно так, а не проще.
 
@@ -51,7 +51,7 @@ someKernel<<<...>>>(devPtr);              // ядро зовёт devPtr->key(...
 
 ```cpp
 template<class T>
-__global__ void constructDeviceObject(T* object, ...)
+__global__ void constructDeviceObjectKernel(T* object, ...)
 {
     new (object) T(...);        // конструктор выполняется на устройстве
 }
@@ -85,7 +85,7 @@ __global__ void constructDeviceObject(T* object, ...)
 1) cudaMalloc(&devPtr, sizeof(T))     место под объект на устройстве
 2) hostStub->allocate()               хост выделяет буферы, кладёт адреса в стаб
 3) cudaMemcpy(devPtr, hostStub, ...)  байтовая копия стаба → адреса уехали
-4) constructDeviceObject<<<1,1>>>     placement new поверх копии → чинит vtable
+4) constructDeviceObjectKernel<<<1,1>>>     placement new поверх копии → чинит vtable
 ```
 
 Сначала копия, **потом** конструктор. Иначе конструктор, отработавший первым,
@@ -130,7 +130,7 @@ kodes::Balancer* stub;
 
 ## 2. Контракт: что должен предоставить класс
 
-Всё вышеперечисленное написано **один раз** в `Factory/DeviceObject.cuh`. Чтобы
+Всё вышеперечисленное написано **один раз** в `Factory/deviceObject.cuh`. Чтобы
 класс можно было строить этими шаблонами, от него требуется ровно три вещи:
 
 ```cpp
@@ -209,7 +209,7 @@ KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)
 слот для несуществующей на хосте `key()`. Это лишний риск на ровном месте.
 
 Вместо этого один конкретный класс сводится к набору **обычных указателей на
-функции** (`TypeTable.cuh`):
+функции** (`typeTable.cuh`):
 
 ```cpp
 template<class Base>
@@ -360,7 +360,7 @@ solver.setBalancer(balancing.device(), balancing.host());
 (`CUDA_SEPARABLE_COMPILATION ON`) девиртуализовать их всё равно было нечем.
 
 Что действительно поменялось — `planLaunch()` теперь спрашивает занятость одного
-ядра `adaptive_solve` на все методы сразу, а не отдельной инстанциации на каждый.
+ядра `solveKernel` на все методы сразу, а не отдельной инстанциации на каждый.
 Раньше в ядро инлайнился весь `Seulex::step`, и занятость считалась по его
 регистрам; теперь ядро само по себе маленькое. Если после замеров окажется, что
 сетка выходит крупнее, чем устройство реально держит резидентной, — лишнее место

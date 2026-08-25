@@ -1,10 +1,9 @@
 
-#ifndef ODESystem1_H
-#define ODESystem1_H
-
+#ifndef KODES_ODE_SYSTEM
+#define KODES_ODE_SYSTEM
 #pragma once
 
-#include "basic_types.cuh"
+#include "basicTypes.cuh"
 
 namespace kodes 
 {

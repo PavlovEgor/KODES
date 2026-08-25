@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "basic_types.cuh"
-#include "DeviceObject.cuh"
+#include "basicTypes.cuh"
+#include "deviceObject.cuh"
 #include "DeviceResources.cuh"
 #include "ODESystem.cuh"
 #include "LaunchConfig.cuh"
@@ -100,7 +100,7 @@ relativeRHSNorm(const scalar* y, const scalar* dydt, const label systemSize)
 // The ordering is a bucket sort and runs entirely on the device: the keys never
 // leave it. See balance() for the four passes.
 //
-// A device object in the sense of Factory/DeviceObject.cuh: it lives in device
+// A device object in the sense of Factory/deviceObject.cuh: it lives in device
 // memory and a host side stub holds the same pointers. The device object is
 // placement-newed on top of a byte copy of that stub, so the constructor must
 // set value members only and leave every buffer pointer alone - initialising
@@ -291,7 +291,7 @@ public:
 };
 
 // Pass 1: the keys of every system, and the range each of them spans
-__global__ void fillKeys
+__global__ void fillKeysKernel
 (
     Balancer* balancer,
     DeviceResources* resources,
@@ -300,13 +300,13 @@ __global__ void fillKeys
 );
 
 // Pass 2: the bucket every system falls in, and how many fall in each
-__global__ void fillBuckets(Balancer* balancer, const label realBatchSize);
+__global__ void fillBucketsKernel(Balancer* balancer, const label realBatchSize);
 
 // Pass 3: where each bucket starts in the ordered batch
-__global__ void scanBuckets(Balancer* balancer);
+__global__ void scanBucketsKernel(Balancer* balancer);
 
 // Pass 4: every system into a slot of its bucket
-__global__ void scatterOrder(Balancer* balancer, const label realBatchSize);
+__global__ void scatterOrderKernel(Balancer* balancer, const label realBatchSize);
 
 }
 

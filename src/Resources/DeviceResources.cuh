@@ -1,9 +1,8 @@
-#ifndef DEVRES
-#define DEVRES
-
+#ifndef KODES_DEVICE_RESOURCES
+#define KODES_DEVICE_RESOURCES
 #include "Resources.cuh"
 #include "StepState.cuh"
-#include "DeviceObject.cuh"
+#include "deviceObject.cuh"
 
 namespace kodes
 {
@@ -63,7 +62,7 @@ public:
 
     // The device buffers, allocated into this object's own pointers. Every
     // subclass calls this one first and then adds its own - see
-    // Factory/DeviceObject.cuh for who calls them and when.
+    // Factory/deviceObject.cuh for who calls them and when.
     __host__ void allocate();
 
     __host__ void deallocate();

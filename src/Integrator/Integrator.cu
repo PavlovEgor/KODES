@@ -7,7 +7,7 @@
 // writing it back. It walks the balanced order, so the systems a warp picks up
 // are 32 neighbours of that order.
 __global__
-void kodes::adaptive_solve
+void kodes::solveKernel
 (
     kodes::ODESystem* ode,
     kodes::DeviceResources* resources,
@@ -18,7 +18,7 @@ void kodes::adaptive_solve
     kodes::IntegratorControls ctrl = controls;
 
     const label systemSize = resources->systemSize();
-    const label maxSteps_ = ctrl.maxSteps;
+    const label maxSteps = ctrl.maxSteps;
 
     scalar* __restrict__ y = resources->currentVector();
 
@@ -43,7 +43,7 @@ void kodes::adaptive_solve
 
         bool reachedEnd = false;
 
-        for (label nStep = 0; nStep < maxSteps_; ++nStep)
+        for (label nStep = 0; nStep < maxSteps; ++nStep)
         {
             scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
             resources->reject[INDEXVEC(0)] = false;
@@ -80,7 +80,7 @@ void kodes::adaptive_solve
             (
                 "Integration steps greater than maximum %d : system %d, "
                 "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps_, system, t, tEnd, resources->deltaTDid[INDEXVEC(0)]
+                maxSteps, system, t, tEnd, resources->deltaTDid[INDEXVEC(0)]
             );
         }
 
@@ -109,7 +109,7 @@ __host__ label kodes::maxConcurrentSystems(const label threads)
 {
     return maxConcurrentThreads
     (
-        (const void*)adaptive_solve,
+        (const void*)solveKernel,
         threads,
         sharedMemorySize(threads)
     );
@@ -230,7 +230,7 @@ void kodes::Integrator::solve(scalar deltaT, label realBatchSize)
     controls_.realBatchSize = realBatchSize;
     controls_.deltaT = deltaT;
 
-    kodes::adaptive_solve
+    kodes::solveKernel
         <<<config_.blocks, config_.threads, config_.sharedMemSize>>>
         (ode_, resources_, method_, controls_);
     CUDA_CHECK_LAST();

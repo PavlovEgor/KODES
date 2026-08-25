@@ -6,7 +6,7 @@
 #include <cuda_runtime.h>
 #include <string.h>
 
-#include "basic_types.cuh"
+#include "basicTypes.cuh"
 
 // Fraction of the free VRAM a plan may claim, whatever share is asked for
 #define KODES_MEMORY_HEADROOM 0.8

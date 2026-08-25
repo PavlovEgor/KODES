@@ -1,11 +1,10 @@
-#ifndef Integrator_H
-#define Integrator_H
-
+#ifndef KODES_INTEGRATOR
+#define KODES_INTEGRATOR
 #pragma once
 
 #include <cuda_runtime.h>
 
-#include "basic_types.cuh"
+#include "basicTypes.cuh"
 #include "IntegratorControls.cuh"
 #include "LaunchConfig.cuh"
 #include "Balancer.cuh"
@@ -20,7 +19,7 @@ namespace kodes
 // the method, the resources and the balancer are all device objects the kernel
 // dispatches on, so nothing about it depends on which ones were chosen.
 __global__
-void adaptive_solve
+void solveKernel
 (
     ODESystem* ode,
     DeviceResources* resources,

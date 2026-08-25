@@ -5,7 +5,7 @@
 #define KODES_WARP 32
 
 __global__ void
-kodes::fillKeys
+kodes::fillKeysKernel
 (
     kodes::Balancer* balancer,
     kodes::DeviceResources* resources,
@@ -81,7 +81,7 @@ kodes::fillKeys
 }
 
 __global__ void
-kodes::fillBuckets(kodes::Balancer* balancer, const label realBatchSize)
+kodes::fillBucketsKernel(kodes::Balancer* balancer, const label realBatchSize)
 {
     const scalar* __restrict__ keys = balancer->keys();
     label* __restrict__ bucket = balancer->bucket();
@@ -116,7 +116,7 @@ kodes::fillBuckets(kodes::Balancer* balancer, const label realBatchSize)
 }
 
 __global__ void
-kodes::scanBuckets(kodes::Balancer* balancer)
+kodes::scanBucketsKernel(kodes::Balancer* balancer)
 {
     __shared__ label buffer[2][KODES_BALANCER_SCAN_BLOCK];
     __shared__ label running;
@@ -175,7 +175,7 @@ kodes::scanBuckets(kodes::Balancer* balancer)
 }
 
 __global__ void
-kodes::scatterOrder(kodes::Balancer* balancer, const label realBatchSize)
+kodes::scatterOrderKernel(kodes::Balancer* balancer, const label realBatchSize)
 {
     const label* __restrict__ bucket = balancer->bucket();
     label* __restrict__ cursor = balancer->cursor();
@@ -260,18 +260,18 @@ kodes::Balancer::balance
     // The key kernel is given the same grid and the same dynamic shared memory
     // as the solve: a key is free to evaluate the right hand side, and a
     // generated mechanism reads both the thread indexing and that shared block.
-    kodes::fillKeys<<<config.blocks, config.threads, config.sharedMemSize>>>
+    kodes::fillKeysKernel<<<config.blocks, config.threads, config.sharedMemSize>>>
     (
         devBalancer, resources, ode, realBatchSize
     );
     CUDA_CHECK_LAST();
 
-    kodes::fillBuckets<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
+    kodes::fillBucketsKernel<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
     CUDA_CHECK_LAST();
 
-    kodes::scanBuckets<<<1, KODES_BALANCER_SCAN_BLOCK>>>(devBalancer);
+    kodes::scanBucketsKernel<<<1, KODES_BALANCER_SCAN_BLOCK>>>(devBalancer);
     CUDA_CHECK_LAST();
 
-    kodes::scatterOrder<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
+    kodes::scatterOrderKernel<<<config.blocks, config.threads>>>(devBalancer, realBatchSize);
     CUDA_CHECK_LAST();
 }

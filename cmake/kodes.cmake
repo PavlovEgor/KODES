@@ -10,29 +10,28 @@
 # and then use ${KODES_SOURCES} / ${KODES_INCLUDE_DIRS}.
 #
 # The pyJac mechanism is a separate list, since not every target needs one:
-#   kodes_pyjac_mechanism(grimech OUT_SOURCES ... OUT_INCLUDE_DIRS ...)
+#   kodes_pyjac_mechanism(grimech MECH_SOURCES MECH_INCLUDE_DIRS)
 
 set(KODES_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 set(KODES_SRC_DIR ${KODES_ROOT_DIR}/src)
 
 set(KODES_SOURCES
-    ${KODES_SRC_DIR}/basic_linalg.cu
+    ${KODES_SRC_DIR}/basicLinalg.cu
 
-    ${KODES_SRC_DIR}/StepState/StepState.cu
-
+    ${KODES_SRC_DIR}/Resources/StepState.cu
+    ${KODES_SRC_DIR}/Resources/HostResources.cu
     ${KODES_SRC_DIR}/Resources/DeviceResources.cu
     ${KODES_SRC_DIR}/Resources/AdaptiveDeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/HostResources.cu
+    ${KODES_SRC_DIR}/Resources/SeulexDeviceResources.cu
+    ${KODES_SRC_DIR}/Resources/EulerDeviceResources.cu
     ${KODES_SRC_DIR}/Resources/Operator.cu
-    ${KODES_SRC_DIR}/Resources/IntegratorDeviceResources/Seulex/SeulexDeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/IntegratorDeviceResources/Seulex/SeulexConstants.cu
-    ${KODES_SRC_DIR}/Resources/IntegratorDeviceResources/Euler/EulerDeviceResources.cu
 
     ${KODES_SRC_DIR}/Integrator/Integrator.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/IntegrationMethod.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/methodTable.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/Seulex.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler/Euler.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/seulexConstants.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler.cu
 
     ${KODES_SRC_DIR}/Balancer/Balancer.cu
     ${KODES_SRC_DIR}/Balancer/TemperatureBalancer.cu
@@ -48,38 +47,38 @@ set(KODES_SOURCES
 #
 #   git submodule update --init external/rapidjson
 set(KODES_SETTINGS_SOURCES
-    ${KODES_SRC_DIR}/kodes_config.cu
+    ${KODES_SRC_DIR}/Settings/Config.cu
     ${KODES_SRC_DIR}/Settings/Settings.cu
 )
 
 set(KODES_SETTINGS_INCLUDE_DIRS
-    ${KODES_SRC_DIR}/Settings
     ${KODES_ROOT_DIR}/external/rapidjson/include
+)
+
+# Optional MPI device binding, a translation unit of its own so that targets
+# not needing MPI never link it
+set(KODES_MPI_SOURCES
+    ${KODES_SRC_DIR}/mpiSelectDevice.cu
 )
 
 set(KODES_INCLUDE_DIRS
     ${KODES_SRC_DIR}
     ${KODES_SRC_DIR}/Factory
-    ${KODES_SRC_DIR}/StepState
     ${KODES_SRC_DIR}/ODESystem
     ${KODES_SRC_DIR}/Resources
-    ${KODES_SRC_DIR}/Resources/IntegratorDeviceResources/Seulex
-    ${KODES_SRC_DIR}/Resources/IntegratorDeviceResources/Euler
     ${KODES_SRC_DIR}/Integrator
-    ${KODES_SRC_DIR}/Integrator/IntegratorControls
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler
     ${KODES_SRC_DIR}/Balancer
+    ${KODES_SRC_DIR}/Settings
 )
 
-# The generated sources of one pyJac mechanism, plus pyJacSystem itself.
+# The generated sources of one pyJac mechanism, plus PyJacSystem itself.
 function(kodes_pyjac_mechanism name out_sources out_include_dirs)
 
     set(dir ${KODES_SRC_DIR}/ODESystem/${name}/out)
 
     set(sources
-        ${KODES_SRC_DIR}/ODESystem/pyJacSystem.cu
+        ${KODES_SRC_DIR}/ODESystem/PyJacSystem.cu
         ${dir}/chem_utils.cu
         ${dir}/dydt.cu
         ${dir}/jacob.cu

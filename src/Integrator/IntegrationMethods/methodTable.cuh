@@ -5,7 +5,7 @@
 
 #include "IntegrationMethod.cuh"
 #include "DeviceResources.cuh"
-#include "TypeTable.cuh"
+#include "typeTable.cuh"
 
 // The integration methods a name may select, and how to build the one it
 // selects. The balancer's table with one addition: a method and the resources

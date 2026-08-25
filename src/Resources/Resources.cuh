@@ -1,7 +1,6 @@
-#ifndef KODES_RESOURCES_CUH
-#define KODES_RESOURCES_CUH
-
-#include "basic_types.cuh"
+#ifndef KODES_RESOURCES
+#define KODES_RESOURCES
+#include "basicTypes.cuh"
 #include <stdio.h>
 
 namespace kodes 

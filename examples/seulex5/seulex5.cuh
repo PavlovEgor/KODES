@@ -1,0 +1,21 @@
+#pragma once
+
+#include "basicLinalg.cuh"
+#include "SeulexDeviceResources.cuh"
+#include "PyJacSystem.cuh"
+#include "HostResources.cuh"
+#include "Operator.cuh"
+#include "Seulex.cuh"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <cuda/cmath>
+#include <cuda_runtime.h>
+#include <iostream>
+#include <chrono>
+#include "gpu_memory.cuh"
+#include "mechanism.cuh"
+#include "Integrator.cuh"
+#include "methodTable.cuh"
+#include "balancerTable.cuh"
+#include "Settings.cuh"

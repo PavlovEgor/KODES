@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "basic_types.cuh"
-#include "kodes_config.cuh"
+#include "basicTypes.cuh"
+#include "Config.cuh"
 #include "LaunchConfig.cuh"
 #include "IntegratorControls.cuh"
 #include "balancerTable.cuh"
@@ -14,7 +14,7 @@
 // One JSON file holding everything a run is free to choose, so that changing
 // the method, the balancer or a tolerance does not mean recompiling.
 //
-// See examples/integrators/GRIMECH/seulex5.json for a complete file. Every
+// See examples/seulex5/seulex5.json for a complete file. Every
 // entry has a default, so a file naming nothing but the method is valid.
 //
 //   {

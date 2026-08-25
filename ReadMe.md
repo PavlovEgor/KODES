@@ -65,7 +65,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 
 ### Basic types and utilities
 
-- **`basic_types.cuh`** — the library's fundamental typedefs: `scalar` (`double`) and `label`
+- **`basicTypes.cuh`** — the library's fundamental typedefs: `scalar` (`double`) and `label`
   (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
   values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID` plus
   `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data layout*).
@@ -96,11 +96,11 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   exists, which it has to be, since it is the plan that fixes their sizes. Memory owned outside both
   (for a pyJac mechanism, `required_mechanism_size()`; pad that allocation to `scratchSize`, not to
   `batchSize`) goes in the extra.
-- **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
+- **`basicLinalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization and back-substitution, used to solve
   the linear systems in each implicit step), plus small helpers (`copyVec`, `sumVec`, `sqr`,
   `clamp`, `swap`, `normalizeError`).
-- **`kodes::Config`** (`kodes_config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
+- **`kodes::Config`** (`Settings/Config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
   (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE
   machinery. Keys are dotted paths, so `"controls.absTol"` reaches into the nested object. Requires
   the `external/rapidjson` submodule.
@@ -108,7 +108,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   name of the method, the name of the balancer, the `LaunchConfig` to resolve and the
   `IntegratorControls`. Every entry has a default, and both names are looked up in their table in
   the constructor, so a typo fails before anything has been allocated on the device. See
-  `examples/integrators/GRIMECH/seulex5.json`. It is a source list of its own in
+  `examples/seulex5/seulex5.json`. It is a source list of its own in
   `cmake/kodes.cmake` — the only part of the library needing rapidjson — because a caller with its
   own settings to read (the OpenFOAM chemistry model reads an OpenFOAM dictionary) passes the same
   names and numbers by hand and never links it.
@@ -120,7 +120,7 @@ decisions made when the program starts, and all three are made the same way. The
 worth reading once — **`DeviceObjects_explained.md`** covers them in full, with the reasons — but
 in short:
 
-- **`Factory/DeviceObject.cuh`** — how such an object is built. It lives in device memory, because
+- **`Factory/deviceObject.cuh`** — how such an object is built. It lives in device memory, because
   a virtual call from inside a kernel needs a device vtable, and its buffers are allocated by the
   host into a *host stub* of the same type: allocate on the stub, byte-copy it to the device,
   placement-new on top of the copy. That order is why the constructor of such a class must set
@@ -130,7 +130,7 @@ in short:
   `create`/`destroy`/`createStub`/`destroyStub` — from one line of `KODES_DEFINE_DEVICE_OBJECT` in
   its `.cu`. The host half of the pattern is static polymorphism (the factory is a template, so
   `stub->allocate()` resolves to the concrete one); only the device half uses a vtable.
-- **`Factory/TypeTable.cuh`** — how one of them is chosen by name. A `TypeEntry` is a concrete class
+- **`Factory/typeTable.cuh`** — how one of them is chosen by name. A `TypeEntry` is a concrete class
   reduced to plain function pointers, so the dispatch needs no host vtable at all: a caller nvcc did
   not compile can still select and own a class whose virtuals only exist on the device. That is the
   reason for `createStub` — `key()` and `step()` are device-only virtuals, and the host vtable of a
@@ -142,7 +142,7 @@ in short:
 The tables are `Balancer/balancerTable.cu` and `Integrator/IntegrationMethods/methodTable.cu`; a
 method's entry names the `DeviceResources` subclass holding its scratch, since the two can only be
 chosen together.
-- **`kodes::mpiSelectDevice`** (`kodes_mpi.cuh`/`.cu`) — optional MPI device-binding helper for
+- **`kodes::mpiSelectDevice`** (`mpiSelectDevice.cuh`/`.cu`) — optional MPI device-binding helper for
   running across an arbitrary number of ranks and an arbitrary number of GPUs (single node or a
   heterogeneous multi-node cluster). Each rank is assumed to already own its own local slice of
   systems (e.g. via the host CFD code's own domain decomposition) — this only binds the calling
@@ -150,7 +150,7 @@ chosen together.
   scatter/gather any data. Call it once per rank, right after `MPI_Init`, before creating any
   device-side `kodes` object; `kodes` never calls `MPI_Init`/`MPI_Finalize` itself. A separate
   translation unit from the rest of the library, so targets that don't need MPI never link it — see
-  `examples/mpi_device_select`.
+  `examples/mpiDeviceSelect`.
 
 ### `ODESystem` — the equations being integrated
 
@@ -160,7 +160,7 @@ chosen together.
   device memory — the solve kernel needs a device-resident `ODESystem*`. Its constructor takes the
   mechanism's scratch rather than the four sizes, so it writes its own `create`/`destroy` instead of
   taking them from `KODES_DEFINE_DEVICE_OBJECT`.
-- **`kodes::pyJacSystem`** (`ODESystem/pyJacSystem.cuh`/`.cu`) — any mechanism generated by pyJac.
+- **`kodes::PyJacSystem`** (`ODESystem/PyJacSystem.cuh`/`.cu`) — any mechanism generated by pyJac.
   `derivatives`/`jacobian` forward into the generated `dydt`/`eval_jacob` against a per-thread
   `mechanism_memory` scratch block (concentrations, rates, Jacobian workspace — allocated separately
   via `initialize_gpu_memory`/`free_gpu_memory`, distinct from the state buffers below). Compiled
@@ -190,7 +190,7 @@ chosen together.
   every other, so its buffers are allocated by its own `allocate()` into a host stub that `Operator`
   then reads to find them. The static `stateBytesPerSystem`/`scratchBytesPerThread` report the
   per-system and per-thread cost to `planLaunch`; every subclass extends the latter.
-- **`kodes::SeulexDeviceResources`** (`Resources/IntegratorDeviceResources/Seulex/…`) — extends
+- **`kodes::SeulexDeviceResources`** (`Resources/SeulexDeviceResources.cuh`) — extends
   `DeviceResources` with the extra scratch the Seulex integrator needs per thread: the polynomial
   extrapolation table, Jacobian (`dfdy`) and LU work matrix (`a`), pivot indices, and the various
   temporaries used between the outer step and the inner `seul` sub-stepping. All of it is sized
@@ -267,7 +267,7 @@ resolution on the ones already there. Order them by how much they matter; at mos
   Temperature alone leaves a band holding fresh mixture next to burnt gas, which do not need the
   same number of steps; the norm alone puts a cold cell and a hot equilibrated one in the same bin
   though their Jacobians have nothing in common. This is what more than one key is for, and what
-  `examples/integrators/GRIMECH/seulex5.cu` uses.
+  `examples/seulex5/seulex5.cu` uses.
 
 All three are *device objects* in the sense of the section below, so all three are built the same
 way and picked by name — `"temperature"`, `"rhsNorm"`, `"stiffness"` — out of the table in
@@ -297,12 +297,12 @@ is what the `"none"` name gives — leave the traversal in the copy order.
   `step()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and polynomial
   extrapolation (`extrapolate`) to control step size and order, so it controls its own step and
   `usesAdaptiveStep` is false. The step-control coefficients are `__constant__`s in
-  `SeulexConstants`; the tolerances come from `IntegratorControls`, i.e. from the settings file.
+  `seulexConstants.cuh`; the tolerances come from `IntegratorControls`, i.e. from the settings file.
 - **`kodes::Euler`** (`Integrator/IntegrationMethods/Euler/…`) — one explicit step and its error, to
   be accepted or rejected by `adaptiveStep`. The simplest thing the machinery can be checked
   against, not something to point at a stiff mechanism.
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — drives the solve. It owns the
-  `adaptive_solve` kernel: the grid-stride loop over the batch and the step-count loop that walks
+  `solveKernel` kernel: the grid-stride loop over the batch and the step-count loop that walks
   one system from local time 0 to the target end time. `solve(deltaT, realBatchSize)` launches it
   for one batch, `setDeltaT` seeds the step state of every thread slot, and `resetStep()` reseeds a
   slot for its next system from the trial step the previous one ended with, so each system starts
@@ -312,7 +312,7 @@ is what the `"none"` name gives — leave the traversal in the copy order.
 
 ## Typical run
 
-See `examples/integrators/GRIMECH/seulex5.cu` and the `seulex5.json` beside it. The order matters:
+See `examples/seulex5/seulex5.cu` and the `seulex5.json` beside it. The order matters:
 plan first (it needs the free VRAM before anything has been allocated), then size every allocation
 from the plan.
 
@@ -374,7 +374,7 @@ same names and numbers from wherever it got them.
 ```sh
 git submodule update --init external/rapidjson      # only for kodes::Settings
 
-cd examples/integrators/GRIMECH && cmake -B build && cmake --build build
+cd examples/seulex5 && cmake -B build && cmake --build build
 ./build/seulex5                                     # reads build/seulex5.json
 ```
 
@@ -383,3 +383,31 @@ is a handful of lines. Every method and every balancer is compiled in, whichever
 the choice is made when the program starts, so all of them have to be in the binary.
 `CUDA_SEPARABLE_COMPILATION` is not optional — a device-only virtual is called from a kernel in
 another translation unit.
+
+## Layout
+
+```
+src/
+  basicTypes.cuh          scalar, label, the indexing macros
+  basicLinalg.{cuh,cu}    LU factorisation and the small device helpers
+  mpiSelectDevice.{cuh,cu}
+  Factory/                deviceObject.cuh, typeTable.cuh — the pattern above
+  ODESystem/              ODESystem.cuh, PyJacSystem.*, and the generated
+                          mechanisms grimech/ and h2o2/
+  Resources/              Resources, HostResources, DeviceResources and the
+                          per-method subclasses, StepState, Operator
+  Integrator/             Integrator, LaunchConfig, IntegratorControls
+    IntegrationMethods/   IntegrationMethod, Seulex, Euler, methodTable
+  Balancer/               Balancer, the three keys, balancerTable
+  Settings/               Config (JSON reader), Settings
+
+examples/
+  seulex5/                GRI-Mech 3.0 with seulex — the reference example
+  euler1/                 the same program with one name changed
+  config/                 kodes::Config on its own
+  mpiDeviceSelect/        binding one rank per GPU
+```
+
+A file starting with a capital letter holds the class it is named after; a lower-case one holds
+free functions, a table or macros. That and the rest of the conventions are in
+**[`CodingStyle.md`](CodingStyle.md)**.
