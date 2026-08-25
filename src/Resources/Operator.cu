@@ -1,11 +1,9 @@
-namespace kodes 
-{
+#include "Operator.cuh"
 
-template<class HostResourcesType, class DeviceResourcesType>
-Operator<HostResourcesType, DeviceResourcesType>::Operator(HostResourcesType* hostRes, DeviceResourcesType* deviceRes)
-: 
-hostRes_(hostRes), 
-deviceRes_(deviceRes), 
+kodes::Operator::Operator(kodes::HostResources* hostRes, kodes::DeviceResources* deviceRes)
+:
+hostRes_(hostRes),
+deviceRes_(deviceRes),
 ensembleSize_(hostRes_->ensembleSize()),
 systemSize_(hostRes_->systemSize()),
 parameterSize_(hostRes_->parameterSize()),
@@ -28,15 +26,14 @@ batchSize_(deviceRes_->ensembleSize())
     if ((ensembleSize_ / batchSize_) == lastBatchIndex_ + 1)
     {
         lastBatchSize_ = batchSize_;
-    } else 
+    } else
     {
         lastBatchSize_ = ensembleSize_ - (ensembleSize_ / batchSize_) * batchSize_;
     }
 
 }
 
-template<class HostResourcesType, class DeviceResourcesType>
-void Operator<HostResourcesType, DeviceResourcesType>::cpyHostToDevice(label batchIndex)
+void kodes::Operator::cpyHostToDevice(label batchIndex)
 {
     if (batchIndex < 0 || batchIndex > lastBatchIndex_)
     {
@@ -57,8 +54,7 @@ void Operator<HostResourcesType, DeviceResourcesType>::cpyHostToDevice(label bat
     }
 }
 
-template<class HostResourcesType, class DeviceResourcesType>
-void Operator<HostResourcesType, DeviceResourcesType>::cpyDeviceToHost(label batchIndex)
+void kodes::Operator::cpyDeviceToHost(label batchIndex)
 {
     if (batchIndex < 0 || batchIndex > lastBatchIndex_)
     {
@@ -79,8 +75,7 @@ void Operator<HostResourcesType, DeviceResourcesType>::cpyDeviceToHost(label bat
     }
 }
 
-template<class HostResourcesType, class DeviceResourcesType>
-label Operator<HostResourcesType, DeviceResourcesType>::getRealBatchSize(label batchIndex)
+label kodes::Operator::getRealBatchSize(label batchIndex)
 {
     if (batchIndex < 0 || batchIndex > lastBatchIndex_)
     {
@@ -89,5 +84,4 @@ label Operator<HostResourcesType, DeviceResourcesType>::getRealBatchSize(label b
     }
 
     return (batchIndex == lastBatchIndex_) ? lastBatchSize_ : batchSize_;
-}
 }

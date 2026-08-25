@@ -16,3 +16,5 @@
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
 #include "Integrator.cuh"
+#include "methodTable.cuh"
+#include "balancerTable.cuh"

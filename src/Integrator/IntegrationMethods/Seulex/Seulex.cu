@@ -1,9 +1,12 @@
+#include "Seulex.cuh"
+#include "basic_linalg.cuh"
 
-template<class ODESystem>
+KODES_DEFINE_DEVICE_OBJECT(kodes::Seulex)
+
 __device__
-bool kodes::Seulex<ODESystem>::seul (
+bool kodes::Seulex::seul (
     kodes::SeulexDeviceResources* resources,
-    ODESystem* ode,
+    kodes::ODESystem* ode,
     const scalar t0,
     const scalar dtTot,
     const label k,
@@ -13,10 +16,10 @@ bool kodes::Seulex<ODESystem>::seul (
     scalar* __restrict__ dfdy_  = resources->dfdy();
     scalar* __restrict__ a_     = resources->a();
     label* __restrict__ pivotIndices_ = resources->pivotIndices();
-    
+
     scalar* __restrict__ y0_    = resources->y0();
     scalar* __restrict__ scale = resources->scale();
-    
+
     scalar* __restrict__ dy_    = resources->dy();
     scalar* __restrict__ yTemp_ = resources->yTemp();
     scalar* __restrict__ dydt_  = resources->dydt();
@@ -26,16 +29,16 @@ bool kodes::Seulex<ODESystem>::seul (
 
     label nSteps = nSeq_[k];
     scalar dt = dtTot/nSteps;
-    
+
     for (label i=0; i<systemSize; i++)
-    { 
+    {
         for (label j=0; j<systemSize; j++)
         {
             a_[INDEXMAT(i, j, systemSize)] = -dfdy_[INDEXMAT(i, j, systemSize)];
         }
         a_[INDEXMAT(i, i, systemSize)] += 1/dt;
     }
-    
+
     LUDecompose(a_, pivotIndices_, systemSize);
 
     scalar tNew = t0 + dt;
@@ -99,9 +102,8 @@ bool kodes::Seulex<ODESystem>::seul (
     return true;
 }
 
-template<class ODESystem>
 __device__
-void kodes::Seulex<ODESystem>::extrapolate (const label k, const label systemSize, scalar* __restrict__ table, scalar* __restrict__ y)
+void kodes::Seulex::extrapolate (const label k, const label systemSize, scalar* __restrict__ table, scalar* __restrict__ y)
 {
     for (label j=k-1; j>0; j--)
     {
@@ -118,15 +120,18 @@ void kodes::Seulex<ODESystem>::extrapolate (const label k, const label systemSiz
     }
 }
 
-template<class ODESystem>
 __device__
-void kodes::Seulex<ODESystem>::step
+scalar kodes::Seulex::step
 (
-    ODESystem* ode,
-    kodes::SeulexDeviceResources* resources,
+    kodes::ODESystem* ode,
+    kodes::DeviceResources* deviceResources,
     kodes::IntegratorControls controls
-)
+) const
 {
+    // safe: the table entry that made this method made these resources
+    SeulexDeviceResources* resources =
+        static_cast<SeulexDeviceResources*>(deviceResources);
+
     const label systemSize = resources->systemSize();
 
     const scalar absTol_ = controls.absTol;
@@ -140,13 +145,13 @@ void kodes::Seulex<ODESystem>::step
     scalar* __restrict__ table_ = resources->table();
     scalar* __restrict__ dfdt_  = resources->dfdt();
     scalar* __restrict__ dfdy_  = resources->dfdy();
-    
+
     scalar* __restrict__ dtOpt_ = resources->dtOpt();
     scalar* __restrict__ temp_  = resources->temp();
     scalar* __restrict__ y0_    = resources->y0();
     scalar* __restrict__ ySequence_ = resources->ySequence();
     scalar* __restrict__ scale_ = resources->scale();
-    
+
     scalar* __restrict__ y      = resources->currentVector();
     scalar& t      = resources->currentT[INDEXVEC(0)];
 
@@ -316,7 +321,7 @@ void kodes::Seulex<ODESystem>::step
                     break;
                 }
             }
-        } 
+        }
         if (resources->reject[INDEXVEC(0)])
         {
             resources->prevReject[INDEXVEC(0)] = true;
@@ -334,7 +339,7 @@ void kodes::Seulex<ODESystem>::step
 
     }
     jacUpdated = false;
-    
+
     resources->deltaTDid[INDEXVEC(0)] = dt;
     t += dt;
 
@@ -367,7 +372,7 @@ void kodes::Seulex<ODESystem>::step
             kopt = min(k, kMaxx_ - 1);
         }
     }
-    
+
     if (resources->prevReject[INDEXVEC(0)])
     {
         kTarg_ = min(kopt, k);
@@ -393,7 +398,9 @@ void kodes::Seulex<ODESystem>::step
         }
         kTarg_ = kopt;
     }
-    
-    resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
-}
 
+    resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+
+    // the step is already accepted and sized; nothing for adaptiveStep to judge
+    return 0.0;
+}

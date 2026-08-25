@@ -12,10 +12,9 @@
 #include <cuda/cmath>
 #include <cuda_runtime.h>
 #include <iostream>
-#include <chrono> 
+#include <chrono>
 #include "gpu_memory.cuh"
 #include "mechanism.cuh"
 #include "Integrator.cuh"
-#include "TemperatureBalancer.cuh"
-#include "RHSNormBalancer.cuh"
-#include "StiffnessBalancer.cuh"
+#include "methodTable.cuh"
+#include "balancerTable.cuh"

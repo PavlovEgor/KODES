@@ -1,12 +1,20 @@
-template<class ODESystem>
+#include "Euler.cuh"
+#include "basic_linalg.cuh"
+
+KODES_DEFINE_DEVICE_OBJECT(kodes::Euler)
+
 __device__
-scalar kodes::Euler<ODESystem>::step
+scalar kodes::Euler::step
 (
-    ODESystem* ode,
-    kodes::EulerDeviceResources* resources,
+    kodes::ODESystem* ode,
+    kodes::DeviceResources* deviceResources,
     kodes::IntegratorControls controls
-)
+) const
 {
+    // safe: the table entry that made this method made these resources
+    EulerDeviceResources* resources =
+        static_cast<EulerDeviceResources*>(deviceResources);
+
     const label systemSize = resources->systemSize();
 
     const scalar absTol_ = controls.absTol;

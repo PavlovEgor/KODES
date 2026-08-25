@@ -1,3 +1,8 @@
+#ifndef KODES_HOST_RESOURCES
+#define KODES_HOST_RESOURCES
+
+#pragma once
+
 #include "Resources.cuh"
 
 
@@ -30,3 +35,5 @@ public:
 
 }
 
+
+#endif

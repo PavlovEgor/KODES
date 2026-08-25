@@ -5,6 +5,10 @@ int main(){
 
     label ensembleSize = 3 * 8192;
 
+    // the same program as GRIMECH/seulex5, with one name changed
+    const char* method = "euler";
+    const char* balancer = "temperature";
+
     kodes::HostResources            host_res(ensembleSize, NSP, 1);
 
     set_same_initial_conditions(host_res.ensembleSize(), host_res.vectors, host_res.parameters);
@@ -12,17 +16,13 @@ int main(){
     host_res.printVectori(0);
 
     kodes::LaunchConfig config = kodes::planLaunch
-    <
-        kodes::pyJacSystem,
-        kodes::Euler<kodes::pyJacSystem>,
-        kodes::EulerDeviceResources
-    >
     (
         ensembleSize,
         host_res.systemSize(),
         host_res.parameterSize(),
+        method,
+        balancer,
         required_mechanism_size(),
-        0,
         kodes::LaunchConfig("best")
     );
 
@@ -37,17 +37,36 @@ int main(){
     // pyJac's scratch is per thread, so it is padded to the resident threads
     initialize_gpu_memory(config.scratchSize, &h_mem, &d_mem);
 
-    kodes::EulerDeviceResources   host_res_dev(batchSize, config.scratchSize, host_res.systemSize(), host_res.parameterSize());
+    kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
+    (
+        method, batchSize, config.scratchSize,
+        host_res.systemSize(), host_res.parameterSize()
+    );
 
-    kodes::EulerDeviceResources*   res_prt = kodes::EulerDeviceResources::create(batchSize, config.scratchSize, host_res.systemSize(), host_res.parameterSize(), &host_res_dev);
+    kodes::Handle<kodes::IntegrationMethod> integrationMethod = kodes::newMethod
+    (
+        method, batchSize, config.scratchSize,
+        host_res.systemSize(), host_res.parameterSize()
+    );
+
+    kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
+    (
+        balancer, batchSize, config.scratchSize,
+        host_res.systemSize(), host_res.parameterSize()
+    );
 
     kodes::pyJacSystem* ode_prt = kodes::pyJacSystem::createGPU(d_mem);
 
-    kodes::Operator<kodes::HostResources, kodes::EulerDeviceResources> op(&host_res, &host_res_dev);
+    kodes::Operator op(&host_res, resources.host());
 
     kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
 
-    kodes::Integrator<kodes::pyJacSystem, kodes::Euler<kodes::pyJacSystem>, kodes::EulerDeviceResources> solver(ode_prt, res_prt, config, controls);
+    kodes::Integrator solver
+    (
+        ode_prt, resources.device(), integrationMethod.device(), config, controls
+    );
+
+    solver.setBalancer(balancing.device(), balancing.host());
 
     scalar tEnd = 10.0;
     solver.setDeltaT(1e-10);
@@ -62,7 +81,6 @@ int main(){
     host_res.printVectori(0);
 
     kodes::pyJacSystem::destroyGPU(ode_prt);
-    kodes::EulerDeviceResources::destroy(res_prt, &host_res_dev);
 
     free_gpu_memory(&h_mem, &d_mem);
     free(h_mem);

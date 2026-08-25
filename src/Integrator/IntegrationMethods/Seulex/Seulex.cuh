@@ -1,38 +1,56 @@
 #ifndef Seulex_H
 #define Seulex_H
 
-#include <cuda/cmath>
+#pragma once
+
 #include <cuda_runtime.h>
 
-#include "basic_linalg.cuh"
-
-#include "IntegratorControls.cuh"
-#include "ODESystem.cuh"
+#include "IntegrationMethod.cuh"
 #include "SeulexDeviceResources.cuh"
 #include "SeulexConstants.cuh"
 
-#pragma once
-
 namespace kodes
 {
-template<class ODESystem>
+
+// A GPU port of the semi-implicit Bulirsch-Stoer extrapolation method, the same
+// algorithm as OpenFOAM's own seulex ODE solver.
+//
+// It controls its own step size and order, so usesAdaptiveStep is false and
+// step() is the whole of one accepted step rather than a trial one.
+//
+// Selected by the name "seulex", see methodTable; the entry pairs it with
+// SeulexDeviceResources, which holds the extrapolation table, the Jacobian and
+// the LU work matrix that step() casts down to reach.
 class Seulex
+    :
+    public IntegrationMethod
 {
-private:
-    Seulex() = delete;
-
-    ~Seulex() = delete;
-
-    Seulex(const Seulex&) = delete;
-
-    Seulex& operator=(const Seulex&) = delete;
-
 public:
 
-    static const bool useAdaptiveStep = false;
+    static constexpr bool usesAdaptiveStep = false;
 
-    __device__
-    static bool seul (
+    __device__ __host__
+    Seulex
+    (
+        const label batchSize,
+        const label scratchSize,
+        const label systemSize,
+        const label parameterSize
+    )
+        : IntegrationMethod
+          (
+              batchSize, scratchSize, systemSize, parameterSize,
+              usesAdaptiveStep
+          )
+    {}
+
+    __device__ __host__
+    ~Seulex() = default;
+
+    // One linearly implicit sub-stepping sequence of nSeq_[k] steps over dtTot
+    __device__ static bool
+    seul
+    (
         SeulexDeviceResources* resources,
         ODESystem* ode,
         const scalar t0,
@@ -41,20 +59,26 @@ public:
         scalar& theta
     );
 
-    __device__
-    static void extrapolate (const label k, const label systemSize, scalar* __restrict__ table, scalar* __restrict__ y);
+    __device__ static void
+    extrapolate
+    (
+        const label k,
+        const label systemSize,
+        scalar* __restrict__ table,
+        scalar* __restrict__ y
+    );
 
-    __device__
-    static void step
+    __device__ scalar
+    step
     (
         ODESystem* ode,
-        SeulexDeviceResources* resources,
+        DeviceResources* resources,
         IntegratorControls controls
-    );
+    ) const override;
+
+    KODES_DECLARE_DEVICE_OBJECT(Seulex)
 };
 
 }
-
-#include "Seulex.cu"
 
 #endif

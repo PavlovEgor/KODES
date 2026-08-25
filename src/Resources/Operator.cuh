@@ -1,36 +1,49 @@
-#include "basic_types.cuh"
+#ifndef KODES_OPERATOR
+#define KODES_OPERATOR
 
-namespace kodes 
+#pragma once
+
+#include "basic_types.cuh"
+#include "HostResources.cuh"
+#include "DeviceResources.cuh"
+
+namespace kodes
 {
 
-template<class HostResourcesType, class DeviceResourcesType>
-class Operator 
+// Moves one batch of state between the host's per-component pointers and the
+// device's flat state space, in both directions.
+//
+// It only ever touches vectors/parameters and the three sizes, all of which
+// belong to the base classes, so it no longer cares which DeviceResources
+// subclass the chosen method brought with it.
+class Operator
 {
 protected:
 
-    HostResourcesType*       hostRes_;
-    DeviceResourcesType*     deviceRes_;
+    HostResources*       hostRes_;
+    DeviceResources*     deviceRes_;
 
     label                    ensembleSize_;
     label                    systemSize_;
     label                    parameterSize_;
 
     label                    batchSize_;
-    label                    lastBatchSize_; 
+    label                    lastBatchSize_;
     label                    lastBatchIndex_;
 
 public:
 
-    Operator(HostResourcesType* hostRes, DeviceResourcesType* deviceRes);
-        
+    Operator(HostResources* hostRes, DeviceResources* deviceRes);
+
     virtual ~Operator() = default;
 
     virtual void cpyHostToDevice(label batchIndex);
     virtual void cpyDeviceToHost(label batchIndex);
 
+    // Systems in that batch - the last one is normally shorter than batchSize
     virtual label getRealBatchSize(label batchIndex);
 };
 
 }
 
-#include "Operator.cu"
+#endif

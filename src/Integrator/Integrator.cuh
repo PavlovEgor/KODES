@@ -9,63 +9,62 @@
 #include "IntegratorControls.cuh"
 #include "LaunchConfig.cuh"
 #include "Balancer.cuh"
+#include "DeviceResources.cuh"
+#include "IntegrationMethod.cuh"
+#include "ODESystem.cuh"
 
 namespace kodes
 {
 
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+// The solve kernel. One instantiation for the whole library: the ODE system,
+// the method, the resources and the balancer are all device objects the kernel
+// dispatches on, so nothing about it depends on which ones were chosen.
 __global__
 void adaptive_solve
 (
     ODESystem* ode,
-    IntegratorDeviceResources* resources,
-    kodes::IntegratorControls controls
+    DeviceResources* resources,
+    const IntegrationMethod* method,
+    IntegratorControls controls
 );
 
-template<class IntegratorDeviceResources>
 __global__
-void setDeltaT
-(
-    const scalar deltaT,
-    IntegratorDeviceResources* resources
-);
+void setDeltaTKernel(const scalar deltaT, DeviceResources* resources);
 
-template<class IntegratorDeviceResources>
 __global__
-void useOrder
-(
-    IntegratorDeviceResources* resources,
-    const label* order
-);
+void useOrderKernel(DeviceResources* resources, const label* order);
 
-// Systems the device can integrate at the same time with this (ODESystem,
-// IntegrationMethod, Resources) combination, from the occupancy of the solve
-// kernel - so it accounts for the registers and shared memory the mechanism
-// needs.
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+// Systems the device can integrate at the same time, from the occupancy of the
+// solve kernel.
 __host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
 
 // Resolve `request` against this device: how many threads to launch (and
 // therefore how many scratch slots to allocate) and how many systems to ship
-// per batch. The two extras cover memory owned outside the resources object -
-// for a pyJac mechanism required_mechanism_size() per thread, and for a sorted
-// batch Balancer::bytesPerSystem() per system.
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+// per batch.
+//
+// The names are what tie the plan to the run: the method's entry knows what its
+// resources cost per thread and per system, the balancer's entry knows what the
+// keys and the order cost, and this adds them up before either exists. Anything
+// owned outside both - for a pyJac mechanism, required_mechanism_size() - goes
+// in the extra.
 __host__ LaunchConfig planLaunch
 (
     const label ensembleSize,
     const label systemSize,
     const label parameterSize,
+    const char* methodName,
+    const char* balancerName,
     const size_t extraScratchBytesPerThread = 0,
-    const size_t extraStateBytesPerSystem = 0,
     const LaunchConfig& request = LaunchConfig()
 );
-}
 
-namespace kodes
-{
-
-template<class ODESystem, class IntegrationMethod, class IntegratorDeviceResources>
+// Drives the solve: owns the grid-stride loop over the batch, the step count
+// loop that walks one system from local time 0 to the target end time, and the
+// balancing pass in front of both.
+//
+// It holds all four of the runtime-selected objects as their abstract base, so
+// which method, which balancer and which mechanism a run uses are decisions
+// made when the program starts rather than when it was compiled.
 class Integrator
 {
 
@@ -73,7 +72,8 @@ protected:
     LaunchConfig config_;
 
     ODESystem* ode_;
-    IntegratorDeviceResources* resources_;
+    DeviceResources* resources_;
+    const IntegrationMethod* method_;
 
     Balancer* balancer_;
     Balancer* balancerStub_;
@@ -85,7 +85,8 @@ public:
     Integrator
     (
         ODESystem* ode,
-        IntegratorDeviceResources* resources,
+        DeviceResources* resources,
+        const IntegrationMethod* method,
         const LaunchConfig& config,
         const IntegratorControls& controls = IntegratorControls()
     );
@@ -98,27 +99,13 @@ public:
 
     // Integrate the batch in the order this balancer sorts it into. Rebalanced
     // at the start of every solve(); pass nulls to go back to the copy order.
-    //
-    // A balancer whose key evaluates the right hand side is handed `ode` as a
-    // kodes::ODESystem, so an ODESystem template argument that does not derive
-    // from it can only be used with a balancer that does not need one.
     void setBalancer(Balancer* balancer, Balancer* hostStub);
 
     void setDeltaT(const scalar deltaT);
-
-    __device__
-    static void adaptiveStep
-    (
-        ODESystem* ode,
-        IntegratorDeviceResources* resources,
-        IntegratorControls controls
-    );
 
     void solve(scalar deltaT, label realBatchSize);
 };
 
 }
-
-#include "Integrator.cu"
 
 #endif
