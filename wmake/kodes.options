@@ -1,0 +1,32 @@
+/*---------------------------------------------------------------------------*\
+    KODES include paths, for an OpenFOAM `Make/options`.
+
+    Define KODES_SRC and #include this from your own Make/options, then use
+    $(KODES_INC):
+
+        KODES_SRC = ../../external/KODES/src
+        #include "../../../external/KODES/wmake/kodes.options"
+
+        EXE_INC = \
+            $(KODES_INC) \
+            -I$(LIB_SRC)/finiteVolume/lnInclude \
+            ...
+
+    The #include has to come before EXE_INC rather than inside it: the
+    preprocessor splices a line ending in a backslash into the next one before
+    it looks for directives, so an #include on the line after `EXE_INC = \`
+    would never be seen as one.
+
+    This is also the list cmake/kodes.cmake reads, so a directory added here
+    reaches both build systems.
+\*---------------------------------------------------------------------------*/
+
+KODES_INC = \
+    -I$(KODES_SRC) \
+    -I$(KODES_SRC)/Factory \
+    -I$(KODES_SRC)/ODESystem \
+    -I$(KODES_SRC)/Resources \
+    -I$(KODES_SRC)/Integrator \
+    -I$(KODES_SRC)/Integrator/IntegrationMethods \
+    -I$(KODES_SRC)/Balancer \
+    -I$(KODES_SRC)/Settings

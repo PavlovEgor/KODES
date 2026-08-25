@@ -383,11 +383,87 @@ cd examples/reactors && cmake -B build && cmake --build build
 ./build/reactors_h2o2               # H2/O2,        reads build/h2o2.json
 ```
 
-`cmake/kodes.cmake` holds the library's source and include lists, so an example's `CMakeLists.txt`
-is a handful of lines. Every method and every balancer is compiled in, whichever one a run names:
-the choice is made when the program starts, so all of them have to be in the binary.
-`CUDA_SEPARABLE_COMPILATION` is not optional — a device-only virtual is called from a kernel in
-another translation unit.
+Every method and every balancer is compiled in, whichever one a run names: the choice is made when
+the program starts, so all of them have to be in the binary. `CUDA_SEPARABLE_COMPILATION` is not
+optional — a device-only virtual is called from a kernel in another translation unit.
+
+## Building against KODES
+
+The source list and the include list live in **`wmake/kodes.files`** and **`wmake/kodes.options`**,
+in the form OpenFOAM's wmake wants. `cmake/kodes.cmake` reads those same two files. So there is one
+list, not one per build system, and a source added to the library reaches both.
+
+### From CMake
+
+```cmake
+include(${CMAKE_CURRENT_SOURCE_DIR}/<path to KODES>/cmake/kodes.cmake)
+
+kodes_pyjac_mechanism(grimech MECH_SOURCES MECH_INCLUDE_DIRS)
+
+add_executable(myApp myApp.cu ${KODES_SOURCES} ${MECH_SOURCES})
+target_include_directories(myApp PRIVATE ${KODES_INCLUDE_DIRS} ${MECH_INCLUDE_DIRS})
+set_target_properties(myApp PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+```
+
+`${KODES_SETTINGS_SOURCES}` adds `kodes::Settings` (and needs the rapidjson submodule);
+`${KODES_MPI_SOURCES}` adds `kodes::mpiSelectDevice`. Neither is in the core list, since a consumer
+reading an OpenFOAM dictionary on one GPU wants neither.
+
+### From wmake, without repeating the list
+
+wmake runs both `Make/files` and `Make/options` through the C preprocessor before make ever sees
+them. That is the hook: they can `#include` a plain fragment, and the fragment can be the very one
+CMake reads.
+
+`Make/files` — two lines instead of twenty:
+
+```make
+KODES_SRC = ../../external/KODES/src
+#include "../../../external/KODES/wmake/kodes.files"
+
+myModel.C
+
+LIB = $(FOAM_USER_LIBBIN)/libmyModel
+```
+
+`Make/options` — the include defines `$(KODES_INC)`:
+
+```make
+KODES_SRC = ../../external/KODES/src
+#include "../../../external/KODES/wmake/kodes.options"
+
+EXE_INC = \
+    $(KODES_INC) \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    ...
+```
+
+Three things to know:
+
+- `KODES_SRC` is a *make* variable, so it is relative to the directory wmake runs in (where `Make/`
+  lives). The path in the `#include` is a *preprocessor* path, so it is relative to `Make/` itself
+  — one `..` more.
+- The `#include` in `Make/options` must come **before** `EXE_INC`, never inside it. The
+  preprocessor splices a line ending in a backslash into the next one before it looks for
+  directives, so an `#include` after `EXE_INC = \` would never be seen as one.
+- Comments in these files are `/* ... */`. A `#` comment is an invalid preprocessor directive and
+  stops the build; and in `Make/files` a line containing `=` is taken for a variable definition
+  rather than a source.
+
+`src/kodesChemistyModel` in the OpenFOAM-solvers repository is set up this way, and its
+`Make/options` is down to one KODES line.
+
+### Why not ship a prebuilt library instead
+
+It would be the obvious answer, and it half works. Everything except `PyJacSystem.cu` is
+mechanism-independent, so a `libkodes` could be built once and linked by anyone.
+
+Two things get in the way. The device code is compiled `-rdc=true` and `step()`/`key()` are
+resolved at *device* link time, so the library would have to be a static one with its device
+symbols left unresolved for the consumer's link to finish — and in the OpenFOAM case that final
+link is done by `nvc++ -cuda`, not by nvcc. And a consumer still has to compile `PyJacSystem.cu`
+against its own mechanism, so it needs the headers and a compiler for `.cu` anyway. Sharing the two
+lists costs one `#include` at each end and none of that.
 
 ## Layout
 
@@ -405,6 +481,10 @@ src/
     IntegrationMethods/   IntegrationMethod, Seulex, Euler, method_table
   Balancer/               Balancer, the three keys, balancer_table
   Settings/               Config (JSON reader), Settings
+
+wmake/
+  kodes.files             the source list, shared by wmake and CMake
+  kodes.options           the include list, likewise
 
 data/
   mechanisms/

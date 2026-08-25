@@ -1,0 +1,56 @@
+/*---------------------------------------------------------------------------*\
+    KODES sources, for an OpenFOAM `Make/files`.
+
+    Every method and every balancer is here, whichever one a run ends up
+    naming: the choice is made when the program starts, so the code for all of
+    them has to be in the library.
+
+    Define KODES_SRC and #include this from your own Make/files:
+
+        KODES_SRC = ../../external/KODES/src
+        #include "../../../external/KODES/wmake/kodes.files"
+
+        myModel.C
+
+        LIB = $(FOAM_USER_LIBBIN)/libmyModel
+
+    wmake runs Make/files through the C preprocessor, so the #include is
+    inlined before make ever sees it; KODES_SRC is a make variable, so it is
+    relative to the directory wmake runs in, not to this file.
+
+    This is also the list cmake/kodes.cmake reads, so a source added here
+    reaches both build systems. Keep one path per line and use C comments -
+    the preprocessor rejects a # comment, and a line containing '=' is taken
+    for a variable definition rather than a source.
+
+    kodes::Settings (Settings/Config.cu, Settings/Settings.cu) and
+    kodes::mpiSelectDevice (mpi_select_device.cu) are deliberately not here:
+    the first needs the rapidjson submodule, the second MPI, and a consumer
+    reading an OpenFOAM dictionary on one GPU wants neither. Add the line by
+    hand if you do.
+\*---------------------------------------------------------------------------*/
+
+$(KODES_SRC)/basic_linalg.cu
+
+$(KODES_SRC)/Resources/StepState.cu
+$(KODES_SRC)/Resources/HostResources.cu
+$(KODES_SRC)/Resources/DeviceResources.cu
+$(KODES_SRC)/Resources/AdaptiveDeviceResources.cu
+$(KODES_SRC)/Resources/SeulexDeviceResources.cu
+$(KODES_SRC)/Resources/EulerDeviceResources.cu
+$(KODES_SRC)/Resources/Operator.cu
+
+$(KODES_SRC)/Integrator/Integrator.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/IntegrationMethod.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/method_table.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Seulex.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/seulex_constants.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Euler.cu
+
+$(KODES_SRC)/Balancer/Balancer.cu
+$(KODES_SRC)/Balancer/TemperatureBalancer.cu
+$(KODES_SRC)/Balancer/RHSNormBalancer.cu
+$(KODES_SRC)/Balancer/StiffnessBalancer.cu
+$(KODES_SRC)/Balancer/balancer_table.cu
+
+$(KODES_SRC)/ODESystem/PyJacSystem.cu

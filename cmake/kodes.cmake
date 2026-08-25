@@ -9,36 +9,58 @@
 #   include(${CMAKE_CURRENT_SOURCE_DIR}/<path to>/cmake/kodes.cmake)
 # and then use ${KODES_SOURCES} / ${KODES_INCLUDE_DIRS}.
 #
+# The lists themselves are NOT here. They live in wmake/kodes.files and
+# wmake/kodes.options, in the form OpenFOAM's wmake wants, and this file reads
+# them - so a source or an include directory added to KODES reaches CMake and
+# wmake from one place. See "Building against KODES" in the ReadMe.
+#
 # The pyJac mechanism is a separate list, since not every target needs one:
 #   kodes_pyjac_mechanism(grimech MECH_SOURCES MECH_INCLUDE_DIRS)
 
 set(KODES_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/..)
 set(KODES_SRC_DIR ${KODES_ROOT_DIR}/src)
+set(KODES_WMAKE_DIR ${KODES_ROOT_DIR}/wmake)
 
-set(KODES_SOURCES
-    ${KODES_SRC_DIR}/basic_linalg.cu
+# Read one of the wmake fragments: drop the C comment block and the blank
+# lines, turn $(KODES_SRC) into this build's path, and hand back a CMake list.
+function(_kodes_read_wmake_list file prefix_to_strip out_list)
 
-    ${KODES_SRC_DIR}/Resources/StepState.cu
-    ${KODES_SRC_DIR}/Resources/HostResources.cu
-    ${KODES_SRC_DIR}/Resources/DeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/AdaptiveDeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/SeulexDeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/EulerDeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/Operator.cu
+    file(READ ${file} text)
 
-    ${KODES_SRC_DIR}/Integrator/Integrator.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/IntegrationMethod.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/method_table.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/seulex_constants.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler.cu
+    # the /* ... */ header
+    string(REGEX REPLACE "/\\*.*\\*/" "" text "${text}")
 
-    ${KODES_SRC_DIR}/Balancer/Balancer.cu
-    ${KODES_SRC_DIR}/Balancer/TemperatureBalancer.cu
-    ${KODES_SRC_DIR}/Balancer/RHSNormBalancer.cu
-    ${KODES_SRC_DIR}/Balancer/StiffnessBalancer.cu
-    ${KODES_SRC_DIR}/Balancer/balancer_table.cu
-)
+    string(REPLACE "$(KODES_SRC)" "${KODES_SRC_DIR}" text "${text}")
+    string(REPLACE "\\" "" text "${text}")
+    string(REPLACE "\n" ";" lines "${text}")
+
+    set(result "")
+
+    foreach(line ${lines})
+        string(STRIP "${line}" line)
+
+        if(line STREQUAL "")
+            continue()
+        endif()
+
+        # a make variable definition, not an entry
+        if(line MATCHES "=")
+            continue()
+        endif()
+
+        if(NOT prefix_to_strip STREQUAL "")
+            string(REGEX REPLACE "^${prefix_to_strip}" "" line "${line}")
+        endif()
+
+        list(APPEND result "${line}")
+    endforeach()
+
+    set(${out_list} ${result} PARENT_SCOPE)
+
+endfunction()
+
+_kodes_read_wmake_list(${KODES_WMAKE_DIR}/kodes.files "" KODES_SOURCES)
+_kodes_read_wmake_list(${KODES_WMAKE_DIR}/kodes.options "-I" KODES_INCLUDE_DIRS)
 
 # The JSON settings reader, kept apart because it is the one part of the
 # library that needs the rapidjson submodule. A caller that gets its settings
@@ -61,16 +83,6 @@ set(KODES_MPI_SOURCES
     ${KODES_SRC_DIR}/mpi_select_device.cu
 )
 
-set(KODES_INCLUDE_DIRS
-    ${KODES_SRC_DIR}
-    ${KODES_SRC_DIR}/Factory
-    ${KODES_SRC_DIR}/ODESystem
-    ${KODES_SRC_DIR}/Resources
-    ${KODES_SRC_DIR}/Integrator
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods
-    ${KODES_SRC_DIR}/Balancer
-    ${KODES_SRC_DIR}/Settings
-)
 
 set(KODES_MECHANISM_DIR ${KODES_ROOT_DIR}/data/mechanisms)
 
@@ -91,8 +103,8 @@ function(kodes_pyjac_mechanism name out_sources out_include_dirs)
             "${KODES_MECHANISM_DIR}")
     endif()
 
+    # PyJacSystem.cu itself is in the core list, since it names no mechanism
     set(sources
-        ${KODES_SRC_DIR}/ODESystem/PyJacSystem.cu
         ${dir}/chem_utils.cu
         ${dir}/dydt.cu
         ${dir}/jacob.cu
