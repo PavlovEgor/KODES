@@ -1,0 +1,32 @@
+{
+    "_comment": "Everything the seulex5 run is free to choose. Nothing here is compiled in: the two names are looked up in methodTable.cu and balancerTable.cu when the program starts.",
+
+    "method": "seulex",
+    "balancer": "stiffness",
+
+    "device": {
+        "_comment": "share is how much of the device one run may take: best or half. Give concurrentSystems and batchSize together instead to size it by hand.",
+        "share": "best",
+        "threadsPerBlock": 256
+    },
+
+    "controls": {
+        "absTol": 1e-10,
+        "relTol": 1e-1,
+        "maxSteps": 10000,
+        "Treact": 0.0,
+
+        "_comment": "the step size controller, used only by a method that takes trial steps - seulex controls its own step and ignores these",
+        "safeScale": 0.9,
+        "alphaIncrease": 0.2,
+        "alphaDecrease": 0.25,
+        "minScale": 0.2,
+        "maxScale": 10.0
+    },
+
+    "run": {
+        "ensembleSize": 24576,
+        "endTime": 10.0,
+        "initialTimeStep": 10.0
+    }
+}

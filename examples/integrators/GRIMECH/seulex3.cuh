@@ -18,3 +18,4 @@
 #include "Integrator.cuh"
 #include "methodTable.cuh"
 #include "balancerTable.cuh"
+#include "Settings.cuh"

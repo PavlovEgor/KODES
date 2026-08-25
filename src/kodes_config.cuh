@@ -16,6 +16,8 @@ private:
     rapidjson::Document document;
     FILE* file;
 
+    // Looks up a dotted path: "controls.absTol" is absTol inside the controls
+    // object, not a member called "controls.absTol".
     const rapidjson::Value* getValue(const std::string& name) const;
 
 public:

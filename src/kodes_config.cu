@@ -53,17 +53,41 @@ Config& Config::operator=(Config&& other) noexcept {
     return *this;
 }
 
+// "controls.absTol" walks into the nested object rather than looking for a
+// member of that name, so a settings file can be grouped instead of flat.
 const rapidjson::Value* Config::getValue(const std::string& name) const {
-    auto it = document.FindMember(name.c_str());
-    if (it == document.MemberEnd()) {
-        return nullptr;
+    const rapidjson::Value* value = &document;
+
+    for (size_t start = 0; ; ) {
+        const size_t dot = name.find('.', start);
+        const std::string part =
+            name.substr(start, dot == std::string::npos ? std::string::npos : dot - start);
+
+        if (!value->IsObject()) {
+            return nullptr;
+        }
+
+        auto it = value->FindMember(part.c_str());
+        if (it == value->MemberEnd()) {
+            return nullptr;
+        }
+
+        value = &(it->value);
+
+        if (dot == std::string::npos) {
+            return value;
+        }
+
+        start = dot + 1;
     }
-    return &(it->value);
 }
 
+// IsNumber rather than IsDouble: a tolerance written 1 or 10 parses as an
+// integer, and silently handing back the default for it is the kind of thing
+// that is only noticed in the results.
 double Config::getDouble(const std::string& name, double default_value) const {
     const rapidjson::Value* val = getValue(name);
-    if (val && val->IsDouble()) {
+    if (val && val->IsNumber()) {
         return val->GetDouble();
     }
     return default_value;

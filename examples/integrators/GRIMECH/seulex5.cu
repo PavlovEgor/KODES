@@ -1,17 +1,23 @@
 #include "seulex3.cuh"
 
 
-int main(){
+// GRI-Mech 3.0, an ensemble of identical reactors, integrated on the GPU.
+//
+// Nothing about the run is compiled in: the method, the balancer, the
+// tolerances and the sizes all come out of a JSON file, which is looked up in
+// the tables when the program starts.
+//
+//     ./seulex5 [settings.json]      default: seulex5.json
+int main(int argc, char** argv)
+{
+    kodes::Settings settings(argc > 1 ? argv[1] : "seulex5.json");
 
-    label ensembleSize = 3 * 8192;
+    settings.print();
 
-    // Both are names looked up in a table when the program runs, not types
-    // baked in when it was compiled:
-    //   method   - "seulex" or "euler",           see methodTable.cu
-    //   balancer - "temperature", "rhsNorm",
-    //              "stiffness" or "none",         see balancerTable.cu
-    const char* method = "seulex";
-    const char* balancer = "stiffness";
+    const char* method = settings.method().c_str();
+    const char* balancer = settings.balancer().c_str();
+
+    label ensembleSize = settings.ensembleSize();
 
     kodes::HostResources            host_res(ensembleSize, NSP, 1);
 
@@ -23,10 +29,6 @@ int main(){
     // need: the method's entry knows what its resources cost, the balancer's
     // knows what the keys and the order cost. Everything owned outside both -
     // here pyJac's own per thread scratch - goes in the extra.
-    //
-    // kodes::LaunchConfig("best")  - take the whole device
-    // kodes::LaunchConfig("half")  - take one half of it
-    // kodes::LaunchConfig(8192, 1000000) - concurrent systems and batch by hand
     kodes::LaunchConfig config = kodes::planLaunch
     (
         ensembleSize,
@@ -35,7 +37,7 @@ int main(){
         method,
         balancer,
         required_mechanism_size(),
-        kodes::LaunchConfig("best")
+        settings.launchRequest()
     );
 
     config.print("seulex5");
@@ -63,8 +65,8 @@ int main(){
         host_res.systemSize(), host_res.parameterSize()
     );
 
-    // temperature first, then the norm of the right hand side inside each band
-    // of it - "temperature" is the cheaper single key version
+    // an empty handle when the settings say "none", which leaves the batch in
+    // the order it was copied in
     kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
     (
         balancer, batchSize, config.scratchSize,
@@ -75,17 +77,16 @@ int main(){
 
     kodes::Operator op(&host_res, resources.host());
 
-    kodes::IntegratorControls controls(1e-10, 1e-1, 10000);
-
     kodes::Integrator solver
     (
-        ode_prt, resources.device(), integrationMethod.device(), config, controls
+        ode_prt, resources.device(), integrationMethod.device(),
+        config, settings.controls()
     );
 
     solver.setBalancer(balancing.device(), balancing.host());
 
-    scalar tEnd = 10.0;
-    solver.setDeltaT(tEnd);
+    scalar tEnd = settings.endTime();
+    solver.setDeltaT(settings.initialTimeStep());
 
     for (label i=0; i < numOfBatches; i++)
     {

@@ -13,12 +13,21 @@ kodes_pyjac_mechanism(grimech MECH_SOURCES MECH_INCLUDE_DIRS)
 # для RTX 20xx, 30xx, 40xx, 50xx
 set(CMAKE_CUDA_ARCHITECTURES "120")
 
-add_executable(seulex5 seulex5.cu ${KODES_SOURCES} ${MECH_SOURCES})
+add_executable(seulex5
+    seulex5.cu
+    ${KODES_SOURCES}
+    ${KODES_SETTINGS_SOURCES}
+    ${MECH_SOURCES}
+)
 
 target_include_directories(seulex5 PRIVATE
     ${KODES_INCLUDE_DIRS}
+    ${KODES_SETTINGS_INCLUDE_DIRS}
     ${MECH_INCLUDE_DIRS}
 )
+
+# the run reads it by name from the working directory
+configure_file(seulex5.json ${CMAKE_CURRENT_BINARY_DIR}/seulex5.json COPYONLY)
 
 target_compile_options(seulex5 PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>

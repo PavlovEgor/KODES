@@ -41,6 +41,22 @@ set(KODES_SOURCES
     ${KODES_SRC_DIR}/Balancer/balancerTable.cu
 )
 
+# The JSON settings reader, kept apart because it is the one part of the
+# library that needs the rapidjson submodule. A caller that gets its settings
+# from somewhere else - the OpenFOAM chemistry model reads an OpenFOAM
+# dictionary - passes the same names and numbers by hand and never links this.
+#
+#   git submodule update --init external/rapidjson
+set(KODES_SETTINGS_SOURCES
+    ${KODES_SRC_DIR}/kodes_config.cu
+    ${KODES_SRC_DIR}/Settings/Settings.cu
+)
+
+set(KODES_SETTINGS_INCLUDE_DIRS
+    ${KODES_SRC_DIR}/Settings
+    ${KODES_ROOT_DIR}/external/rapidjson/include
+)
+
 set(KODES_INCLUDE_DIRS
     ${KODES_SRC_DIR}
     ${KODES_SRC_DIR}/Factory
