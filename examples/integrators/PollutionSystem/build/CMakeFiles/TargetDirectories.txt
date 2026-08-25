@@ -1,3 +1,0 @@
-/home/pavlovep/KODES/examples/integrators/PollutionSystem/build/CMakeFiles/pollution_example.dir
-/home/pavlovep/KODES/examples/integrators/PollutionSystem/build/CMakeFiles/edit_cache.dir
-/home/pavlovep/KODES/examples/integrators/PollutionSystem/build/CMakeFiles/rebuild_cache.dir

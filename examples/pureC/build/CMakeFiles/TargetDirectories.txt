@@ -1,3 +1,0 @@
-/home/pavlovep/KODES/examples/pureC/build/CMakeFiles/seulex4.dir
-/home/pavlovep/KODES/examples/pureC/build/CMakeFiles/edit_cache.dir
-/home/pavlovep/KODES/examples/pureC/build/CMakeFiles/rebuild_cache.dir

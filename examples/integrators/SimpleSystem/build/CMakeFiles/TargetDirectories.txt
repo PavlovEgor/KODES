@@ -1,3 +1,0 @@
-/home/pavlovep/KODES/examples/integrators/SimpleSystem/build/CMakeFiles/simple_example.dir
-/home/pavlovep/KODES/examples/integrators/SimpleSystem/build/CMakeFiles/edit_cache.dir
-/home/pavlovep/KODES/examples/integrators/SimpleSystem/build/CMakeFiles/rebuild_cache.dir
