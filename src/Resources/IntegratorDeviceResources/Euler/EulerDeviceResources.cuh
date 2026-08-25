@@ -28,11 +28,11 @@ public:
     __device__ __host__
     ~EulerDeviceResources() = default;
 
-    __host__ static EulerDeviceResources*
-    create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize, EulerDeviceResources* hostStub);
+    KODES_DECLARE_DEVICE_OBJECT(EulerDeviceResources)
 
-    __host__ static void
-    destroy(EulerDeviceResources* devRes, EulerDeviceResources* hostStub);
+    __host__ void allocate();
+
+    __host__ void deallocate();
 
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {

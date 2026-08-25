@@ -18,6 +18,8 @@ namespace kodes
 // mechanism is the same work as one step of an explicit integrator. Against a
 // solve that takes hundreds of implicit steps that is small, but it is not
 // nothing, and it is why TemperatureBalancer is still worth having.
+//
+// Selected by the name "rhsNorm", see balancerTable.
 class RHSNormBalancer
     :
     public Balancer
@@ -26,14 +28,22 @@ public:
 
     static constexpr label keyCount = 1;
 
+    static constexpr bool usesDerivatives = true;
+
     __device__ __host__
     RHSNormBalancer
     (
         const label batchSize,
         const label scratchSize,
-        const label systemSize
+        const label systemSize,
+        const label parameterSize
     )
-        : Balancer(batchSize, scratchSize, systemSize, keyCount, true) {}
+        : Balancer
+          (
+              batchSize, scratchSize, systemSize, parameterSize,
+              keyCount, usesDerivatives
+          )
+    {}
 
     __device__ __host__
     ~RHSNormBalancer() = default;
@@ -55,34 +65,19 @@ public:
         key[0] = relativeRHSNorm(y, dydt, resources->systemSize());
     }
 
-    __host__ static size_t bytesPerSystem()
+    __host__ static size_t
+    stateBytesPerSystem(const label systemSize, const label parameterSize)
     {
-        return Balancer::bytesPerSystem(keyCount);
+        return Balancer::keyBytesPerSystem(keyCount);
     }
 
-    __host__ static size_t scratchBytesPerThread(const label systemSize)
+    __host__ static size_t
+    scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return Balancer::scratchBytesPerThread(systemSize, true);
+        return Balancer::keyScratchBytesPerThread(systemSize, usesDerivatives);
     }
 
-    __host__ static RHSNormBalancer*
-    create
-    (
-        const label batchSize,
-        const label scratchSize,
-        const label systemSize,
-        RHSNormBalancer* hostStub
-    );
-
-    __host__ static void
-    destroy(RHSNormBalancer* devBalancer, RHSNormBalancer* hostStub);
-
-    // see TemperatureBalancer::createStub for why this is not the caller's job
-    __host__ static RHSNormBalancer*
-    createStub(const label batchSize, const label scratchSize, const label systemSize);
-
-    __host__ static void
-    destroyStub(RHSNormBalancer* hostStub);
+    KODES_DECLARE_DEVICE_OBJECT(RHSNormBalancer)
 };
 
 }

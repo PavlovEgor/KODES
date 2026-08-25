@@ -3,6 +3,7 @@
 
 #include "Resources.cuh"
 #include "StepState.cuh"
+#include "DeviceObject.cuh"
 
 namespace kodes
 {
@@ -58,15 +59,14 @@ public:
     __device__ __host__
     ~DeviceResources() = default;
 
-    __device__ static void* operator new(size_t size, void* ptr) {
-        return ptr;
-    }
+    KODES_DECLARE_DEVICE_OBJECT(DeviceResources)
 
-    __host__ static DeviceResources*
-    create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize);
+    // The device buffers, allocated into this object's own pointers. Every
+    // subclass calls this one first and then adds its own - see
+    // Factory/DeviceObject.cuh for who calls them and when.
+    __host__ void allocate();
 
-    __host__ static void
-    destroy(DeviceResources* devRes);
+    __host__ void deallocate();
 
     __host__ __device__ void
     printVectori(const label i) const;

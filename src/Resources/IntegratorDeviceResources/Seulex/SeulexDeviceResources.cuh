@@ -45,18 +45,11 @@ public:
     __device__ __host__
     ~SeulexDeviceResources() = default;
 
-    __host__ static SeulexDeviceResources*
-    create
-    (
-        const label batchSize,
-        const label scratchSize,
-        const label systemSize,
-        const label parameterSize,
-        SeulexDeviceResources* hostStub
-    );
+    KODES_DECLARE_DEVICE_OBJECT(SeulexDeviceResources)
 
-    __host__ static void
-    destroy(SeulexDeviceResources* devRes, SeulexDeviceResources* hostStub);
+    __host__ void allocate();
+
+    __host__ void deallocate();
 
     // dtOpt_/temp_ are indexed by the extrapolation order k, not by the
     // component, so they need at least iMaxx_ entries per thread

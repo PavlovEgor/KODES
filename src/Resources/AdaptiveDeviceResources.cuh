@@ -29,11 +29,11 @@ public:
     __device__ __host__
     ~AdaptiveDeviceResources() = default;
 
-    __host__ static AdaptiveDeviceResources*
-    create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize, AdaptiveDeviceResources* hostStub);
+    KODES_DECLARE_DEVICE_OBJECT(AdaptiveDeviceResources)
 
-    __host__ static void
-    destroy(AdaptiveDeviceResources* devRes, AdaptiveDeviceResources* hostStub);
+    __host__ void allocate();
+
+    __host__ void deallocate();
 
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {

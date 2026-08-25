@@ -4,6 +4,7 @@
 #pragma once
 
 #include "basic_types.cuh"
+#include "DeviceObject.cuh"
 #include "DeviceResources.cuh"
 #include "ODESystem.cuh"
 #include "LaunchConfig.cuh"
@@ -99,11 +100,11 @@ relativeRHSNorm(const scalar* y, const scalar* dydt, const label systemSize)
 // The ordering is a bucket sort and runs entirely on the device: the keys never
 // leave it. See balance() for the four passes.
 //
-// Follows the DeviceResources pattern: the object lives in device memory and a
-// host side stub holds the same pointers. The device object is placement-newed
-// on top of a byte copy of that stub, so the constructor must set value members
-// only and leave every buffer pointer alone - initialising one here would
-// overwrite the address the stub allocated.
+// A device object in the sense of Factory/DeviceObject.cuh: it lives in device
+// memory and a host side stub holds the same pointers. The device object is
+// placement-newed on top of a byte copy of that stub, so the constructor must
+// set value members only and leave every buffer pointer alone - initialising
+// one here would overwrite the address the stub allocated.
 class Balancer
 {
 protected:
@@ -111,6 +112,7 @@ protected:
     label   batchSize_;
     label   scratchSize_;
     label   systemSize_;
+    label   parameterSize_;
 
     label   numOfKeys_;
     label   numOfBins_;      // bins per key
@@ -146,12 +148,14 @@ public:
         const label batchSize,
         const label scratchSize,
         const label systemSize,
+        const label parameterSize,
         const label numOfKeys,
         const bool usesDerivatives
     )
         : batchSize_(batchSize),
           scratchSize_(scratchSize),
           systemSize_(systemSize),
+          parameterSize_(parameterSize),
           numOfKeys_(numOfKeys),
           numOfBins_(binsPerKey(numOfKeys)),
           numOfBuckets_(bucketsFor(numOfKeys)),
@@ -267,14 +271,16 @@ public:
     );
 
     // Device memory the balancer adds per system of the batch, and per resident
-    // thread. Subclasses restate both without the arguments they already fix.
-    __host__ static size_t bytesPerSystem(const label numOfKeys)
+    // thread. Every subclass restates both with the signature a TypeEntry
+    // expects - (systemSize, parameterSize) - filling in the key count and the
+    // derivative flag it already fixes.
+    __host__ static size_t keyBytesPerSystem(const label numOfKeys)
     {
         return size_t(numOfKeys) * sizeof(scalar) + 2 * sizeof(label);
     }
 
     __host__ static size_t
-    scratchBytesPerThread(const label systemSize, const bool usesDerivatives)
+    keyScratchBytesPerThread(const label systemSize, const bool usesDerivatives)
     {
         return usesDerivatives ? size_t(systemSize) * sizeof(scalar) : 0;
     }

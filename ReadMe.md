@@ -225,19 +225,14 @@ resolution on the ones already there. Order them by how much they matter; at mos
   though their Jacobians have nothing in common. This is what more than one key is for, and what
   `examples/integrators/GRIMECH/seulex5.cu` uses.
 
-All three are built with the same `create`/`destroy` host-stub pair as the device resources, and
-all take the same `(batchSize, scratchSize, systemSize)`. Each declares its own
-`bytesPerSystem()`/`scratchBytesPerThread(systemSize)` for `planLaunch` — a key that evaluates the
-right hand side needs a `systemSize` scratch slot per resident thread to write it into.
+All three are *device objects* in the sense of the section below, so all three are built the same
+way and picked by name — `"temperature"`, `"rhsNorm"`, `"stiffness"` — out of the table in
+`Balancer/balancerTable.cu`, with `"none"` for no balancing at all. Each declares its own
+`stateBytesPerSystem`/`scratchBytesPerThread` for `planLaunch`: a key that evaluates the right hand
+side needs a `systemSize` scratch slot per resident thread to write it into.
 
-Unlike the resources, the stub can also be asked for with `createStub`/`destroyStub` instead of
-being declared by the caller: `key()` is a *device-only virtual*, so the vtable of a host side
-object can only be emitted by a compiler that invents a host stub for one — nvcc does, `nvc++
--cuda` does not and stops with an undefined `key` in the vtable. A caller compiled by anything
-other than nvcc (an OpenFOAM chemistry model, say) must therefore hold the stub as a pointer and
-let the `.cu` construct it. `Balancer/BalancerFactory.cuh` holds those four steps once, and is
-included only by the `.cu` of a subclass — never by a caller, since it is the file that launches
-the kernels. Adding a balancer is a subclass with a `key()`, plus four one-line forwards to it.
+Adding a balancer is a subclass with a `key()`, one `KODES_DEFINE_DEVICE_OBJECT` line in its `.cu`
+and one line in the table.
 
 `Integrator::setBalancer(balancer, hostStub)` points the resources at the balancer's order array
 and rebalances at the start of every `solve()`, since a new batch brings new cells. Without it the

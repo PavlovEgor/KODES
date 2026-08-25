@@ -21,6 +21,8 @@ namespace kodes
 //
 // The cost is resolution: two keys share KODES_BALANCER_BUCKETS buckets between
 // them, so each is cut into 128 bins rather than 16384.
+//
+// Selected by the name "stiffness", see balancerTable.
 class StiffnessBalancer
     :
     public Balancer
@@ -29,14 +31,22 @@ public:
 
     static constexpr label keyCount = 2;
 
+    static constexpr bool usesDerivatives = true;
+
     __device__ __host__
     StiffnessBalancer
     (
         const label batchSize,
         const label scratchSize,
-        const label systemSize
+        const label systemSize,
+        const label parameterSize
     )
-        : Balancer(batchSize, scratchSize, systemSize, keyCount, true) {}
+        : Balancer
+          (
+              batchSize, scratchSize, systemSize, parameterSize,
+              keyCount, usesDerivatives
+          )
+    {}
 
     __device__ __host__
     ~StiffnessBalancer() = default;
@@ -59,34 +69,19 @@ public:
         key[1] = relativeRHSNorm(y, dydt, resources->systemSize());
     }
 
-    __host__ static size_t bytesPerSystem()
+    __host__ static size_t
+    stateBytesPerSystem(const label systemSize, const label parameterSize)
     {
-        return Balancer::bytesPerSystem(keyCount);
+        return Balancer::keyBytesPerSystem(keyCount);
     }
 
-    __host__ static size_t scratchBytesPerThread(const label systemSize)
+    __host__ static size_t
+    scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return Balancer::scratchBytesPerThread(systemSize, true);
+        return Balancer::keyScratchBytesPerThread(systemSize, usesDerivatives);
     }
 
-    __host__ static StiffnessBalancer*
-    create
-    (
-        const label batchSize,
-        const label scratchSize,
-        const label systemSize,
-        StiffnessBalancer* hostStub
-    );
-
-    __host__ static void
-    destroy(StiffnessBalancer* devBalancer, StiffnessBalancer* hostStub);
-
-    // see TemperatureBalancer::createStub for why this is not the caller's job
-    __host__ static StiffnessBalancer*
-    createStub(const label batchSize, const label scratchSize, const label systemSize);
-
-    __host__ static void
-    destroyStub(StiffnessBalancer* hostStub);
+    KODES_DECLARE_DEVICE_OBJECT(StiffnessBalancer)
 };
 
 }

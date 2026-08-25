@@ -14,6 +14,8 @@ namespace kodes
 // similar time scales, so they need a similar number of steps - but only
 // roughly, since two cells at the same temperature and different composition
 // do not. StiffnessBalancer refines exactly that.
+//
+// Selected by the name "temperature", see balancerTable.
 class TemperatureBalancer
     :
     public Balancer
@@ -22,14 +24,22 @@ public:
 
     static constexpr label keyCount = 1;
 
+    static constexpr bool usesDerivatives = false;
+
     __device__ __host__
     TemperatureBalancer
     (
         const label batchSize,
         const label scratchSize,
-        const label systemSize
+        const label systemSize,
+        const label parameterSize
     )
-        : Balancer(batchSize, scratchSize, systemSize, keyCount, false) {}
+        : Balancer
+          (
+              batchSize, scratchSize, systemSize, parameterSize,
+              keyCount, usesDerivatives
+          )
+    {}
 
     __device__ __host__
     ~TemperatureBalancer() = default;
@@ -46,38 +56,19 @@ public:
         key[0] = resources->vectorComponent(system, 0);
     }
 
-    __host__ static size_t bytesPerSystem()
+    __host__ static size_t
+    stateBytesPerSystem(const label systemSize, const label parameterSize)
     {
-        return Balancer::bytesPerSystem(keyCount);
+        return Balancer::keyBytesPerSystem(keyCount);
     }
 
-    __host__ static size_t scratchBytesPerThread(const label systemSize)
+    __host__ static size_t
+    scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return Balancer::scratchBytesPerThread(systemSize, false);
+        return Balancer::keyScratchBytesPerThread(systemSize, usesDerivatives);
     }
 
-    __host__ static TemperatureBalancer*
-    create
-    (
-        const label batchSize,
-        const label scratchSize,
-        const label systemSize,
-        TemperatureBalancer* hostStub
-    );
-
-    __host__ static void
-    destroy(TemperatureBalancer* devBalancer, TemperatureBalancer* hostStub);
-
-    // The host side stub, built here rather than by the caller. key() only
-    // exists on the device, so the vtable of a host object can only be emitted
-    // by a compiler that invents a host stub for a device-only virtual - nvcc
-    // does, nvc++ -cuda does not. Keeping the construction in this .cu leaves
-    // callers holding nothing but a pointer, which needs no vtable at all.
-    __host__ static TemperatureBalancer*
-    createStub(const label batchSize, const label scratchSize, const label systemSize);
-
-    __host__ static void
-    destroyStub(TemperatureBalancer* hostStub);
+    KODES_DECLARE_DEVICE_OBJECT(TemperatureBalancer)
 };
 
 }

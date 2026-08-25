@@ -1,56 +1,38 @@
 #include "DeviceResources.cuh"
 
-namespace kodes
+KODES_DEFINE_DEVICE_OBJECT(kodes::DeviceResources)
+
+__host__ void
+kodes::DeviceResources::allocate()
 {
+    // state space: the whole batch, one slot per system
+    CUDA_CHECK(cudaMalloc(&vectors, size_t(systemSize_) * ensembleSize_ * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&parameters, size_t(parameterSize_) * ensembleSize_ * sizeof(scalar)));
 
-__global__ void
-constructDeviceResources(kodes::DeviceResources* devRes, const label batchSize, const label scratchSize, const label systemSize, const label parameterSize)
+    // scratch space: one slot per resident thread
+    CUDA_CHECK(cudaMalloc(&currentVector_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    CUDA_CHECK(cudaMalloc(&currentParameters_, size_t(parameterSize_) * scratchSize_ * sizeof(scalar)));
+
+    StepState::allocate(scratchSize_);
+}
+
+__host__ void
+kodes::DeviceResources::deallocate()
 {
-    new (devRes) kodes::DeviceResources(batchSize, scratchSize, systemSize, parameterSize);
-}
+    CUDA_CHECK(cudaFree(vectors));
+    CUDA_CHECK(cudaFree(parameters));
 
-__global__ void
-destructDeviceResources(kodes::DeviceResources* devRes) {
-    devRes->~DeviceResources();
-}
+    CUDA_CHECK(cudaFree(currentVector_));
+    CUDA_CHECK(cudaFree(currentParameters_));
 
-__host__  kodes::DeviceResources*
-kodes::DeviceResources::create(const label batchSize, const label scratchSize, const label systemSize, const label parameterSize) {
-    DeviceResources* ptr;
-    CUDA_CHECK(cudaMalloc(&ptr, sizeof(DeviceResources)));
-
-    constructDeviceResources<<<1, 1>>>(ptr, batchSize, scratchSize, systemSize, parameterSize);
-    CUDA_CHECK_LAST();
-    CUDA_CHECK(cudaDeviceSynchronize());
-
-    CUDA_CHECK(cudaMalloc(&ptr->vectors, systemSize * batchSize * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&ptr->parameters, parameterSize * batchSize * sizeof(scalar)));
-
-    return ptr;
-}
-
-__host__  void
-kodes::DeviceResources::destroy(kodes::DeviceResources* devRes) {
-    if (devRes) {
-
-        CUDA_CHECK(cudaFree(devRes->vectors));
-        CUDA_CHECK(cudaFree(devRes->parameters));
-
-        destructDeviceResources<<<1, 1>>>(devRes);
-        CUDA_CHECK_LAST();
-        CUDA_CHECK(cudaDeviceSynchronize());
-
-        CUDA_CHECK(cudaFree(devRes));
-    }
+    StepState::deallocate();
 }
 
 __host__ __device__ void
-DeviceResources::printVectori(const label i) const
+kodes::DeviceResources::printVectori(const label i) const
 {
     for (label j = 0; j < systemSize_; ++j) {
         printf("%0.2f ", this->vectors[INDEXSTATE(i, j, ensembleSize_)]);
     }
     printf("\n");
-}
-
 }
