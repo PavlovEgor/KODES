@@ -1,0 +1,5 @@
+venv/
+media/
+slides/
+*.pptx
+__pycache__/
