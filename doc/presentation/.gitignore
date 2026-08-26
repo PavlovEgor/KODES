@@ -1,5 +1,5 @@
 venv/
 media/
 slides/
-*.pptx
+# *.pptx
 __pycache__/
