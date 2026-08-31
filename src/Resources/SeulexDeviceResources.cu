@@ -28,6 +28,10 @@ kodes::SeulexDeviceResources::allocate()
     CUDA_CHECK(cudaMalloc(&yTemp_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&dydt_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
 
+    // one entry per thread: step control that survives a step, not a system
+    CUDA_CHECK(cudaMalloc(&kTarg_, size_t(scratchSize_) * sizeof(label)));
+    CUDA_CHECK(cudaMalloc(&theta_, size_t(scratchSize_) * sizeof(scalar)));
+
     uploadSeulexConstants();
 }
 
@@ -50,6 +54,9 @@ kodes::SeulexDeviceResources::deallocate()
     CUDA_CHECK(cudaFree(dy_));
     CUDA_CHECK(cudaFree(yTemp_));
     CUDA_CHECK(cudaFree(dydt_));
+
+    CUDA_CHECK(cudaFree(kTarg_));
+    CUDA_CHECK(cudaFree(theta_));
 
     DeviceResources::deallocate();
 }

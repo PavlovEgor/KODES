@@ -30,6 +30,14 @@ protected:
     scalar* yTemp_;
     scalar* dydt_;
 
+    // Order and Jacobian control carried from one step of a system to the next:
+    // the target extrapolation order the previous step settled on, and the
+    // contraction rate that decides whether the Jacobian may be reused. They
+    // outlive a step but not a system, so they are scratch like everything
+    // else here - a step re-reads what the previous one left in its slot.
+    label*  kTarg_;
+    scalar* theta_;
+
 public:
 
     __device__ __host__
@@ -68,8 +76,9 @@ public:
              + 2 * n * n                            // dfdy_, a_
              + 7 * n                                // dfdt_, y0_, ySequence_, scale_, dy_, yTemp_, dydt_
              + 2 * size_t(orderStorage(systemSize)) // dtOpt_, temp_
+             + 1                                    // theta_
                ) * sizeof(scalar)
-             + n * sizeof(label);                   // pivotIndices_
+             + (n + 1) * sizeof(label);             // pivotIndices_, kTarg_
     }
 
     __device__ scalar*
@@ -110,6 +119,12 @@ public:
 
     __device__ scalar*
     dydt() { return dydt_; }
+
+    __device__ label*
+    kTarg() { return kTarg_; }
+
+    __device__ scalar*
+    theta() { return theta_; }
 
 };
 

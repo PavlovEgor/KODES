@@ -139,8 +139,12 @@ scalar kodes::Seulex::step
 
     const scalar jacRedo = min(1e-4, relTol);
 
-    scalar theta, logTol;
-    label kTarg;
+    // Both outlive this call: kTarg is the order the previous step of this
+    // system settled on, theta the contraction rate it measured. They live in
+    // the thread's scratch slot, since a local would be indeterminate on every
+    // step after the first - which is the one the first_ branch below writes.
+    label&  kTarg = resources->kTarg()[INDEXVEC(0)];
+    scalar& theta = resources->theta()[INDEXVEC(0)];
 
     scalar* __restrict__ table = resources->table();
     scalar* __restrict__ dfdt  = resources->dfdt();
@@ -167,7 +171,7 @@ scalar kodes::Seulex::step
 
     if (resources->first[INDEXVEC(0)] )
     {
-        logTol = -log10(relTol + absTol)*0.6 + 0.5;
+        const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
         kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
 
