@@ -123,7 +123,8 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const char* methodName,
     const char* balancerName,
     const size_t extraScratchBytesPerThread,
-    const LaunchConfig& request
+    const LaunchConfig& request,
+    const size_t deviceStackBytes
 )
 {
     if (ensembleSize <= 0 || systemSize <= 0 || request.threads <= 0)
@@ -131,6 +132,17 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         fprintf(stderr, "kodes::planLaunch error at %s:%d: non-positive ensembleSize/systemSize/threads\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
+
+    if (deviceStackBytes == 0)
+    {
+        fprintf(stderr, "kodes::planLaunch error at %s:%d: deviceStackBytes is zero\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
+    // First, and before freeDeviceMemory() below: the driver reserves the stack
+    // of every resident thread out of the same VRAM the plan is about to divide
+    // up. Sizing the stack after the plan would mean promising memory twice.
+    setDeviceStack(deviceStackBytes);
 
     return makePlan
     (

@@ -11,6 +11,28 @@
 // Fraction of the free VRAM a plan may claim, whatever share is asked for
 #define KODES_MEMORY_HEADROOM 0.8
 
+// Bytes of call stack one device thread gets.
+//
+// The driver's own default is 1 KiB, and it is only a default: normally the
+// driver walks the kernel's call graph, adds up the frames and reserves what it
+// finds. It cannot do that here. solveKernel reaches the method through
+// IntegrationMethod::advance() and the mechanism through
+// ODESystem::derivatives()/jacobian(), both virtual, so ptxas sees an indirect
+// call and stops. Everything below it - Seulex::step(), pyJac's eval_jacob()
+// and the hundreds of separately compiled functions it calls - has to fit in
+// this number instead, and a mechanism with hundreds of species does not fit in
+// 1 KiB. Overflowing it corrupts the stack, and the first thing a corrupt stack
+// does is return to an address that is not code: "invalid program counter",
+// reported by the next synchronising call rather than by the launch.
+//
+// It is not free, and the price is not what it looks like: the driver reserves
+// this much for every thread the device *could* hold resident -
+// multiProcessorCount * maxThreadsPerMultiProcessor of them - not for the ones
+// a launch actually uses. Four times the stack is four times that reservation
+// whatever the grid, and all of it comes out of the VRAM the batch was going to
+// live in. Raise it until the run stops failing, not further.
+#define KODES_DEVICE_STACK_BYTES 8192
+
 namespace kodes
 {
 
@@ -289,6 +311,29 @@ __host__ inline size_t freeDeviceMemory()
     size_t totalMem = 0;
     CUDA_CHECK(cudaMemGetInfo(&freeMem, &totalMem));
     return freeMem;
+}
+
+// What a device thread's call stack is right now.
+__host__ inline size_t deviceStack()
+{
+    size_t granted = 0;
+    CUDA_CHECK(cudaDeviceGetLimit(&granted, cudaLimitStackSize));
+    return granted;
+}
+
+// Give every device thread `bytes` of call stack, and return what the driver
+// actually granted (it rounds up). See KODES_DEVICE_STACK_BYTES for why the
+// default will not do.
+//
+// Whether the driver takes the memory for the backing store here or holds off
+// until the first launch is its own business. That is exactly why planLaunch()
+// calls this before it counts free memory and not after: either cudaMemGetInfo
+// already has the reservation out of it, or it is still to come and comes out
+// of KODES_MEMORY_HEADROOM. Counting first would leave neither.
+__host__ inline size_t setDeviceStack(const size_t bytes)
+{
+    CUDA_CHECK(cudaDeviceSetLimit(cudaLimitStackSize, bytes));
+    return deviceStack();
 }
 
 }

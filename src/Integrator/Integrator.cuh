@@ -46,6 +46,9 @@ __host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
 // keys and the order cost, and this adds them up before either exists. Anything
 // owned outside both - for a pyJac mechanism, required_mechanism_size() - goes
 // in the extra.
+//
+// This is also where the device call stack is sized, because that has to happen
+// before the free memory is counted: see KODES_DEVICE_STACK_BYTES.
 __host__ LaunchConfig planLaunch
 (
     const label ensembleSize,
@@ -54,7 +57,8 @@ __host__ LaunchConfig planLaunch
     const char* methodName,
     const char* balancerName,
     const size_t extraScratchBytesPerThread = 0,
-    const LaunchConfig& request = LaunchConfig()
+    const LaunchConfig& request = LaunchConfig(),
+    const size_t deviceStackBytes = KODES_DEVICE_STACK_BYTES
 );
 
 // Drives the solve: owns the grid-stride loop over the batch, the step count
