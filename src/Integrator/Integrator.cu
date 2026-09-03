@@ -133,16 +133,15 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         std::exit(EXIT_FAILURE);
     }
 
-    if (deviceStackBytes == 0)
+    // Zero leaves the driver's own value alone, which is what it should be
+    // doing: see KODES_DEVICE_STACK_BYTES. When a caller does override it, this
+    // has to happen before freeDeviceMemory() below - the driver reserves the
+    // stack of every resident thread out of the same VRAM the plan is about to
+    // divide up, so sizing it after the plan would promise that memory twice.
+    if (deviceStackBytes > 0)
     {
-        fprintf(stderr, "kodes::planLaunch error at %s:%d: deviceStackBytes is zero\n", __FILE__, __LINE__);
-        std::exit(EXIT_FAILURE);
+        setDeviceStack(deviceStackBytes);
     }
-
-    // First, and before freeDeviceMemory() below: the driver reserves the stack
-    // of every resident thread out of the same VRAM the plan is about to divide
-    // up. Sizing the stack after the plan would mean promising memory twice.
-    setDeviceStack(deviceStackBytes);
 
     return makePlan
     (

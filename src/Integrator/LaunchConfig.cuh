@@ -11,27 +11,27 @@
 // Fraction of the free VRAM a plan may claim, whatever share is asked for
 #define KODES_MEMORY_HEADROOM 0.8
 
-// Bytes of call stack one device thread gets.
+// Bytes of call stack one device thread gets, or 0 to leave the driver's own
+// value alone. 0 is the default, and should stay the default.
 //
-// The driver's own default is 1 KiB, and it is only a default: normally the
-// driver walks the kernel's call graph, adds up the frames and reserves what it
-// finds. It cannot do that here. solveKernel reaches the method through
-// IntegrationMethod::advance() and the mechanism through
-// ODESystem::derivatives()/jacobian(), both virtual, so ptxas sees an indirect
-// call and stops. Everything below it - Seulex::step(), pyJac's eval_jacob()
-// and the hundreds of separately compiled functions it calls - has to fit in
-// this number instead, and a mechanism with hundreds of species does not fit in
-// 1 KiB. Overflowing it corrupts the stack, and the first thing a corrupt stack
-// does is return to an address that is not code: "invalid program counter",
-// reported by the next synchronising call rather than by the launch.
+// Normally the driver sizes the stack itself: ptxas records a frame size per
+// function, the driver walks the kernel's call graph and reserves what it
+// finds. `cuobjdump -res-usage` prints what it found - for a 159 species
+// mechanism solveKernel comes out at STACK:15600 - and cudaLimitStackSize is
+// only the floor under that, for the part of the graph the compiler could not
+// see (an indirect call, which a virtual call on the device is).
 //
-// It is not free, and the price is not what it looks like: the driver reserves
-// this much for every thread the device *could* hold resident -
-// multiProcessorCount * maxThreadsPerMultiProcessor of them - not for the ones
-// a launch actually uses. Four times the stack is four times that reservation
-// whatever the grid, and all of it comes out of the VRAM the batch was going to
-// live in. Raise it until the run stops failing, not further.
-#define KODES_DEVICE_STACK_BYTES 8192
+// Raising the floor is expensive out of all proportion to what it buys. The
+// driver reserves it for every thread the device *could* hold resident -
+// multiProcessorCount * maxThreadsPerMultiProcessor - not for the ones a launch
+// uses, so on a large card 128 KiB per thread is over 30 GiB, more than the card
+// has, and what survives is what the batch gets to live in. A run that asked for
+// it came back with 8 blocks x 64 threads for a 40000 cell case.
+//
+// So: only set this when a run is actually dying for want of stack, and then set
+// it to the frame cuobjdump reports plus room for the indirect part, not to a
+// round number that sounds safe.
+#define KODES_DEVICE_STACK_BYTES 0
 
 namespace kodes
 {
