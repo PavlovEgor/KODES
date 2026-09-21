@@ -1,9 +1,5 @@
 #include "Balancer.cuh"
 
-// Lanes of a warp. Fixed on every NVIDIA device, and needed as a constant so
-// the shuffle reduction below can be unrolled.
-#define KODES_WARP 32
-
 __global__ void
 kodes::fillKeysKernel
 (

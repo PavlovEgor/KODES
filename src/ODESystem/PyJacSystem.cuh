@@ -42,7 +42,7 @@ public:
     __device__ void
     jacobian
     (
-        const scalar t, const scalar pressure, const scalar* y, scalar* dfdt, scalar* dfdy
+        const scalar t, const scalar pressure, const scalar* y, scalar* dfdy
     ) const override;
 };
 }

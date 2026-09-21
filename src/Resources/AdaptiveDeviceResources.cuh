@@ -20,10 +20,11 @@ public:
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     )
-        : DeviceResources(batchSize, scratchSize, systemSize, parameterSize) {}
+        : DeviceResources(batchSize, scratchSize, blocks, systemSize, parameterSize) {}
 
     __device__ __host__
     ~AdaptiveDeviceResources() = default;

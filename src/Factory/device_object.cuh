@@ -18,8 +18,10 @@
 // The contract a class has to keep to be built this way:
 //
 //   1. a `__device__ __host__` constructor taking exactly
-//      (batchSize, scratchSize, systemSize, parameterSize), which sets value
-//      members only and never touches a buffer pointer - see create() for why;
+//      (batchSize, scratchSize, blocks, systemSize, parameterSize), which sets
+//      value members only and never touches a buffer pointer - see create()
+//      for why. `blocks` is there because a buffer may be per block rather
+//      than per resident thread: the matrix a whole block factorises once is;
 //   2. `__host__ void allocate()` / `deallocate()`, which cudaMalloc/cudaFree
 //      the buffers into the object's own pointers. They are *not* virtual: the
 //      templates below are instantiated with the concrete class, so the
@@ -39,11 +41,12 @@ __global__ void constructDeviceObjectKernel
     T* object,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 )
 {
-    new (object) T(batchSize, scratchSize, systemSize, parameterSize);
+    new (object) T(batchSize, scratchSize, blocks, systemSize, parameterSize);
 }
 
 template<class T>
@@ -66,11 +69,12 @@ __host__ T* createStubObject
 (
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 )
 {
-    return ::new T(batchSize, scratchSize, systemSize, parameterSize);
+    return ::new T(batchSize, scratchSize, blocks, systemSize, parameterSize);
 }
 
 template<class T>
@@ -92,6 +96,7 @@ __host__ T* createDeviceObject
 (
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize,
     T* hostStub
@@ -103,14 +108,14 @@ __host__ T* createDeviceObject
         std::exit(EXIT_FAILURE);
     }
 
-    if (batchSize <= 0 || scratchSize <= 0 || systemSize <= 0 || parameterSize < 0)
+    if (batchSize <= 0 || scratchSize <= 0 || blocks <= 0 || systemSize <= 0 || parameterSize < 0)
     {
         fprintf
         (
             stderr,
-            "kodes::createDeviceObject error at %s:%d: batchSize %d, scratchSize %d "
-            "and systemSize %d must be positive and parameterSize %d not negative\n",
-            __FILE__, __LINE__, batchSize, scratchSize, systemSize, parameterSize
+            "kodes::createDeviceObject error at %s:%d: batchSize %d, scratchSize %d, "
+            "blocks %d and systemSize %d must be positive and parameterSize %d not negative\n",
+            __FILE__, __LINE__, batchSize, scratchSize, blocks, systemSize, parameterSize
         );
         std::exit(EXIT_FAILURE);
     }
@@ -124,7 +129,7 @@ __host__ T* createDeviceObject
 
     constructDeviceObjectKernel<T><<<1, 1>>>
     (
-        devPtr, batchSize, scratchSize, systemSize, parameterSize
+        devPtr, batchSize, scratchSize, blocks, systemSize, parameterSize
     );
     CUDA_CHECK_LAST();
     CUDA_CHECK(cudaDeviceSynchronize());
@@ -164,6 +169,7 @@ __host__ Class* Class::create                                                  \
 (                                                                              \
     const label batchSize,                                                     \
     const label scratchSize,                                                   \
+    const label blocks,                                                        \
     const label systemSize,                                                    \
     const label parameterSize,                                                 \
     Class* hostStub                                                            \
@@ -171,7 +177,7 @@ __host__ Class* Class::create                                                  \
 {                                                                              \
     return kodes::createDeviceObject<Class>                                    \
     (                                                                          \
-        batchSize, scratchSize, systemSize, parameterSize, hostStub            \
+        batchSize, scratchSize, blocks, systemSize, parameterSize, hostStub    \
     );                                                                         \
 }                                                                              \
                                                                                \
@@ -184,13 +190,14 @@ __host__ Class* Class::createStub                                              \
 (                                                                              \
     const label batchSize,                                                     \
     const label scratchSize,                                                   \
+    const label blocks,                                                        \
     const label systemSize,                                                    \
     const label parameterSize                                                  \
 )                                                                              \
 {                                                                              \
     return kodes::createStubObject<Class>                                      \
     (                                                                          \
-        batchSize, scratchSize, systemSize, parameterSize                      \
+        batchSize, scratchSize, blocks, systemSize, parameterSize              \
     );                                                                         \
 }                                                                              \
                                                                                \
@@ -208,6 +215,7 @@ __host__ void Class::destroyStub(Class* hostStub)                              \
     (                                                                          \
         const label batchSize,                                                 \
         const label scratchSize,                                               \
+        const label blocks,                                                    \
         const label systemSize,                                                \
         const label parameterSize,                                             \
         Class* hostStub                                                        \
@@ -219,6 +227,7 @@ __host__ void Class::destroyStub(Class* hostStub)                              \
     (                                                                          \
         const label batchSize,                                                 \
         const label scratchSize,                                               \
+        const label blocks,                                                    \
         const label systemSize,                                                \
         const label parameterSize                                              \
     );                                                                         \

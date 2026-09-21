@@ -23,10 +23,13 @@ public:
         const scalar t, const scalar parameter, const scalar* y, scalar* dydt
     ) const = 0;
 
+    // df/dy only: the systems this library integrates are autonomous, so the
+    // df/dt this used to take alongside it was a vector every caller allocated
+    // per thread, passed in, and never read. pyJac never wrote it either.
     __device__ virtual void
     jacobian
     (
-        const scalar t, const scalar parameter, const scalar* y, scalar* dfdt, scalar* dfdy
+        const scalar t, const scalar parameter, const scalar* y, scalar* dfdy
     ) const = 0;
 };
 }

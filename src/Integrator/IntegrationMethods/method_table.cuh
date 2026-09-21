@@ -44,6 +44,13 @@ __host__ size_t methodScratchBytesPerThread
     const label parameterSize
 );
 
+__host__ size_t methodScratchBytesPerBlock
+(
+    const char* name,
+    const label systemSize,
+    const label parameterSize
+);
+
 __host__ size_t methodStateBytesPerSystem
 (
     const char* name,
@@ -56,6 +63,7 @@ __host__ Handle<IntegrationMethod> newMethod
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 );
@@ -67,6 +75,7 @@ __host__ Handle<DeviceResources> newResources
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 );

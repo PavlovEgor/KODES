@@ -19,10 +19,11 @@ public:
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     )
-        : AdaptiveDeviceResources(batchSize, scratchSize, systemSize, parameterSize) {}
+        : AdaptiveDeviceResources(batchSize, scratchSize, blocks, systemSize, parameterSize) {}
 
     __device__ __host__
     ~EulerDeviceResources() = default;

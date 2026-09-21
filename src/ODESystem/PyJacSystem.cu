@@ -45,7 +45,7 @@ void kodes::PyJacSystem::derivatives(const scalar t, const scalar pressure, cons
 }
 
 __device__
-void kodes::PyJacSystem::jacobian(const scalar t, const scalar pressure, const scalar* y, scalar* dfdt, scalar* dfdy) const
+void kodes::PyJacSystem::jacobian(const scalar t, const scalar pressure, const scalar* y, scalar* dfdy) const
 {
     eval_jacob(t, pressure, y, dfdy, device_memory);
 }

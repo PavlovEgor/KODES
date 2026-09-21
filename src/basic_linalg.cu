@@ -1,110 +1,144 @@
 #include "basic_linalg.cuh"
+#include "block_reduce.cuh"
 
 
 __device__
-void LUDecompose (scalar* __restrict__ matrix, label* __restrict__ pivotIndices, const label size)
+void blockLUDecompose
+(
+    scalar* __restrict__ matrix,
+    label* __restrict__ pivotIndices,
+    scalar* __restrict__ vv,
+    const label size
+)
 {
-    int sign;
-    LUDecompose(matrix, pivotIndices, size, &sign);
-}
+    const label lane = threadIdx.x;
+    const label lanes = blockDim.x;
 
-__device__ 
-void LUDecompose (scalar* __restrict__ matrix, label* __restrict__ pivotIndices, const label size, int* sign)
-{
-    scalar vv[128];
-    *sign = 1;
-
-    for (label i = 0; i < size; ++i)
+    // Row scales of the implicit pivoting: one over the largest magnitude in
+    // each row, so that the pivot is chosen by relative rather than absolute
+    // size and a row that is merely badly scaled does not win every column.
+    for (label i = lane; i < size; i += lanes)
     {
         scalar largestCoeff = 0.0;
-        scalar temp;
 
         for (label j = 0; j < size; ++j)
         {
-            if ((temp = fabs(matrix[INDEXMAT(i, j, size)])) > largestCoeff)
+            const scalar candidate = fabs(matrix[INDEXBLOCKMAT(i, j, size)]);
+
+            if (candidate > largestCoeff)
             {
-                largestCoeff = temp;
+                largestCoeff = candidate;
             }
         }
+
         if (largestCoeff == 0.0)
         {
-            printf("Singular matrix");
+            printf("Singular matrix\n");
+            largestCoeff = SMALL;
         }
+
         vv[i] = 1.0/largestCoeff;
     }
 
-    for (label j = 0; j < size; ++j)
+    __syncthreads();
+
+    // Right looking Gaussian elimination. The Crout form this replaced walks
+    // each column from its top, every entry needing the one above it, and so
+    // has nothing for a second thread to do; the right looking form spends its
+    // work in a rank one update of the trailing submatrix, which is (size-k)^2
+    // independent entries.
+    for (label k = 0; k < size; ++k)
     {
-        for (label i = 0; i < j; ++i)
+        scalar best = -1.0;
+        label  pivotRow = size;
+
+        for (label i = k + lane; i < size; i += lanes)
         {
-            scalar sum = matrix[INDEXMAT(i, j, size)];
-            for (label k = 0; k < i; ++k)
+            const scalar candidate = vv[i]*fabs(matrix[INDEXBLOCKMAT(i, k, size)]);
+
+            if (candidate > best)
             {
-                sum -= matrix[INDEXMAT(i, k, size)]*matrix[INDEXMAT(k, j, size)];
-            }
-            matrix[INDEXMAT(i, j, size)] = sum;
-        }
-
-        label iMax = j;
-
-        scalar largestCoeff = 0.0;
-        for (label i = j; i < size; ++i)
-        {
-            scalar sum = matrix[INDEXMAT(i, j, size)];
-
-            for (label k = 0; k < j; ++k)
-            {
-                sum -= matrix[INDEXMAT(i, k, size)]*matrix[INDEXMAT(k, j, size)];
-            }
-
-            matrix[INDEXMAT(i, j, size)] = sum;
-
-            scalar temp;
-            if ((temp = vv[i]*fabs(sum)) >= largestCoeff)
-            {
-                largestCoeff = temp;
-                iMax = i;
+                best = candidate;
+                pivotRow = i;
             }
         }
 
-        pivotIndices[INDEXVEC(j)] = iMax;
+        // Ties go to the first row rather than the last, which is where this
+        // differs from the serial version it replaced. Either is a valid
+        // pivot; fixing one of them keeps the factorization reproducible.
+        kodes::blockArgMax(best, pivotRow);
 
-        if (j != iMax)
+        if (lane == 0)
         {
-            for (label k = 0; k < size; ++k)
+            pivotIndices[k] = pivotRow;
+        }
+
+        if (pivotRow != k)
+        {
+            for (label j = lane; j < size; j += lanes)
             {
-                swap(matrix[INDEXMAT(j, k, size)], matrix[INDEXMAT(iMax, k, size)]);
+                swap
+                (
+                    matrix[INDEXBLOCKMAT(k, j, size)],
+                    matrix[INDEXBLOCKMAT(pivotRow, j, size)]
+                );
             }
 
-            *sign *= -1;
-            vv[iMax] = vv[j];
-        }
-
-        if (matrix[INDEXMAT(j, j, size)] == 0.0)
-        {
-            matrix[INDEXMAT(j, j, size)] = SMALL;
-        }
-
-        if (j != size-1)
-        {
-            scalar rDiag = 1.0/matrix[INDEXMAT(j, j, size)];
-
-            for (label i = j + 1; i < size; ++i)
+            if (lane == 0)
             {
-                matrix[INDEXMAT(i, j, size)] *= rDiag;
+                swap(vv[k], vv[pivotRow]);
             }
         }
+
+        __syncthreads();
+
+        if (lane == 0 && matrix[INDEXBLOCKMAT(k, k, size)] == 0.0)
+        {
+            matrix[INDEXBLOCKMAT(k, k, size)] = SMALL;
+        }
+
+        __syncthreads();
+
+        const scalar rDiag = 1.0/matrix[INDEXBLOCKMAT(k, k, size)];
+
+        for (label i = k + 1 + lane; i < size; i += lanes)
+        {
+            matrix[INDEXBLOCKMAT(i, k, size)] *= rDiag;
+        }
+
+        __syncthreads();
+
+        // Flattened, so that the threads share the trailing submatrix evenly
+        // however narrow it has become by the last columns.
+        const label trailing = size - k - 1;
+
+        for (label t = lane; t < trailing*trailing; t += lanes)
+        {
+            const label i = k + 1 + t/trailing;
+            const label j = k + 1 + t%trailing;
+
+            matrix[INDEXBLOCKMAT(i, j, size)] -=
+                matrix[INDEXBLOCKMAT(i, k, size)]*matrix[INDEXBLOCKMAT(k, j, size)];
+        }
+
+        __syncthreads();
     }
 }
 
-__device__  
-void LUBacksubstitute (const scalar* __restrict__ luMatrix, const label* __restrict__ pivotIndices, scalar* __restrict__ source, const label size)
+__device__
+void LUBacksubstitute
+(
+    const scalar* __restrict__ luMatrix,
+    const label* __restrict__ pivotIndices,
+    scalar* __restrict__ source,
+    const label size
+)
 {
     label ii = 0;
 
     for (label i = 0; i < size; ++i)
     {
-        label ip = pivotIndices[INDEXVEC(i)];
+        label ip = pivotIndices[i];
         scalar sum = source[INDEXVEC(ip)];
         source[INDEXVEC(ip)] = source[INDEXVEC(i)];
 
@@ -112,7 +146,7 @@ void LUBacksubstitute (const scalar* __restrict__ luMatrix, const label* __restr
         {
             for (label j = ii - 1; j < i; ++j)
             {
-                sum -= luMatrix[INDEXMAT(i, j, size)]*source[INDEXVEC(j)];
+                sum -= luMatrix[INDEXBLOCKMAT(i, j, size)]*source[INDEXVEC(j)];
             }
         }
         else if (sum != 0.0)
@@ -123,15 +157,15 @@ void LUBacksubstitute (const scalar* __restrict__ luMatrix, const label* __restr
         source[INDEXVEC(i)] = sum;
     }
 
-    for (int i = size - 1; i >= 0; --i)
+    for (label i = size - 1; i >= 0; --i)
     {
         scalar sum = source[INDEXVEC(i)];
 
         for (label j = i + 1; j < size; ++j)
         {
-            sum -= luMatrix[INDEXMAT(i, j, size)]*source[INDEXVEC(j)];
+            sum -= luMatrix[INDEXBLOCKMAT(i, j, size)]*source[INDEXVEC(j)];
         }
 
-        source[INDEXVEC(i)] = sum/luMatrix[INDEXMAT(i, i, size)];
+        source[INDEXVEC(i)] = sum/luMatrix[INDEXBLOCKMAT(i, i, size)];
     }
 }

@@ -1,11 +1,21 @@
 #include "Integrator.cuh"
 #include "method_table.cuh"
 #include "balancer_table.cuh"
+#include "block_reduce.cuh"
 
-// Each thread owns one scratch slot and walks its share of the batch in a
-// grid-stride loop, pulling one system into the slot, integrating it there and
-// writing it back. It walks the balanced order, so the systems a warp picks up
-// are 32 neighbours of that order.
+// A block owns blockDim.x scratch slots and walks its share of the batch a
+// chunk at a time, pulling blockDim.x systems into those slots, integrating
+// them together and writing them back. It walks the balanced order, so a chunk
+// is blockDim.x *neighbours* of that order - which is what makes it reasonable
+// for them to share one Jacobian and one step size.
+//
+// The loop below therefore has one rule behind every line of it: from the top
+// of a chunk to the bottom, every branch is taken by the whole block. A
+// __syncthreads() that some threads reach and others do not is undefined
+// behaviour, not a slow path, and the method this calls into is made almost
+// entirely of them. Hence `chunks` computed the same in every thread rather
+// than a condition on the loop variable, and hence `active` as a mask rather
+// than the two `continue`s that used to stand here.
 __global__
 void kodes::solveKernel
 (
@@ -22,74 +32,107 @@ void kodes::solveKernel
 
     scalar* __restrict__ y = resources->currentVector();
 
-    for (label i = T_ID; i < controls.realBatchSize; i += GRID_DIM)
-    {
-        const label system = resources->systemAt(i);
+    // Carried from the previous launch: the step this block ended the last
+    // batch with is the one it starts this one from.
+    kodes::BlockStep blockStep;
+    scalar deltaTTry = resources->deltaTTry[B_ID];
 
-        if (resources->vectorComponent(system, 0) <= ctrl.Treact)
+    const label chunks = (controls.realBatchSize + GRID_DIM - 1) / GRID_DIM;
+
+    for (label c = 0; c < chunks; ++c)
+    {
+        const label position = T_ID + c * GRID_DIM;
+        const bool inBatch = position < controls.realBatchSize;
+
+        const label system = inBatch ? resources->systemAt(position) : 0;
+
+        // A cold cell is not integrated, but it does not leave the block
+        // either: it goes on reaching every barrier its neighbours do, and
+        // contributes nothing but a losing value to their reductions.
+        const bool active =
+            inBatch && resources->vectorComponent(system, 0) > ctrl.Treact;
+
+        if (!blockAny(active))
         {
             continue;
         }
 
-        ctrl.system = system;
+        ctrl.position = c * GRID_DIM + blockIdx.x * blockDim.x;
 
-        resources->loadSystem(system);
-        resources->resetStep();
+        if (active)
+        {
+            resources->loadSystem(system);
+        }
 
-        scalar tStart = 0;
-        scalar tEnd   = ctrl.deltaT;
-        resources->currentT[INDEXVEC(0)] = tStart;
-        scalar& t = resources->currentT[INDEXVEC(0)];
+        blockStep.reset(deltaTTry);
+
+        const scalar tStart = 0;
+        const scalar tEnd = ctrl.deltaT;
 
         bool reachedEnd = false;
 
         for (label nStep = 0; nStep < maxSteps; ++nStep)
         {
-            scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
-            resources->reject[INDEXVEC(0)] = false;
+            const scalar dtTry0 = blockStep.deltaTTry;
+            blockStep.reject = false;
 
-            if ((t + resources->deltaTTry[INDEXVEC(0)] - tEnd)*(t + resources->deltaTTry[INDEXVEC(0)] - tStart) > 0)
+            if ((blockStep.t + blockStep.deltaTTry - tEnd)*(blockStep.t + blockStep.deltaTTry - tStart) > 0)
             {
-                resources->last[INDEXVEC(0)] = true;
-                resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
+                blockStep.last = true;
+                blockStep.deltaTTry = tEnd - blockStep.t;
             }
 
-            method->advance(ode, resources, ctrl);
+            method->advance(ode, resources, blockStep, active, ctrl);
 
-            if ((t - tEnd)*(tEnd - tStart) >= 0)
+            if ((blockStep.t - tEnd)*(tEnd - tStart) >= 0)
             {
-                if (nStep > 0 && resources->last[INDEXVEC(0)])
+                if (nStep > 0 && blockStep.last)
                 {
-                    resources->deltaTTry[INDEXVEC(0)] = dtTry0;
+                    blockStep.deltaTTry = dtTry0;
                 }
                 reachedEnd = true;
                 break;
             }
 
-            resources->first[INDEXVEC(0)] = false;
+            blockStep.first = false;
 
-            if (resources->reject[INDEXVEC(0)])
+            if (blockStep.reject)
             {
-                resources->prevReject[INDEXVEC(0)] = true;
+                blockStep.prevReject = true;
             }
         }
 
-        if (!reachedEnd)
+        if (!reachedEnd && threadIdx.x == 0)
         {
             printf
             (
-                "Integration steps greater than maximum %d : system %d, "
+                "Integration steps greater than maximum %d : positions %d..%d, "
                 "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps, system, t, tEnd, resources->deltaTDid[INDEXVEC(0)]
+                maxSteps, ctrl.position, ctrl.position + blockDim.x - 1,
+                blockStep.t, tEnd, blockStep.deltaTDid
             );
         }
 
-        for (label i = 0; i < systemSize; ++i)
+        if (active)
         {
-            y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+            for (label i = 0; i < systemSize; ++i)
+            {
+                y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+            }
+
+            resources->storeSystem(system);
         }
 
-        resources->storeSystem(system);
+        deltaTTry = blockStep.deltaTTry;
+    }
+
+    // Every thread read this slot on the way in, and a batch of nothing but
+    // cold cells would put no barrier between that read and the write below.
+    __syncthreads();
+
+    if (threadIdx.x == 0)
+    {
+        resources->deltaTTry[B_ID] = deltaTTry;
     }
 }
 
@@ -105,14 +148,9 @@ void kodes::useOrderKernel(kodes::DeviceResources* resources, const label* order
     resources->useOrder(order);
 }
 
-__host__ label kodes::maxConcurrentSystems(const label threads)
+__host__ label kodes::maxConcurrentSystems(const label threads, const size_t sharedMemSize)
 {
-    return maxConcurrentThreads
-    (
-        (const void*)solveKernel,
-        threads,
-        sharedMemorySize(threads)
-    );
+    return maxConcurrentThreads((const void*)solveKernel, threads, sharedMemSize);
 }
 
 __host__ kodes::LaunchConfig kodes::planLaunch
@@ -144,17 +182,40 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     // up. Sizing the stack after the plan would mean promising memory twice.
     setDeviceStack(deviceStackBytes);
 
+    const size_t scratchPerThread =
+        methodScratchBytesPerThread(methodName, systemSize, parameterSize)
+      + balancerScratchBytesPerThread(balancerName, systemSize, parameterSize)
+      + extraScratchBytesPerThread;
+
+    const size_t scratchPerBlock =
+        methodScratchBytesPerBlock(methodName, systemSize, parameterSize)
+      + balancerScratchBytesPerBlock(balancerName, systemSize, parameterSize);
+
+    const size_t maxSharedPerBlock = maxSharedMemoryPerBlock();
+
+    // The occupancy of the solve kernel depends on how much shared memory it
+    // is launched with, and that depends on whether the block scratch is going
+    // there - so the decision is taken here, before the question is asked, and
+    // makePlan is handed the same inputs and reaches the same answer.
+    const size_t sharedMemSize = sharedMemorySize
+    (
+        request.threads,
+        blockScratchFitsShared(request.threads, scratchPerBlock, maxSharedPerBlock)
+      ? scratchPerBlock
+      : 0
+    );
+
     return makePlan
     (
         request,
         ensembleSize,
-        maxConcurrentSystems(request.threads),
-        methodScratchBytesPerThread(methodName, systemSize, parameterSize)
-      + balancerScratchBytesPerThread(balancerName, systemSize, parameterSize)
-      + extraScratchBytesPerThread,
+        maxConcurrentSystems(request.threads, sharedMemSize),
+        scratchPerThread,
+        scratchPerBlock,
         methodStateBytesPerSystem(methodName, systemSize, parameterSize)
       + balancerStateBytesPerSystem(balancerName, systemSize, parameterSize),
-        freeDeviceMemory()
+        freeDeviceMemory(),
+        maxSharedPerBlock
     );
 }
 
@@ -192,6 +253,11 @@ kodes::Integrator::Integrator
         fprintf(stderr, "Integrator ctor error at %s:%d: batchSize <= 0\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
+
+    // Where the block scratch lives is a decision of the plan, and the kernel
+    // is the only place it is acted on, so it travels with the rest of what
+    // the kernel is told.
+    controls_.blockScratchInShared = config_.blockScratchInShared;
 }
 
 
@@ -220,9 +286,8 @@ void kodes::Integrator::setBalancer(kodes::Balancer* balancer, kodes::Balancer* 
 
 void kodes::Integrator::setDeltaT(const scalar deltaT)
 {
-    kodes::setDeltaTKernel
-        <<<config_.blocks, config_.threads, config_.sharedMemSize>>>
-        (deltaT, resources_);
+    // One trial step per block, so one thread per block to seed it
+    kodes::setDeltaTKernel<<<config_.blocks, 1>>>(deltaT, resources_);
     CUDA_CHECK_LAST();
 }
 

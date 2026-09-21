@@ -72,13 +72,35 @@ scalar normalizeError (
     return maxErr;
 }
 
+// In place LU factorization of the matrix a block shares, with scaled partial
+// pivoting. Collective: every thread of the block has to call it, and it ends
+// on a barrier, so the factors are visible to all of them when it returns.
+//
+// matrix and pivotIndices are the block's own slot, indexed with INDEXBLOCKMAT
+// and directly; vv is `size` scalars of the same slot, the row scales of the
+// implicit pivoting. It used to be a local array with a hard 128 entry bound,
+// which a mechanism of more than 128 species would have run past in silence.
 __device__
-void LUDecompose (scalar* matrix, label* pivotIndices, const label size);
+void blockLUDecompose
+(
+    scalar* matrix,
+    label* pivotIndices,
+    scalar* vv,
+    const label size
+);
 
-__device__ 
-void LUDecompose (scalar* matrix, label* pivotIndices, const label size, int* sign);
-
-__device__  
-void LUBacksubstitute (const scalar* luMatrix, const label* pivotIndices, scalar* source, const label size);
+// Solve for one right hand side against the factors above. Per thread, not
+// collective: the block shares luMatrix and pivotIndices, but `source` is the
+// calling thread's own vector, in its own scratch slot. This is where the
+// sharing pays - every thread of the block reads the same matrix element at
+// the same time, which is one broadcast instead of blockDim.x loads.
+__device__
+void LUBacksubstitute
+(
+    const scalar* luMatrix,
+    const label* pivotIndices,
+    scalar* source,
+    const label size
+);
 
 #endif

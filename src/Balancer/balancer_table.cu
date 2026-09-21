@@ -65,11 +65,24 @@ __host__ size_t kodes::balancerScratchBytesPerThread
     return type ? type->scratchBytesPerThread(systemSize, parameterSize) : 0;
 }
 
+__host__ size_t kodes::balancerScratchBytesPerBlock
+(
+    const char* name,
+    const label systemSize,
+    const label parameterSize
+)
+{
+    const TypeEntry<Balancer>* type = balancerType(name);
+
+    return type ? type->scratchBytesPerBlock(systemSize, parameterSize) : 0;
+}
+
 __host__ kodes::Handle<kodes::Balancer> kodes::newBalancer
 (
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 )
@@ -83,6 +96,6 @@ __host__ kodes::Handle<kodes::Balancer> kodes::newBalancer
 
     return Handle<Balancer>
     (
-        type, batchSize, scratchSize, systemSize, parameterSize
+        type, batchSize, scratchSize, blocks, systemSize, parameterSize
     );
 }

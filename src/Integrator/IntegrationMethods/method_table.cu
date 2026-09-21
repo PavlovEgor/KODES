@@ -80,6 +80,19 @@ __host__ size_t kodes::methodScratchBytesPerThread
          + type->resources.scratchBytesPerThread(systemSize, parameterSize);
 }
 
+__host__ size_t kodes::methodScratchBytesPerBlock
+(
+    const char* name,
+    const label systemSize,
+    const label parameterSize
+)
+{
+    const MethodType* type = methodType(name);
+
+    return type->method.scratchBytesPerBlock(systemSize, parameterSize)
+         + type->resources.scratchBytesPerBlock(systemSize, parameterSize);
+}
+
 __host__ size_t kodes::methodStateBytesPerSystem
 (
     const char* name,
@@ -98,13 +111,14 @@ __host__ kodes::Handle<kodes::IntegrationMethod> kodes::newMethod
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 )
 {
     return Handle<IntegrationMethod>
     (
-        &methodType(name)->method, batchSize, scratchSize, systemSize, parameterSize
+        &methodType(name)->method, batchSize, scratchSize, blocks, systemSize, parameterSize
     );
 }
 
@@ -113,12 +127,13 @@ __host__ kodes::Handle<kodes::DeviceResources> kodes::newResources
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 )
 {
     return Handle<DeviceResources>
     (
-        &methodType(name)->resources, batchSize, scratchSize, systemSize, parameterSize
+        &methodType(name)->resources, batchSize, scratchSize, blocks, systemSize, parameterSize
     );
 }

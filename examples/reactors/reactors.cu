@@ -69,13 +69,13 @@ int main(int argc, char** argv)
     // and hands both back when it goes out of scope.
     kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
     (
-        method, batchSize, config.scratchSize,
+        method, batchSize, config.scratchSize, config.blocks,
         hostRes.systemSize(), hostRes.parameterSize()
     );
 
     kodes::Handle<kodes::IntegrationMethod> integrationMethod = kodes::newMethod
     (
-        method, batchSize, config.scratchSize,
+        method, batchSize, config.scratchSize, config.blocks,
         hostRes.systemSize(), hostRes.parameterSize()
     );
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // the order it was copied in
     kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
     (
-        balancer, batchSize, config.scratchSize,
+        balancer, batchSize, config.scratchSize, config.blocks,
         hostRes.systemSize(), hostRes.parameterSize()
     );
 

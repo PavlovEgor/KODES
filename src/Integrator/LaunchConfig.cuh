@@ -33,6 +33,14 @@
 // live in. Raise it until the run stops failing, not further.
 #define KODES_DEVICE_STACK_BYTES 8192
 
+// Most shared memory a block may be given for the matrix it factorises. The
+// device usually allows more, but shared memory is what limits how many blocks
+// an SM keeps resident, and past this the occupancy lost costs more than the
+// faster back substitution wins. A mechanism whose matrix does not fit under
+// it works in global memory instead, which is correct either way - only
+// slower.
+#define KODES_SHARED_BUDGET 16384
+
 namespace kodes
 {
 
@@ -59,6 +67,11 @@ inline constexpr DeviceShare kDeviceShares[] =
 //    is stored per system, so the batch can be far larger than scratchSize and
 //    fill the free VRAM, which keeps the number of transfers low.
 //
+//  * blockScratchInShared says where the scratch a whole block shares is
+//    worked in. It is allocated in global memory either way; when it fits
+//    under KODES_SHARED_BUDGET the kernel works in dynamic shared memory of
+//    the same layout and leaves the global copy alone.
+//
 // Constructed either from a share name ("best", "half", ... see kDeviceShares)
 // or from explicit sizes; planLaunch() turns it into the final plan.
 class LaunchConfig
@@ -70,6 +83,7 @@ public:
     label  scratchSize   = 0;
     label  batchSize     = 0;
     size_t sharedMemSize = 0;
+    bool   blockScratchInShared = false;
 
     __host__ explicit LaunchConfig
     (
@@ -124,8 +138,10 @@ public:
         printf
         (
             "%s launch config: %d blocks x %d threads = %d concurrent systems, "
-            "batch of %d systems, %zu B shared memory per block\n",
-            name, blocks, threads, scratchSize, batchSize, sharedMemSize
+            "batch of %d systems, %zu B shared memory per block, block scratch "
+            "in %s memory\n",
+            name, blocks, threads, scratchSize, batchSize, sharedMemSize,
+            blockScratchInShared ? "shared" : "global"
         );
     }
 
@@ -135,11 +151,33 @@ private:
     bool   byHand_ = false;
 };
 
+// Whether a block's shared scratch is small enough to be worked in shared
+// memory, once pyJac's own shared_temp has taken its share of it. Split out of
+// makePlan because planLaunch has to settle it *before* asking the device for
+// the occupancy of the solve kernel: the answer depends on how much shared
+// memory the kernel asks for, so asking with the wrong figure would plan the
+// grid against an occupancy the run never has.
+__host__ inline bool blockScratchFitsShared
+(
+    const label threads,
+    const size_t scratchPerBlock,
+    const size_t maxSharedPerBlock
+)
+{
+    const size_t budget =
+        maxSharedPerBlock < size_t(KODES_SHARED_BUDGET)
+      ? maxSharedPerBlock
+      : size_t(KODES_SHARED_BUDGET);
+
+    return sharedMemorySize(threads, scratchPerBlock) <= budget;
+}
+
 // Turn the device's numbers into a plan. Free of any CUDA call, so it can be
 // exercised on its own; planLaunch() feeds it the queried values.
 //
 //  concurrentThreads - threads the device can keep resident at the same time
 //  scratchPerThread  - device memory one resident thread needs for temporaries
+//  scratchPerBlock   - device memory one block needs for what its threads share
 //  statePerSystem    - device memory one system of the batch needs
 __host__ inline LaunchConfig makePlan
 (
@@ -147,8 +185,10 @@ __host__ inline LaunchConfig makePlan
     const label ensembleSize,
     const label concurrentThreads,
     const size_t scratchPerThread,
+    const size_t scratchPerBlock,
     const size_t statePerSystem,
-    const size_t freeMemory
+    const size_t freeMemory,
+    const size_t maxSharedPerBlock
 )
 {
     const label threads = request.threads;
@@ -160,8 +200,31 @@ __host__ inline LaunchConfig makePlan
         std::exit(EXIT_FAILURE);
     }
 
+    // A block reduction folds each warp with __shfl_down_sync before it folds
+    // the warps, and a partial warp would leave lanes out of the shuffle. The
+    // whole collective solve rests on those reductions, so this is checked
+    // here rather than discovered as a wrong answer.
+    if (threads % KODES_WARP != 0)
+    {
+        fprintf
+        (
+            stderr,
+            "kodes::makePlan error at %s:%d: %d threads per block is not a "
+            "multiple of the warp size %d\n",
+            __FILE__, __LINE__, threads, KODES_WARP
+        );
+        std::exit(EXIT_FAILURE);
+    }
+
     LaunchConfig config = request;
-    config.sharedMemSize = sharedMemorySize(threads);
+
+    config.blockScratchInShared =
+        blockScratchFitsShared(threads, scratchPerBlock, maxSharedPerBlock);
+
+    config.sharedMemSize = sharedMemorySize
+    (
+        threads, config.blockScratchInShared ? scratchPerBlock : 0
+    );
 
     if (request.setByHand())
     {
@@ -177,7 +240,10 @@ __host__ inline LaunchConfig makePlan
             std::exit(EXIT_FAILURE);
         }
 
+        config.blocks = config.scratchSize / threads;
+
         const size_t asked = size_t(config.scratchSize) * scratchPerThread
+                           + size_t(config.blocks) * scratchPerBlock
                            + size_t(config.batchSize) * statePerSystem;
 
         if (asked > freeMemory)
@@ -191,8 +257,6 @@ __host__ inline LaunchConfig makePlan
             );
             std::exit(EXIT_FAILURE);
         }
-
-        config.blocks = config.scratchSize / threads;
 
         return config;
     }
@@ -215,9 +279,11 @@ __host__ inline LaunchConfig makePlan
 
     // A resident thread costs its scratch plus the state of at least one system
     // of the batch, since a batch shorter than the grid would leave threads
-    // idle. That is the price of a block, and it fixes how many blocks the
-    // memory budget can afford.
-    const size_t perBlock = size_t(threads) * (scratchPerThread + statePerSystem);
+    // idle. On top of that the block pays for what its threads share. That is
+    // the price of a block, and it fixes how many blocks the memory budget can
+    // afford.
+    const size_t perBlock = size_t(threads) * (scratchPerThread + statePerSystem)
+                          + scratchPerBlock;
 
     if (perBlock > budget)
     {
@@ -240,7 +306,8 @@ __host__ inline LaunchConfig makePlan
     config.blocks = blocks;
     config.scratchSize = blocks * threads;
 
-    const size_t scratchBytes = size_t(config.scratchSize) * scratchPerThread;
+    const size_t scratchBytes = size_t(config.scratchSize) * scratchPerThread
+                              + size_t(config.blocks) * scratchPerBlock;
 
     // Whatever is left of the budget goes to the batch: the state of one system
     // is tiny, so this is what fills the VRAM and keeps the transfer count low.
@@ -334,6 +401,17 @@ __host__ inline size_t setDeviceStack(const size_t bytes)
 {
     CUDA_CHECK(cudaDeviceSetLimit(cudaLimitStackSize, bytes));
     return deviceStack();
+}
+
+__host__ inline size_t maxSharedMemoryPerBlock()
+{
+    int device = 0;
+    CUDA_CHECK(cudaGetDevice(&device));
+
+    cudaDeviceProp prop;
+    CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+
+    return prop.sharedMemPerBlock;
 }
 
 }

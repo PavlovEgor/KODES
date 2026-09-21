@@ -31,6 +31,7 @@ struct TypeEntry
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize,
         Base* hostStub
@@ -40,6 +41,7 @@ struct TypeEntry
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     );
@@ -49,9 +51,16 @@ struct TypeEntry
     void (*destroyStub)(Base* hostStub);
 
     // What one of these costs, before there is one to ask: device memory per
-    // resident thread and per system of the batch. planLaunch() adds up the
-    // entries of every table the run will draw from.
+    // resident thread, per block launched and per system of the batch.
+    // planLaunch() adds up the entries of every table the run will draw from.
+    //
+    // The per block figure is what the collective solve added: a matrix the
+    // whole block factorises once is allocated once per block, not once per
+    // thread, and it is also the amount the plan may decide to put in shared
+    // memory instead.
     size_t (*scratchBytesPerThread)(const label systemSize, const label parameterSize);
+
+    size_t (*scratchBytesPerBlock)(const label systemSize, const label parameterSize);
 
     size_t (*stateBytesPerSystem)(const label systemSize, const label parameterSize);
 };
@@ -66,14 +75,14 @@ __host__ inline TypeEntry<Base> typeEntry(const char* name)
     {
         name,
 
-        [] (const label b, const label s, const label n, const label p, Base* stub) -> Base*
+        [] (const label b, const label s, const label g, const label n, const label p, Base* stub) -> Base*
         {
-            return Derived::create(b, s, n, p, static_cast<Derived*>(stub));
+            return Derived::create(b, s, g, n, p, static_cast<Derived*>(stub));
         },
 
-        [] (const label b, const label s, const label n, const label p) -> Base*
+        [] (const label b, const label s, const label g, const label n, const label p) -> Base*
         {
-            return Derived::createStub(b, s, n, p);
+            return Derived::createStub(b, s, g, n, p);
         },
 
         [] (Base* devObject, Base* hostStub)
@@ -90,6 +99,7 @@ __host__ inline TypeEntry<Base> typeEntry(const char* name)
         },
 
         &Derived::scratchBytesPerThread,
+        &Derived::scratchBytesPerBlock,
         &Derived::stateBytesPerSystem
     };
 }
@@ -144,6 +154,7 @@ public:
         const TypeEntry<Base>* type,
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     )
@@ -154,8 +165,8 @@ public:
             return;
         }
 
-        host_ = type_->createStub(batchSize, scratchSize, systemSize, parameterSize);
-        device_ = type_->create(batchSize, scratchSize, systemSize, parameterSize, host_);
+        host_ = type_->createStub(batchSize, scratchSize, blocks, systemSize, parameterSize);
+        device_ = type_->create(batchSize, scratchSize, blocks, systemSize, parameterSize, host_);
     }
 
     __host__ ~Handle() { clear(); }

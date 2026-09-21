@@ -7,17 +7,21 @@
 namespace kodes
 {
 
-// Device side storage of one batch, split in two address spaces:
+// Device side storage of one batch, split in three address spaces:
 //
 //  * vectors/parameters hold the whole batch, one slot per system, stride
 //    batchSize, addressed with INDEXSTATE
 //  * currentVector/currentParameters hold the system a thread is integrating
 //    right now, one slot per resident thread, stride scratchSize, addressed
-//    with INDEXVEC - as are the step state and every temporary an integrator
-//    adds on top of them
+//    with INDEXVEC - as is every per system temporary an integrator adds
+//  * the block scratch holds what a whole block shares while it integrates its
+//    threads' systems in lockstep: the matrix it factorises once, its pivots,
+//    and the step control that is one value for all of them. One slot per
+//    block, addressed with INDEXBLOCKMAT and INDEXBLOCKVEC
 //
-// Since scratchSize only covers the threads that can run at the same time, the
-// systemSize^2 temporaries stay small for a batch of millions of systems.
+// The last of the three is why the systemSize^2 work matrix costs one copy per
+// block rather than one per resident thread, and why for a small mechanism it
+// fits in shared memory at all.
 class DeviceResources
     :
     public Resources,
@@ -31,6 +35,7 @@ public:
 protected:
 
     label          scratchSize_;
+    label          blocks_;
 
     scalar*        currentVector_;
     scalar*        currentParameters_;
@@ -46,12 +51,14 @@ public:
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     )
         : Resources(batchSize, systemSize, parameterSize),
           StepState(),
           scratchSize_(scratchSize),
+          blocks_(blocks),
           order_(nullptr)
     {}
 
@@ -73,6 +80,8 @@ public:
     __device__ __host__ label batchSize() const { return this->ensembleSize_; }
 
     __device__ __host__ label scratchSize() const { return scratchSize_; }
+
+    __device__ __host__ label blocks() const { return blocks_; }
 
     __device__ scalar* __restrict__ currentVector() { return currentVector_; }
 
@@ -121,8 +130,21 @@ public:
 
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return size_t(systemSize + parameterSize) * sizeof(scalar)
-             + StepState::bytesPerThread();
+        return size_t(systemSize + parameterSize) * sizeof(scalar);
+    }
+
+    // What one block needs on top of its threads' slots. Only the trial step
+    // here; a method that shares a matrix adds it in its own subclass.
+    //
+    // This figure is also what the plan compares against the shared memory a
+    // block may have (see blockScratchInShared in LaunchConfig.cuh), although
+    // the trial step counted here can never move there - it has to survive the
+    // launch. The slack is one scalar per block: it makes the plan marginally
+    // more reluctant to use shared memory, never less, which is the safe
+    // direction.
+    __host__ static size_t scratchBytesPerBlock(const label systemSize, const label parameterSize)
+    {
+        return StepState::bytesPerBlock();
     }
 };
 

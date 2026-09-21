@@ -217,12 +217,13 @@ struct TypeEntry
 {
     const char* name;
 
-    Base* (*create)(label, label, label, label, Base* stub);
-    Base* (*createStub)(label, label, label, label);
+    Base* (*create)(label, label, label, label, label, Base* stub);
+    Base* (*createStub)(label, label, label, label, label);
     void  (*destroy)(Base*, Base*);
     void  (*destroyStub)(Base*);
 
     size_t (*scratchBytesPerThread)(label systemSize, label parameterSize);
+    size_t (*scratchBytesPerBlock)(label systemSize, label parameterSize);
     size_t (*stateBytesPerSystem)(label systemSize, label parameterSize);
 };
 ```
@@ -235,12 +236,21 @@ ABI сверх обычных. Поэтому таблицу может испо
 него безкаптурные лямбды (они конвертируются в указатели на функции) приводят
 `Base*` обратно к `Derived*` и зовут статику нужного класса.
 
-Две последние строчки — почему одна таблица вообще может держать классы,
+Три последние строчки — почему одна таблица вообще может держать классы,
 не имеющие между собой ничего общего: **каждый умеет ответить, во что он
-обойдётся** — сколько памяти устройства на один резидентный поток и на одну
-систему партии. `planLaunch()` складывает эти числа **до того**, как хоть
-что-нибудь создано, — а иначе и нельзя, ведь размеры партии и сетки как раз из
-этого расчёта и получаются.
+обойдётся** — сколько памяти устройства на один резидентный поток, на один
+запущенный блок и на одну систему партии. `planLaunch()` складывает эти числа
+**до того**, как хоть что-нибудь создано, — а иначе и нельзя, ведь размеры
+партии и сетки как раз из этого расчёта и получаются.
+
+Средняя из трёх появилась вместе с блочным решением: матрицу, которую блок
+раскладывает один раз на всех, незачем держать по копии на поток. Она же —
+величина, которую план сравнивает с доступной shared-памятью, решая, работать
+блоку в ней или в своём куске глобальной (`blockScratchInShared`).
+
+Отсюда же и пятый `label` в `create`/`createStub`: конструктор устройственного
+объекта берёт `(batchSize, scratchSize, blocks, systemSize, parameterSize)`.
+Без `blocks` `allocate()` нечем умножить блочный слот.
 
 Сами таблицы — по одной на абстрактную базу, в `.cu` библиотеки:
 
@@ -286,7 +296,7 @@ static const MethodType table[] =
 ```cpp
 kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
 (
-    "stiffness", batchSize, scratchSize, systemSize, parameterSize
+    "stiffness", batchSize, scratchSize, blocks, systemSize, parameterSize
 );
 
 solver.setBalancer(balancing.device(), balancing.host());
@@ -333,9 +343,12 @@ solver.setBalancer(balancing.device(), balancing.host());
 
 Балансировщик — четыре шага:
 
-1. `src/Balancer/MyBalancer.cuh`: наследник `Balancer` с конструктором из четырёх
+1. `src/Balancer/MyBalancer.cuh`: наследник `Balancer` с конструктором из пяти
    аргументов, `key()`, парой `stateBytesPerSystem`/`scratchBytesPerThread` и
-   строкой `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`.
+   строкой `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`. `scratchBytesPerBlock`
+   балансировщику переопределять не нужно: база отвечает за него нулём, потому
+   что проход балансировки — обычный grid-stride цикл, в нём нет ничего
+   коллективного.
 2. `src/Balancer/MyBalancer.cu`: `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
 3. Одна строка в `src/Balancer/balancer_table.cu`.
 4. Одна строка в `cmake/kodes.cmake`.

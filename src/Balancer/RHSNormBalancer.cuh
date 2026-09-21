@@ -35,12 +35,13 @@ public:
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize
     )
         : Balancer
           (
-              batchSize, scratchSize, systemSize, parameterSize,
+              batchSize, scratchSize, blocks, systemSize, parameterSize,
               kKeyCount, kUsesDerivatives
           )
     {}

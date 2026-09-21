@@ -111,6 +111,7 @@ protected:
 
     label   batchSize_;
     label   scratchSize_;
+    label   blocks_;
     label   systemSize_;
     label   parameterSize_;
 
@@ -147,6 +148,7 @@ public:
     (
         const label batchSize,
         const label scratchSize,
+        const label blocks,
         const label systemSize,
         const label parameterSize,
         const label numOfKeys,
@@ -154,6 +156,7 @@ public:
     )
         : batchSize_(batchSize),
           scratchSize_(scratchSize),
+          blocks_(blocks),
           systemSize_(systemSize),
           parameterSize_(parameterSize),
           numOfKeys_(numOfKeys),
@@ -283,6 +286,15 @@ public:
     keyScratchBytesPerThread(const label systemSize, const bool usesDerivatives)
     {
         return usesDerivatives ? size_t(systemSize) * sizeof(scalar) : 0;
+    }
+
+    // A balancer owns nothing per block: its passes are grid-stride loops over
+    // the batch, and none of them is collective. Stated here once rather than
+    // in each subclass, which is why they do not restate it.
+    __host__ static size_t
+    scratchBytesPerBlock(const label systemSize, const label parameterSize)
+    {
+        return 0;
     }
 
     __host__ void allocate();

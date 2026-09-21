@@ -44,6 +44,13 @@ __host__ size_t balancerScratchBytesPerThread
     const label parameterSize
 );
 
+__host__ size_t balancerScratchBytesPerBlock
+(
+    const char* name,
+    const label systemSize,
+    const label parameterSize
+);
+
 // Build it. An empty handle for kNoBalancer, which Integrator takes to
 // mean the batch is integrated in the order it was copied in.
 __host__ Handle<Balancer> newBalancer
@@ -51,6 +58,7 @@ __host__ Handle<Balancer> newBalancer
     const char* name,
     const label batchSize,
     const label scratchSize,
+    const label blocks,
     const label systemSize,
     const label parameterSize
 );

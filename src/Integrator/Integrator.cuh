@@ -18,6 +18,12 @@ namespace kodes
 // The solve kernel. One instantiation for the whole library: the ODE system,
 // the method, the resources and the balancer are all device objects the kernel
 // dispatches on, so nothing about it depends on which ones were chosen.
+//
+// Block collective from end to end: a block takes blockDim.x consecutive
+// positions of the balanced order and walks them from local time 0 to the
+// target end time together, with one step size and one accepted step for all
+// of them. That is what lets the method it dispatches to share a Jacobian and
+// a factorised matrix between the block's threads.
 __global__
 void solveKernel
 (
@@ -34,18 +40,24 @@ __global__
 void useOrderKernel(DeviceResources* resources, const label* order);
 
 // Systems the device can integrate at the same time, from the occupancy of the
-// solve kernel.
-__host__ label maxConcurrentSystems(const label threads = KODES_BLOCK_SIZE);
+// solve kernel. The shared memory the launch will ask for is an argument
+// because it is what the occupancy mostly turns on, and how much of it there
+// will be is a decision of the plan - see blockScratchInShared.
+__host__ label maxConcurrentSystems
+(
+    const label threads = KODES_BLOCK_SIZE,
+    const size_t sharedMemSize = 0
+);
 
 // Resolve `request` against this device: how many threads to launch (and
 // therefore how many scratch slots to allocate) and how many systems to ship
 // per batch.
 //
 // The names are what tie the plan to the run: the method's entry knows what its
-// resources cost per thread and per system, the balancer's entry knows what the
-// keys and the order cost, and this adds them up before either exists. Anything
-// owned outside both - for a pyJac mechanism, required_mechanism_size() - goes
-// in the extra.
+// resources cost per thread, per block and per system, the balancer's entry
+// knows what the keys and the order cost, and this adds them up before either
+// exists. Anything owned outside both - for a pyJac mechanism,
+// required_mechanism_size() - goes in the extra.
 //
 // This is also where the device call stack is sized, because that has to happen
 // before the free memory is counted: see KODES_DEVICE_STACK_BYTES.
@@ -62,8 +74,8 @@ __host__ LaunchConfig planLaunch
 );
 
 // Drives the solve: owns the grid-stride loop over the batch, the step count
-// loop that walks one system from local time 0 to the target end time, and the
-// balancing pass in front of both.
+// loop that walks one block's worth of systems from local time 0 to the target
+// end time, and the balancing pass in front of both.
 //
 // It holds all four of the runtime-selected objects as their abstract base, so
 // which method, which balancer and which mechanism a run uses are decisions

@@ -8,18 +8,8 @@ kodes::SeulexDeviceResources::allocate()
 {
     DeviceResources::allocate();
 
-    const label orderSize = orderStorage(systemSize_);
-
     CUDA_CHECK(cudaMalloc(&table_, 12 * size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&dfdt_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&dfdy_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&a_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
-
-    CUDA_CHECK(cudaMalloc(&pivotIndices_, size_t(systemSize_) * scratchSize_ * sizeof(label)));
-
-    // indexed by the extrapolation order, not by the component
-    CUDA_CHECK(cudaMalloc(&dtOpt_, size_t(orderSize) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&temp_, size_t(orderSize) * scratchSize_ * sizeof(scalar)));
 
     CUDA_CHECK(cudaMalloc(&y0_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&ySequence_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
@@ -28,9 +18,11 @@ kodes::SeulexDeviceResources::allocate()
     CUDA_CHECK(cudaMalloc(&yTemp_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&dydt_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
 
-    // one entry per thread: step control that survives a step, not a system
-    CUDA_CHECK(cudaMalloc(&kTarg_, size_t(scratchSize_) * sizeof(label)));
-    CUDA_CHECK(cudaMalloc(&theta_, size_t(scratchSize_) * sizeof(scalar)));
+    // One region per block. Allocated whether or not the plan decided to work
+    // in shared memory instead: the decision is the kernel's, and a region
+    // small enough to have fitted in shared memory is small enough that the
+    // spare copy does not matter.
+    CUDA_CHECK(cudaMalloc(&blockScratch_, size_t(blocks_) * blockScratchBytes(systemSize_)));
 
     uploadSeulexConstants();
 }
@@ -39,14 +31,7 @@ __host__ void
 kodes::SeulexDeviceResources::deallocate()
 {
     CUDA_CHECK(cudaFree(table_));
-    CUDA_CHECK(cudaFree(dfdt_));
     CUDA_CHECK(cudaFree(dfdy_));
-    CUDA_CHECK(cudaFree(a_));
-
-    CUDA_CHECK(cudaFree(pivotIndices_));
-
-    CUDA_CHECK(cudaFree(dtOpt_));
-    CUDA_CHECK(cudaFree(temp_));
 
     CUDA_CHECK(cudaFree(y0_));
     CUDA_CHECK(cudaFree(ySequence_));
@@ -55,8 +40,7 @@ kodes::SeulexDeviceResources::deallocate()
     CUDA_CHECK(cudaFree(yTemp_));
     CUDA_CHECK(cudaFree(dydt_));
 
-    CUDA_CHECK(cudaFree(kTarg_));
-    CUDA_CHECK(cudaFree(theta_));
+    CUDA_CHECK(cudaFree(blockScratch_));
 
     DeviceResources::deallocate();
 }
