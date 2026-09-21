@@ -21,7 +21,15 @@
 //      (batchSize, scratchSize, blocks, systemSize, parameterSize), which sets
 //      value members only and never touches a buffer pointer - see create()
 //      for why. `blocks` is there because a buffer may be per block rather
-//      than per resident thread: the matrix a whole block factorises once is;
+//      than per resident thread: the matrix a whole block factorises once is.
+//
+//      "Never touches" includes not being written by the language on the
+//      class's behalf. A default constructor declared `= default` is not
+//      user-provided, so naming that base as `Base()` in a mem-initializer
+//      list is *value*-initialization and zeroes the whole base subobject,
+//      buffer pointers included. Give such a constructor an empty body
+//      instead - see StepState, where the difference was a null pointer in
+//      the solve kernel;
 //   2. `__host__ void allocate()` / `deallocate()`, which cudaMalloc/cudaFree
 //      the buffers into the object's own pointers. They are *not* virtual: the
 //      templates below are instantiated with the concrete class, so the

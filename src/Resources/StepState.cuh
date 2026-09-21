@@ -56,12 +56,21 @@ namespace kodes
         // One entry per block launched, addressed with B_ID
         scalar* deltaTTry;
 
-        // Defaulted on purpose: it runs *after* the stub has been byte-copied
-        // to the device, so anything it wrote to deltaTTry - a null included -
-        // would overwrite the address the copy just brought. See
-        // Factory/device_object.cuh.
+        // Empty, and written out rather than `= default`, which is not the
+        // same thing here.
+        //
+        // This constructor runs *after* the stub has been byte-copied to the
+        // device, so anything it wrote to deltaTTry - a null included - would
+        // overwrite the address the copy just brought (see
+        // Factory/device_object.cuh). A `= default` constructor is not
+        // user-provided, and DeviceResources names this base in its
+        // mem-initializer list as `StepState()`, which for a class with a
+        // non-user-provided default constructor is *value*-initialization: it
+        // zeroes the object first. The pointer then reaches the solve as null.
+        // An empty body is default-initialization instead, and leaves it
+        // alone.
         __device__ __host__
-        StepState() = default;
+        StepState() {}
 
         __device__ __host__
         ~StepState() = default;
