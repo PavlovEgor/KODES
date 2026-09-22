@@ -36,22 +36,22 @@ $(KODES_SRC)/Resources/StepState.cu
 $(KODES_SRC)/Resources/HostResources.cu
 $(KODES_SRC)/Resources/DeviceResources.cu
 $(KODES_SRC)/Resources/AdaptiveDeviceResources.cu
-$(KODES_SRC)/Resources/SeulexDeviceResources.cu
-$(KODES_SRC)/Resources/EulerDeviceResources.cu
 $(KODES_SRC)/Resources/Operator.cu
 
 $(KODES_SRC)/Integrator/Integrator.cu
 $(KODES_SRC)/Integrator/IntegrationMethods/IntegrationMethod.cu
 $(KODES_SRC)/Integrator/IntegrationMethods/method_table.cu
-$(KODES_SRC)/Integrator/IntegrationMethods/Seulex.cu
-$(KODES_SRC)/Integrator/IntegrationMethods/seulex_constants.cu
-$(KODES_SRC)/Integrator/IntegrationMethods/Euler.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Seulex/Seulex.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Seulex/SeulexDeviceResources.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Seulex/seulex_constants.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Euler/Euler.cu
+$(KODES_SRC)/Integrator/IntegrationMethods/Euler/EulerDeviceResources.cu
 
 $(KODES_SRC)/Balancer/Balancer.cu
-$(KODES_SRC)/Balancer/TemperatureBalancer.cu
-$(KODES_SRC)/Balancer/RHSNormBalancer.cu
-$(KODES_SRC)/Balancer/StiffnessBalancer.cu
+$(KODES_SRC)/Balancer/TemperatureBalancer/TemperatureBalancer.cu
+$(KODES_SRC)/Balancer/RHSNormBalancer/RHSNormBalancer.cu
+$(KODES_SRC)/Balancer/StiffnessBalancer/StiffnessBalancer.cu
 $(KODES_SRC)/Balancer/balancer_table.cu
 
-$(KODES_SRC)/ODESystem/PyJacSystem.cu
+$(KODES_SRC)/ODESystem/PyJacSystem/PyJacSystem.cu
 $(KODES_SRC)/ODESystem/system_table.cu

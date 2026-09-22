@@ -1,6 +1,6 @@
 #include "system_table.cuh"
 
-#include "PyJacSystem.cuh"
+#include "PyJacSystem/PyJacSystem.cuh"
 
 namespace kodes
 {

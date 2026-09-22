@@ -91,10 +91,11 @@
 собой:
 
 ```
-Balancer.cuh              balancer_table.cu
-RHSNormBalancer.cuh       balancer_table.cuh
-StiffnessBalancer.cuh
-TemperatureBalancer.cuh
+Balancer.cu               balancer_table.cu
+Balancer.cuh              balancer_table.cuh
+RHSNormBalancer/
+StiffnessBalancer/
+TemperatureBalancer/
 ```
 
 `snake_case`, а не `lowerCamelCase`, именно ради контраста: `balancer_table.cuh`
@@ -116,8 +117,28 @@ TemperatureBalancer.cuh
 
 * `src/<Подсистема>` — `UpperCamelCase`, по имени подсистемы:
   `Balancer/`, `Integrator/`, `Resources/`, `Factory/`, `Settings/`, `ODESystem/`.
-* Каталог заводится, когда в нём **больше двух** файлов. Каталог ради одного
-  класса — лишний уровень в пути и лишняя строка `-I`.
+* У семейства, выбираемого по имени в рантайме, в корне подсистемы лежат только
+  **абстрактная база и таблица типов**, а каждый **конкретный** класс — в
+  каталоге своего имени: `Balancer/RHSNormBalancer/`,
+  `Integrator/IntegrationMethods/Seulex/`, `ODESystem/PyJacSystem/`. Каталог
+  ради одного класса здесь оправдан: в нём с самого начала пара `.cuh`/`.cu`, и
+  видно, где кончается один вариант реализации и начинается другой. То, что
+  классом не является — примеси, свободные функции, хостовые классы — остаётся
+  в корне подсистемы.
+* Каталог заводится на **строку таблицы**, а не на класс. У метода
+  интегрирования строка выбирает сразу два класса — сам метод и его хранилище,
+  — значит и лежат они вместе: `IntegrationMethods/Seulex/` это `Seulex`,
+  `SeulexDeviceResources` и `seulex_constants`. Так каталог совпадает с тем,
+  что вообще можно выбрать в файле настроек.
+* Промежуточный наследник каталога не получает: он не вариант выбора, а часть
+  базы (`Resources/AdaptiveDeviceResources.cuh`).
+* Константы и таблицы, принадлежащие одному конкретному классу, переезжают
+  вместе с ним: `Seulex/seulex_constants.cu`.
+* Включения внутри семейства плоские — `#include "Balancer.cuh"`, — потому что
+  корень каждой подсистемы перечислен в `wmake/kodes.options`. До конкретного
+  класса добираются через его каталог: `#include "Seulex/Seulex.cuh"`. Так
+  список `-I` остаётся одной строкой на подсистему, и новый класс его не
+  трогает — а забытая строка ломала бы сборку не здесь, а у потребителя.
 * `examples/<кейс>` — `snake_case`, как и всё, что не является классом.
 * Сгенерированный чужой код лежит отдельно и не переименовывается: выход pyJac
   в `data/mechanisms/` — его стиль не наш.

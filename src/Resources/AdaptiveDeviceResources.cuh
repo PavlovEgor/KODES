@@ -2,10 +2,18 @@
 #define KODES_ADAPTIVE_DEVICE_RESOURCES
 #include "DeviceResources.cuh"
 
-namespace kodes 
+namespace kodes
 {
 
-class AdaptiveDeviceResources 
+// The scratch a method that takes *trial* steps needs whatever else it does:
+// the state a rejected step has to be restored from, and the right hand side
+// at the top of it. IntegrationMethod::adaptiveStep() casts down to this, so
+// every method with usesAdaptiveStep() set brings resources derived from here.
+//
+// An intermediate of the family, not a row of any table - see the head of
+// DeviceResources.cuh - so no KODES_DECLARE_DEVICE_OBJECT. The placement
+// operator new is inherited; the four statics belong to the leaves.
+class AdaptiveDeviceResources
     :
     public DeviceResources
 {
@@ -28,8 +36,6 @@ public:
 
     __device__ __host__
     ~AdaptiveDeviceResources() = default;
-
-    KODES_DECLARE_DEVICE_OBJECT(AdaptiveDeviceResources)
 
     __host__ void allocate();
 

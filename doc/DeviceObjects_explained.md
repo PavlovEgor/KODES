@@ -256,7 +256,8 @@ ABI сверх обычных. Поэтому таблицу может испо
 Сами таблицы — по одной на абстрактную базу, в `.cu` библиотеки:
 
 ```cpp
-// src/Balancer/balancer_table.cu
+// src/Balancer/balancer_table.cu — таблица лежит в корне семейства,
+// а каждый конкретный класс в своём каталоге рядом
 static const TypeEntry<Balancer> table[] =
 {
     typeEntry<Balancer, TemperatureBalancer>("temperature"),
@@ -291,6 +292,73 @@ static const TypeEntry<ODESystem> table[] =
 
 Имя, которого в таблице нет, обрывает запуск сообщением со списком известных —
 и обрывает его в конструкторе `Settings`, то есть до первого `cudaMalloc`.
+
+### Почему у `DeviceResources` своей таблицы нет и быть не должно
+
+Семейств устройственных объектов четыре, а таблиц три. Четвёртое —
+`DeviceResources → AdaptiveDeviceResources → {Seulex,Euler}DeviceResources` —
+паттерну следует полностью, но **выбирается не само по себе**:
+
+```cpp
+// Seulex.cu
+SeulexDeviceResources* resources =
+    static_cast<SeulexDeviceResources*>(deviceResources);
+```
+
+Приведение вниз без проверки — единственное, что здесь вообще возможно: `dynamic_cast`
+на устройстве нет, а виртуальный интерфейс поверх десятка scratch-массивов означал
+бы виртуальный вызов на каждое обращение к временному вектору. Значит, метод и его
+хранилище обязаны приезжать вместе, и строка таблицы для хранилища — **поле** строки
+метода:
+
+```cpp
+struct MethodType
+{
+    const char* name;
+    TypeEntry<IntegrationMethod> method;
+    TypeEntry<DeviceResources>   resources;   // не отдельный выбор
+};
+```
+
+Была бы отдельная таблица со своим именем — файл настроек с
+`{"method": "euler", "resources": "seulexResources"}` прошёл бы всю валидацию и
+упал бы внутри ядра. Сейчас такую комбинацию **нельзя записать**.
+
+Отсюда же правило, общее для всех четырёх семейств: `KODES_DECLARE_DEVICE_OBJECT`
+несёт только тот класс, который встречается **строкой таблицы**. База и
+промежуточные наследники — нет: их `create()` никто бы не позвал, а макрос стоит
+четырёх хостовых функций и двух ядер на класс. У баз остаётся только placement
+`operator new`, написанный руками.
+
+### И то же самое в дереве каталогов
+
+Раз метод и его хранилище — один выбор, то и лежат они в одном каталоге:
+
+```
+Integrator/IntegrationMethods/
+    IntegrationMethod.{cuh,cu}     база
+    method_table.{cuh,cu}          таблица
+    Seulex/                        ← одна строка таблицы = один каталог
+        Seulex.{cuh,cu}
+        SeulexDeviceResources.{cuh,cu}
+        seulex_constants.{cuh,cu}
+    Euler/
+        Euler.{cuh,cu}
+        EulerDeviceResources.{cuh,cu}
+```
+
+В `src/Resources/` остаётся только то, чем может пользоваться **любой** метод:
+абстрактная часть семейства (`Resources`, `DeviceResources`,
+`AdaptiveDeviceResources`), примесь `StepState` и две хостовые вещи, которые
+устройственными объектами не являются вовсе, — `HostResources` и `Operator`.
+Поэтому у этого каталога нет ни таблицы, ни конкретных классов, и это не
+недоделка, а прямое следствие того, что описано выше.
+
+Есть и механическая причина. `SeulexDeviceResources` нужна таблица
+экстраполяции из `seulex_constants.cuh`, так что пока хранилища лежали в
+`Resources/`, каталоги включали друг друга в обе стороны. Теперь зависимость
+односторонняя: `IntegrationMethods` включает из `Resources` (за базой), а
+`Resources` не включает ничего, кроме `basic_types.cuh` и `Factory/`.
 
 ### Таблица из одной строки — зачем она
 
@@ -378,22 +446,36 @@ solver.setBalancer(balancing.device(), balancing.host());
 
 ## 6. Как добавить свой класс
 
-Балансировщик — четыре шага:
+Каждый конкретный класс живёт в собственном каталоге внутри своего семейства;
+в корне семейства остаются только абстрактная база и таблица. Балансировщик —
+четыре шага:
 
-1. `src/Balancer/MyBalancer.cuh`: наследник `Balancer` с конструктором из пяти
-   аргументов, `key()`, парой `stateBytesPerSystem`/`scratchBytesPerThread` и
-   строкой `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`. `scratchBytesPerBlock`
+1. `src/Balancer/MyBalancer/MyBalancer.cuh`: наследник `Balancer` с
+   конструктором из пяти аргументов, `key()`, парой
+   `stateBytesPerSystem`/`scratchBytesPerThread` и строкой
+   `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`. `scratchBytesPerBlock`
    балансировщику переопределять не нужно: база отвечает за него нулём, потому
    что проход балансировки — обычный grid-stride цикл, в нём нет ничего
    коллективного.
-2. `src/Balancer/MyBalancer.cu`: `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
-3. Одна строка в `src/Balancer/balancer_table.cu`.
-4. Одна строка в `cmake/kodes.cmake`.
+2. `src/Balancer/MyBalancer/MyBalancer.cu`:
+   `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
+3. Одна строка в `src/Balancer/balancer_table.cu`:
+   `#include "MyBalancer/MyBalancer.cuh"` и строка самой таблицы.
+4. Одна строка в `wmake/kodes.files` (оттуда её читает и CMake).
+
+Пятого шага — правки списка `-I` — **нет, и это намеренно.** Внутри семейства
+включения плоские (`#include "Balancer.cuh"`), потому что корень каждого
+семейства лежит на include-пути; до конкретного класса добираются через его
+каталог (`#include "MyBalancer/MyBalancer.cuh"`). Иначе каждый новый класс
+требовал бы строки в `wmake/kodes.options`, а забытая строка ломала бы сборку не
+здесь, а у потребителя.
 
 Метод интегрирования — то же самое, но наследник `IntegrationMethod` с `step()`,
 и в строке таблицы рядом указывается его класс хранилища. Если методу нужны свои
 временные массивы — сначала наследник `DeviceResources` с собственными
-`allocate()`/`deallocate()`, по тому же паттерну.
+`allocate()`/`deallocate()`, по тому же паттерну. Макрос
+`KODES_DECLARE_DEVICE_OBJECT` ставится только на тот класс хранилища, который
+попадёт в строку таблицы: промежуточному наследнику он не нужен.
 
 Система уравнений — тоже то же самое: наследник `ODESystem` с `derivatives()` и
 `jacobian()`, строка в `system_table.cu`, строка в `wmake/kodes.files`.

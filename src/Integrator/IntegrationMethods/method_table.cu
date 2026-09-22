@@ -1,10 +1,10 @@
 #include "method_table.cuh"
 
-#include "Seulex.cuh"
-#include "SeulexDeviceResources.cuh"
+#include "Seulex/Seulex.cuh"
+#include "Seulex/SeulexDeviceResources.cuh"
 
-#include "Euler.cuh"
-#include "EulerDeviceResources.cuh"
+#include "Euler/Euler.cuh"
+#include "Euler/EulerDeviceResources.cuh"
 
 namespace kodes
 {

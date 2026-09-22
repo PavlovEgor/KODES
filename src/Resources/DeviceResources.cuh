@@ -22,6 +22,24 @@ namespace kodes
 // The last of the three is why the systemSize^2 work matrix costs one copy per
 // block rather than one per resident thread, and why for a small mechanism it
 // fits in shared memory at all.
+//
+// The abstract base of a device object family, like Balancer and ODESystem:
+// the subclasses keep the same three-point contract and are built by the same
+// four statics. What it does *not* have, and must not, is a table of its own.
+//
+// A method and the resources holding its scratch can only be chosen together -
+// Seulex::step() casts this pointer down to SeulexDeviceResources*, Euler::step()
+// to EulerDeviceResources*, IntegrationMethod::adaptiveStep() to
+// AdaptiveDeviceResources* - so the row that selects a subclass is a field of
+// the method's row, in IntegrationMethods/method_table.cu. Were it a table with
+// a name of its own, a settings file naming "euler" and "seulexResources"
+// would pass every check and fail inside the kernel.
+//
+// Which is also why this class and AdaptiveDeviceResources carry no
+// KODES_DECLARE_DEVICE_OBJECT: neither is ever a row, so the four statics would
+// be four host functions and two construction kernels nobody calls. Only the
+// placement operator new below is inherited, and only the leaves - Seulex's
+// and Euler's - declare the rest.
 class DeviceResources
     :
     public Resources,
@@ -65,7 +83,7 @@ public:
     __device__ __host__
     ~DeviceResources() = default;
 
-    KODES_DECLARE_DEVICE_OBJECT(DeviceResources)
+    __device__ static void* operator new(size_t size, void* ptr) { return ptr; }
 
     // The device buffers, allocated into this object's own pointers. Every
     // subclass calls this one first and then adds its own - see

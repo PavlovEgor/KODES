@@ -1,6 +1,7 @@
 #include "AdaptiveDeviceResources.cuh"
 
-KODES_DEFINE_DEVICE_OBJECT(kodes::AdaptiveDeviceResources)
+// No KODES_DEFINE_DEVICE_OBJECT here: an intermediate of the family is never a
+// row of a type table. See the head of DeviceResources.cuh.
 
 __host__ void
 kodes::AdaptiveDeviceResources::allocate()

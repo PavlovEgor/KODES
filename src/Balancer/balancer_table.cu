@@ -1,8 +1,8 @@
 #include "balancer_table.cuh"
 
-#include "TemperatureBalancer.cuh"
-#include "RHSNormBalancer.cuh"
-#include "StiffnessBalancer.cuh"
+#include "TemperatureBalancer/TemperatureBalancer.cuh"
+#include "RHSNormBalancer/RHSNormBalancer.cuh"
+#include "StiffnessBalancer/StiffnessBalancer.cuh"
 
 namespace kodes
 {

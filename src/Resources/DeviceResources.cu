@@ -1,6 +1,7 @@
 #include "DeviceResources.cuh"
 
-KODES_DEFINE_DEVICE_OBJECT(kodes::DeviceResources)
+// No KODES_DEFINE_DEVICE_OBJECT here: this class is never a row of a type
+// table, only its leaves are. See the head of DeviceResources.cuh.
 
 __host__ void
 kodes::DeviceResources::allocate()
