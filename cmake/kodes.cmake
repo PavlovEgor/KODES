@@ -103,7 +103,8 @@ function(kodes_pyjac_mechanism name out_sources out_include_dirs)
             "${KODES_MECHANISM_DIR}")
     endif()
 
-    # PyJacSystem.cu itself is in the core list, since it names no mechanism
+    # PyJacSystem.cu and system_table.cu are in the core list, since neither
+    # names a mechanism - they take whichever one is on the include path
     set(sources
         ${dir}/chem_utils.cu
         ${dir}/dydt.cu

@@ -54,3 +54,4 @@ $(KODES_SRC)/Balancer/StiffnessBalancer.cu
 $(KODES_SRC)/Balancer/balancer_table.cu
 
 $(KODES_SRC)/ODESystem/PyJacSystem.cu
+$(KODES_SRC)/ODESystem/system_table.cu

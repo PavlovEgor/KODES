@@ -1,6 +1,7 @@
 #include "Integrator.cuh"
 #include "method_table.cuh"
 #include "balancer_table.cuh"
+#include "system_table.cuh"
 #include "block_reduce.cuh"
 
 // A block owns blockDim.x scratch slots and walks its share of the batch a
@@ -160,8 +161,9 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const label parameterSize,
     const char* methodName,
     const char* balancerName,
-    const size_t extraScratchBytesPerThread,
+    const char* systemName,
     const LaunchConfig& request,
+    const size_t extraScratchBytesPerThread,
     const size_t deviceStackBytes
 )
 {
@@ -185,11 +187,13 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const size_t scratchPerThread =
         methodScratchBytesPerThread(methodName, systemSize, parameterSize)
       + balancerScratchBytesPerThread(balancerName, systemSize, parameterSize)
+      + systemScratchBytesPerThread(systemName, systemSize, parameterSize)
       + extraScratchBytesPerThread;
 
     const size_t scratchPerBlock =
         methodScratchBytesPerBlock(methodName, systemSize, parameterSize)
-      + balancerScratchBytesPerBlock(balancerName, systemSize, parameterSize);
+      + balancerScratchBytesPerBlock(balancerName, systemSize, parameterSize)
+      + systemScratchBytesPerBlock(systemName, systemSize, parameterSize);
 
     const size_t maxSharedPerBlock = maxSharedMemoryPerBlock();
 
@@ -213,7 +217,8 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         scratchPerThread,
         scratchPerBlock,
         methodStateBytesPerSystem(methodName, systemSize, parameterSize)
-      + balancerStateBytesPerSystem(balancerName, systemSize, parameterSize),
+      + balancerStateBytesPerSystem(balancerName, systemSize, parameterSize)
+      + systemStateBytesPerSystem(systemName, systemSize, parameterSize),
         freeDeviceMemory(),
         maxSharedPerBlock
     );

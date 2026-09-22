@@ -55,9 +55,13 @@ __host__ label maxConcurrentSystems
 //
 // The names are what tie the plan to the run: the method's entry knows what its
 // resources cost per thread, per block and per system, the balancer's entry
-// knows what the keys and the order cost, and this adds them up before either
-// exists. Anything owned outside both - for a pyJac mechanism,
-// required_mechanism_size() - goes in the extra.
+// knows what the keys and the order cost, the system's entry knows what its
+// own workspace costs - for a pyJac mechanism, required_mechanism_size() - and
+// this adds all three up before any of them exists. Anything a caller owns
+// outside all three still goes in the extra - which is now the empty case,
+// since pyJac's workspace, the one thing that ever went there, belongs to the
+// system's entry. That is why `request` comes before it: the call a caller
+// writes ends at the name of a settings file.
 //
 // This is also where the device call stack is sized, because that has to happen
 // before the free memory is counted: see KODES_DEVICE_STACK_BYTES.
@@ -68,8 +72,9 @@ __host__ LaunchConfig planLaunch
     const label parameterSize,
     const char* methodName,
     const char* balancerName,
-    const size_t extraScratchBytesPerThread = 0,
+    const char* systemName,
     const LaunchConfig& request = LaunchConfig(),
+    const size_t extraScratchBytesPerThread = 0,
     const size_t deviceStackBytes = KODES_DEVICE_STACK_BYTES
 );
 

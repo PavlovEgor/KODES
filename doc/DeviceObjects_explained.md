@@ -140,7 +140,8 @@ public:
     // 1. Конструктор с ровно такой сигнатурой — одинаковой у всех
     //    устройственных объектов библиотеки. Только value-поля! (см. 1.3)
     __device__ __host__
-    MyBalancer(label batchSize, label scratchSize, label systemSize, label parameterSize);
+    MyBalancer(label batchSize, label scratchSize, label blocks,
+               label systemSize, label parameterSize);
 
     // 2. Хостовые allocate/deallocate — cudaMalloc/cudaFree в собственные поля.
     //    Наследник сначала вызывает версию базового класса, потом свою.
@@ -280,8 +281,44 @@ static const MethodType table[] =
 };
 ```
 
+```cpp
+// src/ODESystem/system_table.cu — строка ровно одна
+static const TypeEntry<ODESystem> table[] =
+{
+    typeEntry<ODESystem, PyJacSystem>("pyJac")
+};
+```
+
 Имя, которого в таблице нет, обрывает запуск сообщением со списком известных —
 и обрывает его в конструкторе `Settings`, то есть до первого `cudaMalloc`.
+
+### Таблица из одной строки — зачем она
+
+`ODESystem` долго был единственным исключением из паттерна: свои ядра
+конструктора и деструктора, `create(mechanism_memory*)` вместо пяти размеров,
+никакой таблицы. Аргумент был такой: выбирать всё равно не из чего, потому что
+pyJac генерирует код под **один** механизм и `NSP` — макрос его
+`mechanism.cuh`. Строка в таблице действительно одна и останется одной, пока не
+появится система другого рода.
+
+Но выбор — только половина того, что даёт таблица. Вторая половина — три
+функции стоимости, и вот их спрашивают всегда:
+
+* `required_mechanism_size()` раньше передавали в `planLaunch` руками, отдельным
+  аргументом `extra`. Класс, который этой памятью владеет, за неё не отвечал —
+  отвечал вызывающий код, и каждый вызывающий код по-своему;
+* `initialize_gpu_memory`/`free_gpu_memory` звал тоже вызывающий код, хотя
+  паддинг у них — `scratchSize`, то есть **один из тех самых пяти размеров**.
+  Никакого препятствия к `allocate()` тут не было.
+
+Теперь это `PyJacSystem::scratchBytesPerThread()` и `PyJacSystem::allocate()`,
+а у вызывающего кода остаётся `Handle<ODESystem>`, который сам всё вернёт.
+
+Третья половина (их три) — изоляция. `PyJacSystem.cuh` тянет за собой
+`dydt.cuh`, `jacob.cuh`, `mechanism.cuh`; `system_table.cuh` не тянет ничего.
+Единственные две единицы трансляции библиотеки, которым нужен механизм на
+include-пути, — `PyJacSystem.cu` и `system_table.cu`. Модели химии OpenFOAM
+теперь достаточно держать `Handle<ODESystem>`.
 
 ---
 
@@ -357,6 +394,14 @@ solver.setBalancer(balancing.device(), balancing.host());
 и в строке таблицы рядом указывается его класс хранилища. Если методу нужны свои
 временные массивы — сначала наследник `DeviceResources` с собственными
 `allocate()`/`deallocate()`, по тому же паттерну.
+
+Система уравнений — тоже то же самое: наследник `ODESystem` с `derivatives()` и
+`jacobian()`, строка в `system_table.cu`, строка в `wmake/kodes.files`.
+`stateBytesPerSystem` и `scratchBytesPerBlock` переопределять не нужно — база
+отвечает за оба нулём, потому что состояние партии принадлежит `DeviceResources`,
+а правую часть считает один поток для одной системы. А вот
+`scratchBytesPerThread` обязателен: разумного значения по умолчанию у него нет,
+и база его намеренно не объявляет, чтобы забывчивость была ошибкой компиляции.
 
 После этого новое имя работает в `grimech.json` без единой правки в вызывающем
 коде.

@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 
     const char* method = settings.method().c_str();
     const char* balancer = settings.balancer().c_str();
+    const char* odeSystem = settings.system().c_str();
 
     label ensembleSize = settings.ensembleSize();
 
@@ -39,10 +40,10 @@ int main(int argc, char** argv)
     printf("\ninitial state of reactor 0:\n  ");
     hostRes.printVectori(0);
 
-    // The two names carry what the classes they select will cost: the method's
-    // entry knows what its resources need, the balancer's knows what the keys
-    // and the order need. pyJac's own per-thread scratch is owned by neither,
-    // so it is the one thing left to declare.
+    // The three names carry what the classes they select will cost: the
+    // method's entry knows what its resources need, the balancer's knows what
+    // the keys and the order need, and the system's knows what pyJac's
+    // per-thread workspace needs. Nothing is left for the caller to declare.
     kodes::LaunchConfig config = kodes::planLaunch
     (
         ensembleSize,
@@ -50,7 +51,7 @@ int main(int argc, char** argv)
         hostRes.parameterSize(),
         method,
         balancer,
-        required_mechanism_size(),
+        odeSystem,
         settings.launchRequest()
     );
 
@@ -59,14 +60,10 @@ int main(int argc, char** argv)
     label batchSize = config.batchSize;
     label numOfBatches = config.numOfBatches(ensembleSize);
 
-    mechanism_memory* hostMechanismMemory = (mechanism_memory*)malloc(sizeof(mechanism_memory));
-    mechanism_memory* deviceMechanismMemory = nullptr;
-
-    // pyJac's scratch is per thread, so it is padded to the resident threads
-    initialize_gpu_memory(config.scratchSize, &hostMechanismMemory, &deviceMechanismMemory);
-
     // Each handle owns a device object and the host stub holding its buffers,
-    // and hands both back when it goes out of scope.
+    // and hands both back when it goes out of scope. pyJac's own per-thread
+    // scratch is one of those buffers - the system's allocate() pads it to
+    // config.scratchSize - so there is nothing to initialize or free here.
     kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
     (
         method, batchSize, config.scratchSize, config.blocks,
@@ -87,13 +84,17 @@ int main(int argc, char** argv)
         hostRes.systemSize(), hostRes.parameterSize()
     );
 
-    kodes::PyJacSystem* ode = kodes::PyJacSystem::create(deviceMechanismMemory);
+    kodes::Handle<kodes::ODESystem> ode = kodes::newSystem
+    (
+        odeSystem, batchSize, config.scratchSize, config.blocks,
+        hostRes.systemSize(), hostRes.parameterSize()
+    );
 
     kodes::Operator op(&hostRes, resources.host());
 
     kodes::Integrator solver
     (
-        ode, resources.device(), integrationMethod.device(),
+        ode.device(), resources.device(), integrationMethod.device(),
         config, settings.controls()
     );
 
@@ -126,11 +127,6 @@ int main(int argc, char** argv)
         "\n%d reactors in %d batch(es): %.3f s wall, %.1f reactors/s\n\n",
         ensembleSize, numOfBatches, wallSeconds, ensembleSize/wallSeconds
     );
-
-    kodes::PyJacSystem::destroy(ode);
-
-    free_gpu_memory(&hostMechanismMemory, &deviceMechanismMemory);
-    free(hostMechanismMemory);
 
     return 0;
 }

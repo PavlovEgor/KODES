@@ -1,51 +1,60 @@
 #include "PyJacSystem.cuh"
 
+// The four host statics, all of them the shared ones. This file is compiled by
+// nvcc and is where the vtable of a host side PyJacSystem is emitted; no caller
+// ever has to emit one of its own.
+KODES_DEFINE_DEVICE_OBJECT(kodes::PyJacSystem)
 
-__global__ void 
-constructPyJacSystemKernel(kodes::PyJacSystem* system, mechanism_memory *d_mem)
+__host__ void
+kodes::PyJacSystem::allocate()
 {
-    new (system) kodes::PyJacSystem(d_mem);
-}
+    // pyJac allocates its device arrays onto a host struct and then copies the
+    // struct to the device, which is the same two-step this factory does with
+    // the object itself: the host half is what has to survive until
+    // deallocate(), so it is a member and not a local.
+    hostMemory_ = (mechanism_memory*)malloc(sizeof(mechanism_memory));
 
-__global__ void 
-destructPyJacSystemKernel(kodes::PyJacSystem* system) {
-    system->~PyJacSystem();
-}
-
-__host__  kodes::PyJacSystem* 
-kodes::PyJacSystem::create(mechanism_memory *d_mem) {
-    if (!d_mem)
+    if (!hostMemory_)
     {
-        fprintf(stderr, "PyJacSystem::create error at %s:%d: d_mem is null\n", __FILE__, __LINE__);
+        fprintf
+        (
+            stderr,
+            "PyJacSystem::allocate error at %s:%d: out of host memory\n",
+            __FILE__, __LINE__
+        );
         std::exit(EXIT_FAILURE);
     }
 
-    PyJacSystem* ptr;
-    CUDA_CHECK(cudaMalloc(&ptr, sizeof(PyJacSystem)));
-    constructPyJacSystemKernel<<<1, 1>>>(ptr, d_mem);
-    CUDA_CHECK_LAST();
-    CUDA_CHECK(cudaDeviceSynchronize());
-    return ptr;
+    deviceMemory_ = nullptr;
+
+    // Padded to the resident threads, not to the batch: every array in there
+    // is one slot per thread, addressed with the same stride as the resources'
+    // scratch.
+    initialize_gpu_memory(scratchSize_, &hostMemory_, &deviceMemory_);
 }
 
-__host__  void
-kodes::PyJacSystem::destroy(kodes::PyJacSystem* system) {
-    if (system) {
-        destructPyJacSystemKernel<<<1, 1>>>(system);
-        CUDA_CHECK_LAST();
-        CUDA_CHECK(cudaDeviceSynchronize());
-        CUDA_CHECK(cudaFree(system));
+__host__ void
+kodes::PyJacSystem::deallocate()
+{
+    if (hostMemory_)
+    {
+        free_gpu_memory(&hostMemory_, &deviceMemory_);
+
+        free(hostMemory_);
+
+        hostMemory_ = nullptr;
+        deviceMemory_ = nullptr;
     }
 }
 
 __device__
 void kodes::PyJacSystem::derivatives(const scalar t, const scalar pressure, const scalar* y, scalar* dy) const
 {
-    dydt(t, pressure, y, dy, device_memory);
+    dydt(t, pressure, y, dy, deviceMemory_);
 }
 
 __device__
 void kodes::PyJacSystem::jacobian(const scalar t, const scalar pressure, const scalar* y, scalar* dfdy) const
 {
-    eval_jacob(t, pressure, y, dfdy, device_memory);
+    eval_jacob(t, pressure, y, dfdy, deviceMemory_);
 }

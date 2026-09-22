@@ -17,12 +17,13 @@
 #include "IntegrationMethod.cuh"
 #include "method_table.cuh"
 #include "balancer_table.cuh"
+#include "system_table.cuh"
 #include "Settings.cuh"
 
-#include "PyJacSystem.cuh"
-
-// whichever mechanism this target was built against, see CMakeLists.txt
-#include "gpu_memory.cuh"
+// whichever mechanism this target was built against, see CMakeLists.txt. Only
+// NSP and the names printed below come from here: the system itself is built
+// through system_table.cuh, which names no mechanism and includes none of
+// pyJac's headers.
 #include "mechanism.cuh"
 
 #endif
