@@ -520,8 +520,9 @@ for (label i = 0; i < config.numOfBatches(ensembleSize); i++)
 }
 ```
 
-A caller with its own settings to read — the OpenFOAM chemistry model — skips step 1 and passes the
-same names and numbers from wherever it got them.
+A caller with its own settings to read skips step 1 and passes the same names and numbers from
+wherever it got them. A caller with no CUDA compiler writes none of this: it opens a prebuilt library,
+which does all four steps behind one call — see *As a prebuilt library* below.
 
 ## Building
 
@@ -601,21 +602,64 @@ Three things to know:
   stops the build; and in `Make/files` a line containing `=` is taken for a variable definition
   rather than a source.
 
-`src/kodesChemistyModel` in the OpenFOAM-solvers repository is set up this way, and its
-`Make/options` is down to one KODES line.
+This is for a consumer that compiles KODES into itself. `src/kodesChemistyModel` in the
+OpenFOAM-solvers repository was set up this way until 0.23.0; it now opens a prebuilt library
+instead, which is the next section.
 
-### Why not ship a prebuilt library instead
+## As a prebuilt library, one per mechanism
 
-It would be the obvious answer, and it half works. Everything except `PyJacSystem.cu` and
-`system_table.cu` is mechanism-independent, so a `libkodes` could be built once and linked by
-anyone.
+```sh
+cmake -B build                      # every mechanism of data/mechanisms/
+cmake --build build -j
+cmake --install build               # into $FOAM_USER_LIBBIN when OpenFOAM is sourced, else lib/
+```
 
-Two things get in the way. The device code is compiled `-rdc=true` and `step()`/`key()` are
-resolved at *device* link time, so the library would have to be a static one with its device
-symbols left unresolved for the consumer's link to finish — and in the OpenFOAM case that final
-link is done by `nvc++ -cuda`, not by nvcc. And a consumer still has to compile those two files
-against its own mechanism, so it needs the headers and a compiler for `.cu` anyway. Sharing the two
-lists costs one `#include` at each end and none of that.
+builds `libkodes_grimech.so` and `libkodes_h2o2.so`: the whole library and one mechanism each,
+behind one device link. A program uses one by opening it with `dlopen()` and including nothing of
+KODES but **`src/Library/library_api.h`** — plain C++, no CUDA type in it, so the program needs no
+CUDA compiler, no KODES headers and no `-rdc`. That is what lets an OpenFOAM chemistry model pick its
+mechanism in a case dictionary instead of in a build. `examples/library/` is the reactors example
+done this way, a CMake project with no CUDA in it:
+
+```sh
+cd examples/library && cmake -B build && cmake --build build
+LD_LIBRARY_PATH=../../build ./build/library h2o2
+```
+
+**Why one library per mechanism, and not one `libkodes` for all of them.** The device code is
+compiled `-rdc=true`, and the solve kernel calls the method, the balancer and the mechanism through
+device-only virtuals, which are resolved at *device* link time. CUDA does not link device code
+across shared libraries: a `.so` is device-linked when it is built, and whatever device code it did
+not see then is out of its reach for good. So the mechanism — `dydt()`, `eval_jacob()`, everything
+pyJac generated — has to be inside the same device link as the kernel that calls it, and a library
+without one in it would leave the consumer the device link to do, with nvcc, and pyJac's sources to
+compile, with nvcc again. Built per mechanism, the device link is finished and nothing about CUDA is
+left on the consumer's side.
+
+**What crosses into it.** Two `extern "C"` symbols, looked up with `dlsym()` by the names
+`library_api.h` gives them: `kodesLibraryApiVersion()`, to be compared with `kLibraryApiVersion`
+before anything else, and `kodesLibrary()`, which hands out the `kodes::Library` of the mechanism.
+That one answers what the mechanism is — its name, the KODES version it was built from, its species
+in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
+`kodes::Solver` from a `kodes::SolverSettings`: the method, the balancer, the device share or the
+sizes by hand, the tolerances. The solver plans, builds and integrates exactly as *Typical run*
+above; `solve(deltaT, state, parameters)` takes the ensemble in the `HostResources` layout and
+integrates it in place, batch by batch. The types in the interface are `double` and `int`, not
+`scalar` and `label`, so a caller with types of its own of those names converts at the call.
+
+**How it is built.** `kodes_library(<name>)` in `cmake/kodes.cmake`, which the top-level
+`CMakeLists.txt` calls for every entry of `KODES_MECHANISMS`:
+
+- an entry is a directory of `data/mechanisms/`, or the path of any directory holding pyJac's `out/`
+  — a consumer's own mechanism, built without being copied in here:
+  `-DKODES_MECHANISMS="/path/to/pyJacSource/C1_C3_HT_NOX_159_2459;grimech"`;
+- the species list is read out of the "Species Indexes" comment of `mechanism.cuh` when the library
+  is configured, since pyJac writes it nowhere else, and checked against `NSP` when it is compiled;
+- the CUDA runtime is linked in statically, so the machine running it needs the driver and nothing
+  else of CUDA; and every symbol but the two entry points is hidden, so two of these in one process
+  cannot see each other;
+- `CMAKE_CUDA_ARCHITECTURES` defaults to `120` as in the examples; `-DKODES_LIBRARY_DIR` changes
+  where `cmake --install` puts the libraries.
 
 ## Layout
 
@@ -648,6 +692,12 @@ src/
     RHSNormBalancer/
     StiffnessBalancer/
   Settings/               Config (JSON reader), Settings
+  Library/                library_api.h — the CUDA-free interface of a prebuilt
+                          libkodes_<mechanism>.so — and library_api.cu behind it
+
+CMakeLists.txt            the prebuilt libraries, one per mechanism
+cmake/
+  kodes.cmake             the source lists, kodes_pyjac_mechanism, kodes_library
 
 wmake/
   kodes.files             the source list, shared by wmake and CMake
@@ -661,6 +711,8 @@ data/
 examples/
   reactors/               an ensemble of reactors — one program, one target per
                           mechanism, everything else from grimech.json / h2o2.json
+  library/                the reactors again, through a prebuilt library and
+                          with no CUDA in the program
   config/                 everything kodes::Config can read
   mpi_device_select/      binding one rank per GPU
 ```
