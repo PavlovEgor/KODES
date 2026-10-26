@@ -461,13 +461,13 @@ solver.setBalancer(balancing.device(), balancing.host());
    `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
 3. Одна строка в `src/Balancer/balancer_table.cu`:
    `#include "MyBalancer/MyBalancer.cuh"` и строка самой таблицы.
-4. Одна строка в `wmake/kodes.files` (оттуда её читает и CMake).
+4. Одна строка в `KODES_SOURCES` в `cmake/kodes.cmake`.
 
 Пятого шага — правки списка `-I` — **нет, и это намеренно.** Внутри семейства
 включения плоские (`#include "Balancer.cuh"`), потому что корень каждого
 семейства лежит на include-пути; до конкретного класса добираются через его
 каталог (`#include "MyBalancer/MyBalancer.cuh"`). Иначе каждый новый класс
-требовал бы строки в `wmake/kodes.options`, а забытая строка ломала бы сборку не
+требовал бы строки в `KODES_INCLUDE_DIRS`, а забытая строка ломала бы сборку не
 здесь, а у потребителя.
 
 Метод интегрирования — то же самое, но наследник `IntegrationMethod` с `step()`,
@@ -478,7 +478,7 @@ solver.setBalancer(balancing.device(), balancing.host());
 попадёт в строку таблицы: промежуточному наследнику он не нужен.
 
 Система уравнений — тоже то же самое: наследник `ODESystem` с `derivatives()` и
-`jacobian()`, строка в `system_table.cu`, строка в `wmake/kodes.files`.
+`jacobian()`, строка в `system_table.cu`, строка в `KODES_SOURCES`.
 `stateBytesPerSystem` и `scratchBytesPerBlock` переопределять не нужно — база
 отвечает за оба нулём, потому что состояние партии принадлежит `DeviceResources`,
 а правую часть считает один поток для одной системы. А вот

@@ -541,11 +541,8 @@ optional — a device-only virtual is called from a kernel in another translatio
 
 ## Building against KODES
 
-The source list and the include list live in **`wmake/kodes.files`** and **`wmake/kodes.options`**,
-in the form OpenFOAM's wmake wants. `cmake/kodes.cmake` reads those same two files. So there is one
-list, not one per build system, and a source added to the library reaches both.
-
-### From CMake
+To compile KODES into a CUDA program of your own, take the source list and the include list from
+**`cmake/kodes.cmake`**:
 
 ```cmake
 include(${CMAKE_CURRENT_SOURCE_DIR}/<path to KODES>/cmake/kodes.cmake)
@@ -559,52 +556,10 @@ set_target_properties(myApp PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 `${KODES_SETTINGS_SOURCES}` adds `kodes::Settings` (and needs the rapidjson submodule);
 `${KODES_MPI_SOURCES}` adds `kodes::mpiSelectDevice`. Neither is in the core list, since a consumer
-reading an OpenFOAM dictionary on one GPU wants neither.
+reading its settings from somewhere else on one GPU wants neither.
 
-### From wmake, without repeating the list
-
-wmake runs both `Make/files` and `Make/options` through the C preprocessor before make ever sees
-them. That is the hook: they can `#include` a plain fragment, and the fragment can be the very one
-CMake reads.
-
-`Make/files` — two lines instead of twenty:
-
-```make
-KODES_SRC = ../../external/KODES/src
-#include "../../../external/KODES/wmake/kodes.files"
-
-myModel.C
-
-LIB = $(FOAM_USER_LIBBIN)/libmyModel
-```
-
-`Make/options` — the include defines `$(KODES_INC)`:
-
-```make
-KODES_SRC = ../../external/KODES/src
-#include "../../../external/KODES/wmake/kodes.options"
-
-EXE_INC = \
-    $(KODES_INC) \
-    -I$(LIB_SRC)/finiteVolume/lnInclude \
-    ...
-```
-
-Three things to know:
-
-- `KODES_SRC` is a *make* variable, so it is relative to the directory wmake runs in (where `Make/`
-  lives). The path in the `#include` is a *preprocessor* path, so it is relative to `Make/` itself
-  — one `..` more.
-- The `#include` in `Make/options` must come **before** `EXE_INC`, never inside it. The
-  preprocessor splices a line ending in a backslash into the next one before it looks for
-  directives, so an `#include` after `EXE_INC = \` would never be seen as one.
-- Comments in these files are `/* ... */`. A `#` comment is an invalid preprocessor directive and
-  stops the build; and in `Make/files` a line containing `=` is taken for a variable definition
-  rather than a source.
-
-This is for a consumer that compiles KODES into itself. `src/kodesChemistyModel` in the
-OpenFOAM-solvers repository was set up this way until 0.23.0; it now opens a prebuilt library
-instead, which is the next section.
+A program with no CUDA compiler of its own — the OpenFOAM chemistry model, since 0.23.0 — does not
+compile KODES at all: it opens a prebuilt library, which is the next section.
 
 ## As a prebuilt library, one per mechanism
 
@@ -699,10 +654,6 @@ CMakeLists.txt            the prebuilt libraries, one per mechanism
 cmake/
   kodes.cmake             the source lists, kodes_pyjac_mechanism, kodes_library
 
-wmake/
-  kodes.files             the source list, shared by wmake and CMake
-  kodes.options           the include list, likewise
-
 data/
   mechanisms/
     grimech/              GRI-Mech 3.0: the pyJac output in out/, beside the
@@ -719,7 +670,7 @@ examples/
 
 Includes stay flat within a family — `#include "Balancer.cuh"` — because every family root is on
 the include path. A concrete class is reached through its directory instead:
-`#include "RHSNormBalancer/RHSNormBalancer.cuh"`. That is deliberate: it keeps `kodes.options` at
+`#include "RHSNormBalancer/RHSNormBalancer.cuh"`. That is deliberate: it keeps `KODES_INCLUDE_DIRS` at
 one entry per family rather than one per class, so adding a class never touches the include list,
 and a consumer's build cannot break because a new `-I` was forgotten. It also makes the include
 line say where the class lives.
