@@ -63,8 +63,9 @@ __host__ label maxConcurrentSystems
 // system's entry. That is why `request` comes before it: the call a caller
 // writes ends at the name of a settings file.
 //
-// This is also where the device call stack is sized, because that has to happen
-// before the free memory is counted: see KODES_DEVICE_STACK_BYTES.
+// This is also where a device call stack the caller asks for is sized, because
+// that has to happen before the free memory is counted; 0, the default, leaves
+// the driver's own value alone: see KODES_DEVICE_STACK_BYTES.
 __host__ LaunchConfig planLaunch
 (
     const label ensembleSize,

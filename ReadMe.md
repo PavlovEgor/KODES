@@ -142,8 +142,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   extra is what is left for memory owned outside all three, and nothing in the library goes there
   any more.
 
-  The order inside `planLaunch` matters twice. The device call stack is sized first of all, because
-  the driver reserves it out of the same VRAM the plan is about to divide up (see
+  The order inside `planLaunch` matters twice. A device call stack the caller asks for is sized first
+  of all, because the driver reserves it out of the same VRAM the plan is about to divide up — and
+  by default none is asked for: 0 leaves the driver's own value alone (see
   `KODES_DEVICE_STACK_BYTES`). And whether the block scratch goes to shared memory is settled
   *before* the occupancy question is asked, because the answer to the occupancy question depends on
   how much shared memory the launch will ask for.
