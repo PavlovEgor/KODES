@@ -1,8 +1,7 @@
 {
-    "_comment": "GRI-Mech 3.0: 53 species, 325 reactions. Everything here is read when the program starts - the two names are looked up in method_table.cu and balancer_table.cu, so changing a solver is an edit to this file, not a rebuild.",
+    "_comment": "GRI-Mech 3.0: 53 species, 325 reactions. Everything here is read when the program starts - the method name is looked up in method_table.cu, so changing a solver is an edit to this file, not a rebuild.",
 
     "method": "seulex",
-    "balancer": "stiffness",
 
     "device": {
         "_comment": "share is how much of the device one run may take: best or half. Give concurrentSystems and batchSize together instead to size it by hand.",

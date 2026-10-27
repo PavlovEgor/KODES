@@ -7,23 +7,21 @@
 namespace kodes
 {
 
-// Device side storage of one batch, split in three address spaces:
+// Device side storage of one batch, split in two address spaces:
 //
 //  * vectors/parameters hold the whole batch, one slot per system, stride
 //    batchSize, addressed with INDEXSTATE
 //  * currentVector/currentParameters hold the system a thread is integrating
 //    right now, one slot per resident thread, stride scratchSize, addressed
-//    with INDEXVEC - as is every per system temporary an integrator adds
-//  * the block scratch holds what a whole block shares while it integrates its
-//    threads' systems in lockstep: the matrix it factorises once, its pivots,
-//    and the step control that is one value for all of them. One slot per
-//    block, addressed with INDEXBLOCKMAT and INDEXBLOCKVEC
+//    with INDEXVEC - as are the step state and every temporary an integrator
+//    adds on top of them
 //
-// The last of the three is why the systemSize^2 work matrix costs one copy per
-// block rather than one per resident thread, and why for a small mechanism it
-// fits in shared memory at all.
+// Every thread integrates its own system on its own: its own step size, its
+// own Jacobian, its own factorization. Since scratchSize only covers the
+// threads that can run at the same time, the systemSize^2 temporaries stay
+// small for a batch of millions of systems.
 //
-// The abstract base of a device object family, like Balancer and ODESystem:
+// The abstract base of a device object family, like ODESystem:
 // the subclasses keep the same three-point contract and are built by the same
 // four statics. What it does *not* have, and must not, is a table of its own.
 //
@@ -58,10 +56,6 @@ protected:
     scalar*        currentVector_;
     scalar*        currentParameters_;
 
-    // Traversal order of the batch, owned by a Balancer. Null means the
-    // systems are taken in the order they were copied in.
-    const label*   order_;
-
 public:
 
     __device__ __host__
@@ -76,8 +70,7 @@ public:
         : Resources(batchSize, systemSize, parameterSize),
           StepState(),
           scratchSize_(scratchSize),
-          blocks_(blocks),
-          order_(nullptr)
+          blocks_(blocks)
     {}
 
     __device__ __host__
@@ -107,11 +100,6 @@ public:
     {
         return currentParameters_[INDEXVEC(i)];
     }
-
-    __device__ void useOrder(const label* order) { order_ = order; }
-
-    // Index of the system sitting at position i of the balanced traversal
-    __device__ label systemAt(const label i) const { return order_ ? order_[i] : i; }
 
     __device__ scalar vectorComponent(const label system, const label i) const
     {
@@ -148,21 +136,15 @@ public:
 
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
-        return size_t(systemSize + parameterSize) * sizeof(scalar);
+        return size_t(systemSize + parameterSize) * sizeof(scalar)
+             + StepState::bytesPerThread();
     }
 
-    // What one block needs on top of its threads' slots. Only the trial step
-    // here; a method that shares a matrix adds it in its own subclass.
-    //
-    // This figure is also what the plan compares against the shared memory a
-    // block may have (see blockScratchInShared in LaunchConfig.cuh), although
-    // the trial step counted here can never move there - it has to survive the
-    // launch. The slack is one scalar per block: it makes the plan marginally
-    // more reluctant to use shared memory, never less, which is the safe
-    // direction.
+    // Nothing is shared by a block: every thread integrates on its own. Kept
+    // because every row of a type table answers it, and the plan adds it up.
     __host__ static size_t scratchBytesPerBlock(const label systemSize, const label parameterSize)
     {
-        return StepState::bytesPerBlock();
+        return 0;
     }
 };
 

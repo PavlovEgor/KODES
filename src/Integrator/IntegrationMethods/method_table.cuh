@@ -8,8 +8,8 @@
 #include "type_table.cuh"
 
 // The integration methods a name may select, and how to build the one it
-// selects. The balancer's table with one addition: a method and the resources
-// holding its scratch are chosen together, so one entry names both.
+// selects. Unlike the ODE system's table, an entry names two classes: a method
+// and the resources holding its scratch are chosen together.
 //
 // Safe for any caller to include - it declares, it does not define.
 

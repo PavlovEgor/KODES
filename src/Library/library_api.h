@@ -10,8 +10,8 @@
 // CUDA compiler and includes nothing of KODES but this header.
 //
 // Why one library per mechanism, and why only this much crosses into it. The
-// device code is compiled -rdc=true and the solve kernel reaches the method,
-// the balancer and the mechanism through device-only virtuals, which are
+// device code is compiled -rdc=true and the solve kernel reaches the method
+// and the mechanism through device-only virtuals, which are
 // resolved at *device* link time. CUDA does not link device code across shared
 // objects, so everything a kernel can call - the mechanism included - has to go
 // through one device link, and that link is done when the .so is built. What is
@@ -52,7 +52,9 @@ struct SolverSettings
     // seulex | euler
     const char* method = "seulex";
 
-    // temperature | rhsNorm | stiffness | none. Null or empty is none.
+    // Not read since 1.0.0, which integrates every system on its own and has
+    // no balancer. Kept so that the layout - and kLibraryApiVersion - stay
+    // those of 0.23, whose callers set it.
     const char* balancer = "temperature";
 
     // How much of the device one run may take: best | half
@@ -79,8 +81,8 @@ struct SolverSettings
     double Treact = 0;
 };
 
-// One run: a plan resolved against the device, and the method, the balancer,
-// the mechanism and their buffers built against that plan. Made by
+// One run: a plan resolved against the device, and the method, the mechanism
+// and their buffers built against that plan. Made by
 // Library::newSolver(), and given back with delete.
 class Solver
 {
@@ -102,12 +104,13 @@ public:
     // Transfers per solve(), the last one usually short
     virtual int numOfBatches() const = 0;
 
+    // Always false since 1.0.0: no scratch is shared by a block
     virtual bool blockScratchInShared() const = 0;
 
     // The call stack of a device thread as the driver has it now
     virtual size_t deviceStack() const = 0;
 
-    // What the settings selected, "none" for no balancer
+    // What the settings selected. The balancer is "none" since 1.0.0.
     virtual const char* method() const = 0;
 
     virtual const char* balancer() const = 0;

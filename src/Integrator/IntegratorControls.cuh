@@ -20,17 +20,12 @@ public:
     label realBatchSize = 0;
     label batchIndex;
 
-    // First position of the balanced order the calling block is working on.
-    // Set by the solve kernel on every grid-stride iteration, for diagnostics
-    // only - the working data is addressed by thread and by block slot.
-    label position = 0;
+    // Index, within the current batch, of the system the calling thread is
+    // integrating. Set by the solve kernel on every grid-stride iteration, for
+    // diagnostics only - the working data is addressed by thread slot.
+    label system = 0;
 
     scalar deltaT = 0;
-
-    // Whether the scratch a block shares is worked in dynamic shared memory
-    // or in the block's slot of the global buffer. Decided by the plan, copied
-    // in from the LaunchConfig by Integrator::solve.
-    bool blockScratchInShared = false;
 
     __device__ __host__
     IntegratorControls

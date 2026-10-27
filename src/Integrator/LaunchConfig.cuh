@@ -67,10 +67,10 @@ inline constexpr DeviceShare kDeviceShares[] =
 //    is stored per system, so the batch can be far larger than scratchSize and
 //    fill the free VRAM, which keeps the number of transfers low.
 //
-//  * blockScratchInShared says where the scratch a whole block shares is
-//    worked in. It is allocated in global memory either way; when it fits
-//    under KODES_SHARED_BUDGET the kernel works in dynamic shared memory of
-//    the same layout and leaves the global copy alone.
+//  * blockScratchInShared says where scratch a whole block shares would be
+//    worked in. No method of this version shares any - every thread
+//    integrates on its own - so it is always false, and kept because the plan
+//    and the library interface still report it.
 //
 // Constructed either from a share name ("best", "half", ... see kDeviceShares)
 // or from explicit sizes; planLaunch() turns it into the final plan.
@@ -164,6 +164,12 @@ __host__ inline bool blockScratchFitsShared
     const size_t maxSharedPerBlock
 )
 {
+    // nothing to put there
+    if (scratchPerBlock == 0)
+    {
+        return false;
+    }
+
     const size_t budget =
         maxSharedPerBlock < size_t(KODES_SHARED_BUDGET)
       ? maxSharedPerBlock
@@ -197,22 +203,6 @@ __host__ inline LaunchConfig makePlan
      || scratchPerThread == 0 || statePerSystem == 0)
     {
         fprintf(stderr, "kodes::makePlan error at %s:%d: invalid arguments\n", __FILE__, __LINE__);
-        std::exit(EXIT_FAILURE);
-    }
-
-    // A block reduction folds each warp with __shfl_down_sync before it folds
-    // the warps, and a partial warp would leave lanes out of the shuffle. The
-    // whole collective solve rests on those reductions, so this is checked
-    // here rather than discovered as a wrong answer.
-    if (threads % KODES_WARP != 0)
-    {
-        fprintf
-        (
-            stderr,
-            "kodes::makePlan error at %s:%d: %d threads per block is not a "
-            "multiple of the warp size %d\n",
-            __FILE__, __LINE__, threads, KODES_WARP
-        );
         std::exit(EXIT_FAILURE);
     }
 

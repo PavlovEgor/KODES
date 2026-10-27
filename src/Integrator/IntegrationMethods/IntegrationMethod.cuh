@@ -12,21 +12,17 @@
 namespace kodes
 {
 
-// One numerical method for advancing a block of systems by one step.
+// One numerical method for advancing one system by one step.
 //
-// A device object in the sense of Factory/deviceObject.cuh, exactly like a
-// Balancer: it lives in device memory, the solve kernel dispatches on it
+// A device object in the sense of Factory/deviceObject.cuh, exactly like an
+// ODESystem: it lives in device memory, the solve kernel dispatches on it
 // through its vtable, and which subclass it is is decided at run time by a name
 // out of methodTable. Before, the method was a template argument of the whole
 // Integrator and the choice was made when the program was compiled.
 //
-// Every entry point here is *collective*: the whole block calls it, and it
-// contains barriers. A step size, an order and an accept-or-reject are one
-// value for the block, held in the BlockStep every thread carries a copy of,
-// so that the branches taken around those barriers are the same in all of
-// them. A thread whose system is inactive - past the end of the batch, or too
-// cold to react - still makes the call, with `active` false, and takes no
-// part in anything but the reductions.
+// Every entry point here is called by one thread for the system in its own
+// scratch slot, and nothing in it waits for another thread: each thread keeps
+// its own step size, order and accept-or-reject, in its slot of StepState.
 //
 // The indirect call costs nothing measurable here. It happens once per step of
 // a system - against an implicit step that factorises a systemSize^2 matrix -
@@ -77,22 +73,20 @@ public:
 
     __device__ static void* operator new(size_t size, void* ptr) { return ptr; }
 
-    // Advance the systems the calling block holds in its threads' scratch
-    // slots by one step of step.deltaTTry.
+    // Advance the system the calling thread holds in its scratch slot by one
+    // step of deltaTTry.
     //
     // `resources` is the subclass the method's own table entry created, so an
     // implementation is free to cast it down to the one holding its scratch.
     //
-    // Returns the error of the trial step over the whole block, normalised so
-    // that 1 is the tolerance, when usesAdaptiveStep() is set; the value is
-    // ignored otherwise. Being a block figure, it is the same in every thread.
+    // Returns the error of the trial step, normalised so that 1 is the
+    // tolerance, when usesAdaptiveStep() is set; the value is ignored
+    // otherwise.
     __device__ virtual scalar
     step
     (
         ODESystem* ode,
         DeviceResources* resources,
-        BlockStep& step,
-        const bool active,
         IntegratorControls controls
     ) const = 0;
 
@@ -109,8 +103,6 @@ public:
     (
         ODESystem* ode,
         DeviceResources* resources,
-        BlockStep& step,
-        const bool active,
         IntegratorControls controls
     ) const;
 
@@ -121,18 +113,16 @@ public:
     (
         ODESystem* ode,
         DeviceResources* resources,
-        BlockStep& blockStep,
-        const bool active,
         IntegratorControls controls
     ) const
     {
         if (usesAdaptiveStep_)
         {
-            adaptiveStep(ode, resources, blockStep, active, controls);
+            adaptiveStep(ode, resources, controls);
         }
         else
         {
-            step(ode, resources, blockStep, active, controls);
+            step(ode, resources, controls);
         }
     }
 

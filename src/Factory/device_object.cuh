@@ -11,8 +11,8 @@
 // functions are called from inside a kernel, and which therefore has to live in
 // device memory with a device vtable.
 //
-// The same four steps for every such class in the library - the balancer, the
-// resources, the integration method - so they are written once here and every
+// The same four steps for every such class in the library - the ODE system,
+// the resources, the integration method - so they are written once here and every
 // concrete class hands out four one-line forwards into them.
 //
 // The contract a class has to keep to be built this way:
@@ -21,7 +21,8 @@
 //      (batchSize, scratchSize, blocks, systemSize, parameterSize), which sets
 //      value members only and never touches a buffer pointer - see create()
 //      for why. `blocks` is there because a buffer may be per block rather
-//      than per resident thread: the matrix a whole block factorises once is.
+//      than per resident thread; none is in this version, where every thread
+//      integrates on its own, but the contract keeps the size.
 //
 //      "Never touches" includes not being written by the language on the
 //      class's behalf. A default constructor declared `= default` is not

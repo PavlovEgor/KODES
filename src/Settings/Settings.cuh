@@ -9,19 +9,16 @@
 #include "Config.cuh"
 #include "LaunchConfig.cuh"
 #include "IntegratorControls.cuh"
-#include "balancer_table.cuh"
 #include "system_table.cuh"
 
 // One JSON file holding everything a run is free to choose, so that changing
-// the method, the balancer or a tolerance does not mean recompiling.
+// the method or a tolerance does not mean recompiling.
 //
 // See examples/reactors/grimech.json for a complete file. Every
 // entry has a default, so a file naming nothing but the method is valid.
 //
 //   {
-//       "method":   "seulex",       // methodTable:   seulex | euler
-//       "balancer": "stiffness",    // balancerTable: temperature | rhsNorm
-//                                   //                stiffness | none
+//       "method":   "seulex",       // methodTable: seulex | euler
 //       "system":   "pyJac",        // systemTable: pyJac
 //       "device": {
 //           "share":           "best",   // best | half, see kDeviceShares
@@ -68,7 +65,6 @@ class Settings
     std::string path_;
 
     std::string method_;
-    std::string balancer_;
     std::string system_;
 
     static Config openOrExit(const std::string& path);
@@ -76,7 +72,7 @@ class Settings
 public:
 
     // Reads and validates `path`. Fails with the list of known names if the
-    // method or the balancer named is not one of them, so a typo is caught
+    // method or the system named is not one of them, so a typo is caught
     // before anything has been allocated on the device.
     explicit Settings(const std::string& path);
 
@@ -85,15 +81,10 @@ public:
     // The name of the entry in methodTable
     const std::string& method() const { return method_; }
 
-    // The name of the entry in balancerTable, or "none"
-    const std::string& balancer() const { return balancer_; }
-
     // The name of the entry in systemTable. One row per build, since pyJac
     // fixes the mechanism when the library is compiled, so a file that leaves
     // this out - every file does - gets that row.
     const std::string& system() const { return system_; }
-
-    bool balanceBatches() const { return balancer_ != kNoBalancer; }
 
     // The request planLaunch resolves against the device
     LaunchConfig launchRequest() const;

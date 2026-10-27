@@ -2,12 +2,11 @@
 
 Этот файл объясняет один-единственный паттерн, по которому в библиотеке сделаны
 **все** классы, выбираемые в момент запуска программы: интегратор
-(`IntegrationMethod` → `Seulex`, `Euler`), балансировщик (`Balancer` →
-`TemperatureBalancer`, ...), хранилище (`DeviceResources` → `SeulexDeviceResources`,
-...) и система уравнений (`ODESystem` → `PyJacSystem`).
+(`IntegrationMethod` → `Seulex`, `Euler`), хранилище (`DeviceResources` →
+`SeulexDeviceResources`, ...) и система уравнений (`ODESystem` → `PyJacSystem`).
 
-Раньше эти механизмы работали по-разному: балансировщик был виртуальным объектом
-на устройстве, интегратор — шаблонным параметром, то есть выбирался при
+Раньше эти механизмы работали по-разному: система уравнений строила себя сама
+своими ядрами, интегратор был шаблонным параметром, то есть выбирался при
 компиляции. Теперь у всех один паттерн, и весь он умещается в два заголовка:
 
 | файл | что в нём |
@@ -24,11 +23,11 @@
 Мы хотим написать обычную вещь:
 
 ```cpp
-kodes::Balancer* balancer = ...;      // какой именно — решаем при запуске
-balancer->key(...);                   // виртуальный вызов
+kodes::IntegrationMethod* method = ...;   // какой именно — решаем при запуске
+method->step(...);                         // виртуальный вызов
 ```
 
-но `key()` вызывается **внутри CUDA-ядра**, то есть на устройстве. И тут обычный
+но `step()` вызывается **внутри CUDA-ядра**, то есть на устройстве. И тут обычный
 C++ ломается о три вещи подряд.
 
 ### 1.1. Таблица виртуальных функций у хоста и у устройства — разные
@@ -38,9 +37,9 @@ C++ ломается о три вещи подряд.
 живут в **разных адресных пространствах**. Значит:
 
 ```cpp
-kodes::StiffnessBalancer b(...);          // сконструирован на хосте
-cudaMemcpy(devPtr, &b, sizeof(b), ...);   // скопирован на устройство
-someKernel<<<...>>>(devPtr);              // ядро зовёт devPtr->key(...)
+kodes::Seulex m(...);                     // сконструирован на хосте
+cudaMemcpy(devPtr, &m, sizeof(m), ...);   // скопирован на устройство
+someKernel<<<...>>>(devPtr);              // ядро зовёт devPtr->step(...)
 ```
 
 не работает: в скопированных байтах лежит **хостовая** vtable, и ядро уйдёт по
@@ -71,8 +70,8 @@ __global__ void constructDeviceObjectKernel(T* object, ...)
    │ hostStub             │                    │ devObject            │
    │  vtable  → хостовая  │                    │  vtable  → устройств.│
    │  batchSize_ = 1000000│                    │  batchSize_ = 1000000│
-   │  keys_   ────────────┼──── cudaMalloc ───▶│  keys_   ────────────┼──▶ буфер
-   │  order_  ────────────┼──── cudaMalloc ───▶│  order_  ────────────┼──▶ буфер
+   │  table_  ────────────┼──── cudaMalloc ───▶│  table_  ────────────┼──▶ буфер
+   │  dfdy_   ────────────┼──── cudaMalloc ───▶│  dfdy_   ────────────┼──▶ буфер
    └──────────────────────┘                    └──────────────────────┘
 ```
 
@@ -95,7 +94,7 @@ __global__ void constructDeviceObjectKernel(T* object, ...)
 следует жёсткое правило, которое легко нарушить:
 
 > **Конструктор такого класса не имеет права трогать ни один указатель на
-> буфер.** Только value-поля (размеры, флаги). Строчка вида `keys_(nullptr)` в
+> буфер.** Только value-поля (размеры, флаги). Строчка вида `dfdy_(nullptr)` в
 > списке инициализации молча затрёт адрес, выделенный на шаге 2, и всё
 > развалится в ядре.
 
@@ -103,23 +102,23 @@ __global__ void constructDeviceObjectKernel(T* object, ...)
 
 ### 1.4. И, наконец: хостовую vtable может выпустить не всякий компилятор
 
-`key()` объявлена только как `__device__`. Хостовая vtable класса всё равно
+`step()` объявлена только как `__device__`. Хостовая vtable класса всё равно
 нужна — она есть у `hostStub`, ведь это обычный хостовой объект. Но что положить
-в её слот для `key()`, если хостовой версии `key()` не существует?
+в её слот для `step()`, если хостовой версии `step()` не существует?
 
 * **nvcc** — придумывает заглушку и vtable выпускает;
 * **`nvc++ -cuda`** (а именно им собирается модель химии OpenFOAM) — не
-  придумывает и останавливается с ошибкой «`key` не определена в vtable».
+  придумывает и останавливается с ошибкой «`step` не определена в vtable».
 
 Ключевой момент: vtable выпускается **в той единице трансляции, которая создаёт
 объект**. Значит, достаточно не позволять чужому компилятору создавать стаб:
 
 ```cpp
 // в .cu, который компилирует nvcc — здесь и рождается хостовая vtable
-StiffnessBalancer* stub = StiffnessBalancer::createStub(...);
+Seulex* stub = Seulex::createStub(...);
 
 // у вызывающего кода — только указатель, ему vtable выпускать не нужно
-kodes::Balancer* stub;
+kodes::IntegrationMethod* stub;
 ```
 
 Поэтому у каждого класса есть не два, а **четыре** статических метода:
@@ -134,14 +133,14 @@ kodes::Balancer* stub;
 класс можно было строить этими шаблонами, от него требуется ровно три вещи:
 
 ```cpp
-class MyBalancer : public kodes::Balancer
+class MyMethodDeviceResources : public kodes::DeviceResources
 {
 public:
     // 1. Конструктор с ровно такой сигнатурой — одинаковой у всех
     //    устройственных объектов библиотеки. Только value-поля! (см. 1.3)
     __device__ __host__
-    MyBalancer(label batchSize, label scratchSize, label blocks,
-               label systemSize, label parameterSize);
+    MyMethodDeviceResources(label batchSize, label scratchSize, label blocks,
+                            label systemSize, label parameterSize);
 
     // 2. Хостовые allocate/deallocate — cudaMalloc/cudaFree в собственные поля.
     //    Наследник сначала вызывает версию базового класса, потом свою.
@@ -172,7 +171,7 @@ __host__ T* createDeviceObject(..., T* hostStub)
 Получается разделение, ради которого паттерн и существует:
 
 * **на хосте — статический полиморфизм** (шаблон подставляет нужный `allocate`);
-* **на устройстве — динамический** (ядро зовёт `key()`/`step()` через vtable).
+* **на устройстве — динамический** (ядро зовёт `step()`/`derivatives()` через vtable).
 
 Хостовая vtable нужна только для деструктора, и ни один виртуальный вызов на
 хосте паттерн не делает.
@@ -182,14 +181,14 @@ __host__ T* createDeviceObject(..., T* hostStub)
 Одна строка:
 
 ```cpp
-#include "MyBalancer.cuh"
+#include "MyMethodDeviceResources.cuh"
 
-KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)
+KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethodDeviceResources)
 ```
 
 Макрос разворачивается в те самые четыре метода, каждый из которых — вызов
 соответствующего шаблона. Объявления в заголовке — тоже одна строка,
-`KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`.
+`KODES_DECLARE_DEVICE_OBJECT(MyMethodDeviceResources)`.
 
 Этот `.cu` **никогда не включается вызывающим кодом**: именно в нём запускаются
 ядра конструктора и деструктора и именно в нём выпускается хостовая vtable.
@@ -207,7 +206,7 @@ KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)
 
 Соблазнительно сделать это хостовыми виртуальными функциями — но тогда чужой
 компилятор должен был бы согласиться с nvcc о раскладке vtable, в которой есть
-слот для несуществующей на хосте `key()`. Это лишний риск на ровном месте.
+слот для несуществующей на хосте `step()`. Это лишний риск на ровном месте.
 
 Вместо этого один конкретный класс сводится к набору **обычных указателей на
 функции** (`type_table.cuh`):
@@ -244,30 +243,21 @@ ABI сверх обычных. Поэтому таблицу может испо
 **до того**, как хоть что-нибудь создано, — а иначе и нельзя, ведь размеры
 партии и сетки как раз из этого расчёта и получаются.
 
-Средняя из трёх появилась вместе с блочным решением: матрицу, которую блок
-раскладывает один раз на всех, незачем держать по копии на поток. Она же —
-величина, которую план сравнивает с доступной shared-памятью, решая, работать
-блоку в ней или в своём куске глобальной (`blockScratchInShared`).
+Средняя из трёх — память, которую делил бы весь блок: матрицу, которую блок
+раскладывает один раз на всех, незачем держать по копии на поток. Так было в
+0.20–0.23, где блок интегрировал свои системы вместе. В 1.x каждая нить
+интегрирует свою систему сама, и все классы отвечают здесь нулём; слот оставлен,
+чтобы такой метод можно было вернуть, не трогая таблиц.
 
 Отсюда же и пятый `label` в `create`/`createStub`: конструктор устройственного
 объекта берёт `(batchSize, scratchSize, blocks, systemSize, parameterSize)`.
-Без `blocks` `allocate()` нечем умножить блочный слот.
+`blocks` нужен буферу, который выделяется на блок, а не на поток; в 1.x таких нет.
 
 Сами таблицы — по одной на абстрактную базу, в `.cu` библиотеки:
 
 ```cpp
-// src/Balancer/balancer_table.cu — таблица лежит в корне семейства,
-// а каждый конкретный класс в своём каталоге рядом
-static const TypeEntry<Balancer> table[] =
-{
-    typeEntry<Balancer, TemperatureBalancer>("temperature"),
-    typeEntry<Balancer, RHSNormBalancer>("rhsNorm"),
-    typeEntry<Balancer, StiffnessBalancer>("stiffness")
-};
-```
-
-```cpp
-// src/Integrator/IntegrationMethods/method_table.cu — здесь в одной строке
+// src/Integrator/IntegrationMethods/method_table.cu — таблица лежит в корне
+// семейства, а каждый конкретный класс в своём каталоге рядом. В одной строке
 // метод и хранилище, потому что выбирать их порознь нельзя: Seulex::step()
 // приводит DeviceResources* к SeulexDeviceResources*
 static const MethodType table[] =
@@ -295,7 +285,7 @@ static const TypeEntry<ODESystem> table[] =
 
 ### Почему у `DeviceResources` своей таблицы нет и быть не должно
 
-Семейств устройственных объектов четыре, а таблиц три. Четвёртое —
+Семейств устройственных объектов три, а таблиц две. Третье —
 `DeviceResources → AdaptiveDeviceResources → {Seulex,Euler}DeviceResources` —
 паттерну следует полностью, но **выбирается не само по себе**:
 
@@ -324,7 +314,7 @@ struct MethodType
 `{"method": "euler", "resources": "seulexResources"}` прошёл бы всю валидацию и
 упал бы внутри ядра. Сейчас такую комбинацию **нельзя записать**.
 
-Отсюда же правило, общее для всех четырёх семейств: `KODES_DECLARE_DEVICE_OBJECT`
+Отсюда же правило, общее для всех трёх семейств: `KODES_DECLARE_DEVICE_OBJECT`
 несёт только тот класс, который встречается **строкой таблицы**. База и
 промежуточные наследники — нет: их `create()` никто бы не позвал, а макрос стоит
 четырёх хостовых функций и двух ядер на класс. У баз остаётся только placement
@@ -399,21 +389,17 @@ include-пути, — `PyJacSystem.cu` и `system_table.cu`. Модели хим
 именно оттуда.
 
 ```cpp
-kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
+kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
 (
-    "stiffness", batchSize, scratchSize, blocks, systemSize, parameterSize
+    "seulex", batchSize, scratchSize, blocks, systemSize, parameterSize
 );
 
-solver.setBalancer(balancing.device(), balancing.host());
+kodes::Operator op(&hostRes, resources.host());
 // деструктор Handle сам вернёт обе половины тому, кто их сделал
 ```
 
 `device()` — объект, на котором диспетчеризуются ядра. `host()` — стаб, через
-который идут хостовые вызовы (`balance()`, `order()`, буферы для `Operator`).
-
-Для балансировщика есть особый случай: имя `"none"` даёт **пустой** handle
-(`device()` и `host()` — нули), и `Integrator::setBalancer(nullptr, nullptr)`
-понимает это как «партия интегрируется в том порядке, в каком её скопировали».
+который идут хостовые вызовы (здесь — адреса буферов для `Operator`).
 
 ---
 
@@ -422,18 +408,18 @@ solver.setBalancer(balancing.device(), balancing.host());
 ```
               ХОСТ                                    УСТРОЙСТВО
    ┌───────────────────────────┐          ┌──────────────────────────────┐
-   │ Handle<Balancer>          │          │                              │
+   │ Handle<DeviceResources>   │          │                              │
    │   type_ ──▶ строка таблицы│          │                              │
    │   host_ ──┐               │          │                              │
    │   device_─┼───────────────┼─────────▶│ devObject                    │
    └───────────┼───────────────┘          │   vtable → устройственная    │
-               │                          │   keys_  ──────────┐         │
-               ▼                          │   order_ ────────┐ │         │
+               │                          │   table_ ──────────┐         │
+               ▼                          │   dfdy_  ────────┐ │         │
    ┌───────────────────────────┐          └──────────────────┼─┼─────────┘
    │ hostStub                  │                             │ │
    │   vtable → хостовая       │          ┌──────────────────▼─▼─────────┐
-   │   keys_  ─────────────────┼─────────▶│  буферы, cudaMalloc          │
-   │   order_ ─────────────────┼─────────▶│                              │
+   │   table_ ─────────────────┼─────────▶│  буферы, cudaMalloc          │
+   │   dfdy_  ─────────────────┼─────────▶│                              │
    └───────────────────────────┘          └──────────────────────────────┘
       те же адреса, что и в devObject:
       это байтовая копия одного и того же
@@ -447,35 +433,30 @@ solver.setBalancer(balancing.device(), balancing.host());
 ## 6. Как добавить свой класс
 
 Каждый конкретный класс живёт в собственном каталоге внутри своего семейства;
-в корне семейства остаются только абстрактная база и таблица. Балансировщик —
-четыре шага:
+в корне семейства остаются только абстрактная база и таблица. Метод
+интегрирования — четыре шага:
 
-1. `src/Balancer/MyBalancer/MyBalancer.cuh`: наследник `Balancer` с
-   конструктором из пяти аргументов, `key()`, парой
-   `stateBytesPerSystem`/`scratchBytesPerThread` и строкой
-   `KODES_DECLARE_DEVICE_OBJECT(MyBalancer)`. `scratchBytesPerBlock`
-   балансировщику переопределять не нужно: база отвечает за него нулём, потому
-   что проход балансировки — обычный grid-stride цикл, в нём нет ничего
-   коллективного.
-2. `src/Balancer/MyBalancer/MyBalancer.cu`:
-   `KODES_DEFINE_DEVICE_OBJECT(kodes::MyBalancer)`.
-3. Одна строка в `src/Balancer/balancer_table.cu`:
-   `#include "MyBalancer/MyBalancer.cuh"` и строка самой таблицы.
-4. Одна строка в `KODES_SOURCES` в `cmake/kodes.cmake`.
+1. `src/Integrator/IntegrationMethods/MyMethod/MyMethod.cuh`: наследник
+   `IntegrationMethod` с конструктором из пяти аргументов, `step()` и строкой
+   `KODES_DECLARE_DEVICE_OBJECT(MyMethod)`. Если методу нужны свои временные
+   массивы — рядом наследник `DeviceResources` (или `AdaptiveDeviceResources`)
+   с собственными `allocate()`/`deallocate()` и `scratchBytesPerThread`, по
+   тому же паттерну.
+2. `src/Integrator/IntegrationMethods/MyMethod/MyMethod.cu`:
+   `KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethod)` — и то же для хранилища.
+3. Одна строка в `method_table.cu`: `#include "MyMethod/MyMethod.cuh"` и строка
+   самой таблицы, где рядом с методом указан его класс хранилища.
+4. Одна строка в `KODES_SOURCES` в `cmake/kodes.cmake` на каждый новый `.cu`.
 
 Пятого шага — правки списка `-I` — **нет, и это намеренно.** Внутри семейства
-включения плоские (`#include "Balancer.cuh"`), потому что корень каждого
-семейства лежит на include-пути; до конкретного класса добираются через его
-каталог (`#include "MyBalancer/MyBalancer.cuh"`). Иначе каждый новый класс
+включения плоские (`#include "IntegrationMethod.cuh"`), потому что корень
+каждого семейства лежит на include-пути; до конкретного класса добираются через
+его каталог (`#include "MyMethod/MyMethod.cuh"`). Иначе каждый новый класс
 требовал бы строки в `KODES_INCLUDE_DIRS`, а забытая строка ломала бы сборку не
 здесь, а у потребителя.
 
-Метод интегрирования — то же самое, но наследник `IntegrationMethod` с `step()`,
-и в строке таблицы рядом указывается его класс хранилища. Если методу нужны свои
-временные массивы — сначала наследник `DeviceResources` с собственными
-`allocate()`/`deallocate()`, по тому же паттерну. Макрос
-`KODES_DECLARE_DEVICE_OBJECT` ставится только на тот класс хранилища, который
-попадёт в строку таблицы: промежуточному наследнику он не нужен.
+Макрос `KODES_DECLARE_DEVICE_OBJECT` ставится только на тот класс хранилища,
+который попадёт в строку таблицы: промежуточному наследнику он не нужен.
 
 Система уравнений — тоже то же самое: наследник `ODESystem` с `derivatives()` и
 `jacobian()`, строка в `system_table.cu`, строка в `KODES_SOURCES`.

@@ -14,7 +14,7 @@ kodes::DeviceResources::allocate()
     CUDA_CHECK(cudaMalloc(&currentVector_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&currentParameters_, size_t(parameterSize_) * scratchSize_ * sizeof(scalar)));
 
-    StepState::allocate(blocks_);
+    StepState::allocate(scratchSize_);
 }
 
 __host__ void

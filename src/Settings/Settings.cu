@@ -24,14 +24,12 @@ kodes::Settings::Settings(const std::string& path)
 config_(openOrExit(path)),
 path_(path),
 method_(config_.getString("method", "seulex")),
-balancer_(config_.getString("balancer", kNoBalancer)),
 system_(config_.getString("system", kDefaultSystem))
 {
-    // All three look their name up in the table straight away rather than when
+    // Both look their name up in the table straight away rather than when
     // the object is built, so a typo fails here - before the plan, before
     // pyJac's scratch, before anything has been allocated on the device.
     methodType(method_.c_str());
-    balancerType(balancer_.c_str());
     systemType(system_.c_str());
 }
 
@@ -114,7 +112,6 @@ void kodes::Settings::print() const
 
     printf("kodes settings from %s:\n", path_.c_str());
     printf("  method   = %s\n", method_.c_str());
-    printf("  balancer = %s\n", balancer_.c_str());
     printf("  system   = %s\n", system_.c_str());
     printf
     (

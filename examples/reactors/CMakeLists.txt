@@ -13,8 +13,8 @@ set(CMAKE_CUDA_ARCHITECTURES "120")
 
 # One program, one target per mechanism. The mechanism is the only thing that
 # has to be fixed at build time - pyJac generates C for one of them and NSP is
-# a macro of its mechanism.cuh. The method, the balancer and the tolerances are
-# names and numbers in the .json beside this file.
+# a macro of its mechanism.cuh. The method and the tolerances are names and
+# numbers in the .json beside this file.
 function(kodes_reactor_case mechanism)
 
     set(target reactors_${mechanism})

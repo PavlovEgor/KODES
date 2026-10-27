@@ -10,7 +10,6 @@
 #include "Integrator.cuh"
 #include "IntegrationMethod.cuh"
 #include "method_table.cuh"
-#include "balancer_table.cuh"
 #include "system_table.cuh"
 
 // The mechanism this library is built for. Only NSP and FWD_RATES come from
@@ -58,9 +57,14 @@ static_assert
 // A pyJac system carries one parameter, the pressure
 constexpr label kPyJacParameterSize = 1;
 
-// The four runtime-selected objects, the host buffers the Operator copies
+// The three runtime-selected objects, the host buffers the Operator copies
 // through and the Integrator driving them, in the order they have to be built
 // in: the plan first, since every one of the rest is sized by it.
+//
+// There is no balancer. Every thread integrates its own system on its own, so
+// the order the batch is taken in changes nothing but which thread gets which
+// system. SolverSettings::balancer is not read and balancer() answers "none":
+// both stay so that this is still the interface version 0.23 spoke.
 class LibrarySolver
 :
     public Solver
@@ -73,21 +77,11 @@ class LibrarySolver
 
     Handle<DeviceResources> resources_;
     Handle<IntegrationMethod> method_;
-    Handle<Balancer> balancer_;
     Handle<ODESystem> system_;
 
     Operator operator_;
 
     Integrator integrator_;
-
-    // An empty name in a settings file means no balancer; a null pointer from a
-    // caller of this interface is taken the same way
-    static const char* balancerName(const SolverSettings& settings)
-    {
-        const char* name = settings.balancer;
-
-        return (name && *name) ? name : kNoBalancer;
-    }
 
     static LaunchConfig request(const SolverSettings& settings)
     {
@@ -133,7 +127,6 @@ public:
                 NSP,
                 kPyJacParameterSize,
                 settings.method,
-                balancerName(settings),
                 kDefaultSystem,
                 request(settings),
                 0,
@@ -153,14 +146,6 @@ public:
             newMethod
             (
                 settings.method, config_.batchSize, config_.scratchSize,
-                config_.blocks, NSP, kPyJacParameterSize
-            )
-        ),
-        balancer_
-        (
-            newBalancer
-            (
-                balancerName(settings), config_.batchSize, config_.scratchSize,
                 config_.blocks, NSP, kPyJacParameterSize
             )
         ),
@@ -188,11 +173,7 @@ public:
                 settings.Treact
             )
         )
-    {
-        // nulls when there is no balancer, which leaves the batch in the order
-        // it was copied in
-        integrator_.setBalancer(balancer_.device(), balancer_.host());
-    }
+    {}
 
     int threads() const override { return config_.threads; }
 
@@ -216,7 +197,7 @@ public:
 
     const char* method() const override { return method_.name(); }
 
-    const char* balancer() const override { return balancer_.name(); }
+    const char* balancer() const override { return "none"; }
 
     void setDeltaT(const double deltaT) override
     {

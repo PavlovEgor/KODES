@@ -3,8 +3,6 @@
 
     "method": "seulex",
 
-    "_comment_balancer": "9 species means a cheap right hand side, so the extra derivatives() call rhsNorm and stiffness cost is worth less here than for grimech; temperature alone is the better trade. 'none' turns the ordering off entirely, which is the honest thing to compare against.",
-    "balancer": "temperature",
 
     "device": {
         "share": "best",

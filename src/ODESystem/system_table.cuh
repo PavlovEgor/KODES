@@ -7,7 +7,7 @@
 #include "type_table.cuh"
 
 // The ODE systems a name may select, and how to build the one it selects. The
-// balancer's table again, for the third abstract base of the library.
+// method's table again, less the second class an entry of that one names.
 //
 // This header is safe for any caller to include - it declares, it does not
 // define - and that is most of the point of it here. PyJacSystem.cuh pulls in
@@ -39,8 +39,7 @@ __host__ label systemTableSize();
 __host__ const TypeEntry<ODESystem>* systemType(const char* name);
 
 // What that system would cost, before there is one - planLaunch adds these to
-// the method's and the balancer's to size the run all three are then built
-// against.
+// the method's to size the run both are then built against.
 __host__ size_t systemScratchBytesPerThread
 (
     const char* name,
@@ -62,8 +61,8 @@ __host__ size_t systemStateBytesPerSystem
     const label parameterSize
 );
 
-// Build it. Unlike the balancer there is no "none": a run with no equations to
-// integrate is not a run, so an unknown or empty name stops the program.
+// Build it. There is no "none": a run with no equations to integrate is not a
+// run, so an unknown or empty name stops the program.
 __host__ Handle<ODESystem> newSystem
 (
     const char* name,

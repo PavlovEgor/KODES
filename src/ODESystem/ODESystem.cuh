@@ -10,7 +10,7 @@ namespace kodes
 // The equations a run integrates: the right hand side and its Jacobian.
 //
 // A device object in the sense of Factory/device_object.cuh, exactly like the
-// integration method, the resources and the balancer. It lives in device
+// integration method and the resources. It lives in device
 // memory because derivatives() and jacobian() are called from inside the solve
 // kernel, whatever buffers it owns are allocated by the host into a stub of
 // the same type, and the device object is placement-newed on top of a byte

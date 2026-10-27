@@ -29,17 +29,17 @@
 | Что | Стиль | Примеры |
 |---|---|---|
 | Пространство имён | одно, всё внутри | `kodes` |
-| Классы, структуры, enum | `UpperCamelCase` | `Balancer`, `SeulexDeviceResources`, `TypeEntry` |
+| Классы, структуры, enum | `UpperCamelCase` | `Integrator`, `SeulexDeviceResources`, `TypeEntry` |
 | Параметры шаблона | `UpperCamelCase` | `Base`, `Derived`, `ODESystem` |
 | Функции и методы | `lowerCamelCase`, глагол первым | `loadSystem()`, `scratchBytesPerThread()` |
-| Ядра (`__global__`) | `lowerCamelCase` + суффикс `Kernel` | `solveKernel`, `fillKeysKernel` |
+| Ядра (`__global__`) | `lowerCamelCase` + суффикс `Kernel` | `solveKernel`, `setDeltaTKernel` |
 | Переменные и параметры | `lowerCamelCase` | `batchSize`, `realBatchSize` |
-| Закрытые поля класса | `lowerCamelCase_` | `batchSize_`, `numOfKeys_` |
+| Закрытые поля класса | `lowerCamelCase_` | `batchSize_`, `scratchSize_` |
 | Открытые поля класса | `lowerCamelCase`, без подчёркивания | `vectors`, `deltaTTry` |
 | Локальные переменные | `lowerCamelCase`, **никогда** с подчёркиванием | `dfdy`, `kTarg` |
-| Константы: `constexpr`, `__constant__` | `kUpperCamelCase` | `kSeulexMaxOrder`, `kSeulexStepSequence`, `kKeyCount`, `kNoBalancer` |
-| Макросы | `UPPER_SNAKE_CASE` с префиксом `KODES_` | `KODES_BLOCK_SIZE`, `KODES_MAX_KEYS` |
-| Имена в файле настроек и в словаре OpenFOAM | `lowerCamelCase` | `"stiffness"`, `"rhsNorm"`, `"threadsPerBlock"` |
+| Константы: `constexpr`, `__constant__` | `kUpperCamelCase` | `kSeulexMaxOrder`, `kSeulexStepSequence`, `kDefaultSystem`, `kLibraryApiVersion` |
+| Макросы | `UPPER_SNAKE_CASE` с префиксом `KODES_` | `KODES_BLOCK_SIZE`, `KODES_MEMORY_HEADROOM` |
+| Имена в файле настроек и в словаре OpenFOAM | `lowerCamelCase` | `"seulex"`, `"pyJac"`, `"threadsPerBlock"` |
 
 ### Почему у констант свой префикс
 
@@ -49,17 +49,18 @@
 `kSeulexStepFactor3` (коэффициент из таблицы) — без префикса они выглядят
 одинаково и читаются одинаково неправильно.
 
-Он же снимает настоящую ловушку. У `Balancer` есть метод `usesDerivatives()`, а
-у каждого наследника — своя `static constexpr bool` с тем же смыслом. Пока обе
-назывались одинаково, константа наследника **скрывала** метод базового класса, и
-`balancer->usesDerivatives()` внутри наследника означало не то, что кажется.
-Теперь это `kUsesDerivatives` и `usesDerivatives()`, и спутать их нельзя.
+Он же снимает настоящую ловушку. У `IntegrationMethod` есть метод
+`usesAdaptiveStep()`, а у каждого наследника — своя `static constexpr bool` с
+тем же смыслом. Назовись они одинаково, константа наследника **скрыла** бы метод
+базового класса, и `usesAdaptiveStep()` внутри наследника означало бы не то, что
+кажется. Поэтому это `kUsesAdaptiveStep` и `usesAdaptiveStep()`, и спутать их
+нельзя.
 
 ### Макрос или константа
 
 Макросом остаётся только то, что сборка вправе переопределить снаружи через
-`-D`: `KODES_BLOCK_SIZE`, `KODES_BALANCER_BUCKETS`, `KODES_MAX_KEYS`,
-`KODES_MEMORY_HEADROOM`. Всё остальное, что известно при компиляции, —
+`-D`: `KODES_BLOCK_SIZE`, `KODES_MEMORY_HEADROOM`, `KODES_DEVICE_STACK_BYTES`,
+`KODES_SHARED_BUDGET`. Всё остальное, что известно при компиляции, —
 `constexpr`-константа: она подчиняется областям видимости, имеет тип и видна
 отладчику. Порядок Seulex, например, был `#define kMaxx_ (12)`, а стал
 `constexpr label kSeulexMaxOrder = 12`.
@@ -88,26 +89,25 @@
 Имя файла:
 
 * заголовок с **одним главным классом** называется по нему, `UpperCamelCase`:
-  `Balancer.cuh`, `SeulexDeviceResources.cuh`;
+  `Integrator.cuh`, `SeulexDeviceResources.cuh`;
 * всё остальное — свободные функции, таблицы, константы, набор мелких
   сопутствующих типов — называется по тому, что даёт, `snake_case`:
-  `basic_types.cuh`, `type_table.cuh`, `balancer_table.cu`,
+  `basic_types.cuh`, `type_table.cuh`, `method_table.cu`,
   `seulex_constants.cu`.
 
 По имени файла сразу видно, что внутри, и `ls` разделяется на две колонки сам
 собой:
 
 ```
-Balancer.cu               balancer_table.cu
-Balancer.cuh              balancer_table.cuh
-RHSNormBalancer/
-StiffnessBalancer/
-TemperatureBalancer/
+IntegrationMethod.cu      method_table.cu
+IntegrationMethod.cuh     method_table.cuh
+Euler/
+Seulex/
 ```
 
-`snake_case`, а не `lowerCamelCase`, именно ради контраста: `balancer_table.cuh`
-рядом с `Balancer.cuh` отличается одной заглавной буквой в начале, а
-`balancer_table.cuh` видно с другого конца экрана.
+`snake_case`, а не `lowerCamelCase`, именно ради контраста: `methodTable.cuh`
+рядом с `IntegrationMethod.cuh` сливался бы с ним, а `method_table.cuh` видно с
+другого конца экрана.
 
 Защита от повторного включения — `KODES_<ИМЯ_ФАЙЛА>` плюс `#pragma once`:
 
@@ -123,12 +123,12 @@ TemperatureBalancer/
 ## 3. Каталоги
 
 * `src/<Подсистема>` — `UpperCamelCase`, по имени подсистемы:
-  `Balancer/`, `Integrator/`, `Resources/`, `Factory/`, `Settings/`, `ODESystem/`,
+  `Integrator/`, `Resources/`, `Factory/`, `Settings/`, `ODESystem/`,
   `Library/`.
 * У семейства, выбираемого по имени в рантайме, в корне подсистемы лежат только
   **абстрактная база и таблица типов**, а каждый **конкретный** класс — в
-  каталоге своего имени: `Balancer/RHSNormBalancer/`,
-  `Integrator/IntegrationMethods/Seulex/`, `ODESystem/PyJacSystem/`. Каталог
+  каталоге своего имени: `Integrator/IntegrationMethods/Seulex/`,
+  `ODESystem/PyJacSystem/`. Каталог
   ради одного класса здесь оправдан: в нём с самого начала пара `.cuh`/`.cu`, и
   видно, где кончается один вариант реализации и начинается другой. То, что
   классом не является — примеси, свободные функции, хостовые классы — остаётся
@@ -142,7 +142,7 @@ TemperatureBalancer/
   базы (`Resources/AdaptiveDeviceResources.cuh`).
 * Константы и таблицы, принадлежащие одному конкретному классу, переезжают
   вместе с ним: `Seulex/seulex_constants.cu`.
-* Включения внутри семейства плоские — `#include "Balancer.cuh"`, — потому что
+* Включения внутри семейства плоские — `#include "IntegrationMethod.cuh"`, — потому что
   корень каждой подсистемы перечислен в `KODES_INCLUDE_DIRS` в
   `cmake/kodes.cmake`. До конкретного класса добираются через его каталог:
   `#include "Seulex/Seulex.cuh"`. Так список `-I` остаётся одной строкой на
@@ -164,18 +164,17 @@ TemperatureBalancer/
 
 ```cpp
 __host__ size_t
-Balancer::keyScratchBytesPerThread
+SeulexDeviceResources::orderStorage
 (
-    const label systemSize,
-    const bool usesDerivatives
+    const label systemSize
 )
 {
-    if (!usesDerivatives)
+    if (systemSize > kSeulexTableSize)
     {
-        return 0;
+        return systemSize;
     }
 
-    return size_t(systemSize) * sizeof(scalar);
+    return kSeulexTableSize;
 }
 ```
 

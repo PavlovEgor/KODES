@@ -54,10 +54,10 @@ struct TypeEntry
     // resident thread, per block launched and per system of the batch.
     // planLaunch() adds up the entries of every table the run will draw from.
     //
-    // The per block figure is what the collective solve added: a matrix the
-    // whole block factorises once is allocated once per block, not once per
-    // thread, and it is also the amount the plan may decide to put in shared
-    // memory instead.
+    // The per block figure is for scratch a whole block would share, and that
+    // the plan could put in shared memory. Every thread integrates on its own
+    // in this version, so every entry answers 0 - the slot stays so that a
+    // method sharing scratch could be added back without touching the tables.
     size_t (*scratchBytesPerThread)(const label systemSize, const label parameterSize);
 
     size_t (*scratchBytesPerBlock)(const label systemSize, const label parameterSize);
