@@ -34,7 +34,10 @@ namespace kodes
 // Raised whenever anything below changes shape: a virtual added, removed or
 // reordered, a member of SolverSettings added or retyped. A caller compares it
 // with the library's before it touches anything else.
-constexpr int kLibraryApiVersion = 1;
+//
+// 2 is this line, kodes-v2; 1 is kodes-v1, whose SolverSettings has no
+// balancer and whose Solver no balancer(). Both lines started out as 1.
+constexpr int kLibraryApiVersion = 2;
 
 constexpr const char* kLibraryApiVersionSymbol = "kodesLibraryApiVersion";
 constexpr const char* kLibrarySymbol = "kodesLibrary";

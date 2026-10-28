@@ -593,7 +593,7 @@ left on the consumer's side.
 
 **What crosses into it.** Two `extern "C"` symbols, looked up with `dlsym()` by the names
 `library_api.h` gives them: `kodesLibraryApiVersion()`, to be compared with `kLibraryApiVersion`
-before anything else, and `kodesLibrary()`, which hands out the `kodes::Library` of the mechanism.
+before anything else — 2 on this line, 1 on `kodes-v1`, whose interface has no balancer — and `kodesLibrary()`, which hands out the `kodes::Library` of the mechanism.
 That one answers what the mechanism is — its name, the KODES version it was built from, its species
 in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
 `kodes::Solver` from a `kodes::SolverSettings`: the method, the balancer, the device share or the
