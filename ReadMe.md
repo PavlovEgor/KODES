@@ -426,9 +426,8 @@ before anything else, and `kodesLibrary()`, which hands out the `kodes::Library`
 That one answers what the mechanism is — its name, the KODES version it was built from, its species
 in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
 `kodes::Solver` from a `kodes::SolverSettings`: the method, the device share or the sizes by hand,
-the tolerances. Its `balancer` field and `Solver::balancer()` are the interface of 0.23, kept as
-they were so that a 0.23 caller works unchanged: the field is not read, and `balancer()` answers
-`"none"`. The solver plans, builds and integrates exactly as *Typical run*
+the tolerances. Unlike 0.23's, it has no `balancer` setting and no `Solver::balancer()`; a 0.23
+caller drops both. The solver plans, builds and integrates exactly as *Typical run*
 above; `solve(deltaT, state, parameters)` takes the ensemble in the `HostResources` layout and
 integrates it in place, batch by batch. The types in the interface are `double` and `int`, not
 `scalar` and `label`, so a caller with types of its own of those names converts at the call.

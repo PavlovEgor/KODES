@@ -52,11 +52,6 @@ struct SolverSettings
     // seulex | euler
     const char* method = "seulex";
 
-    // Not read since 1.0.0, which integrates every system on its own and has
-    // no balancer. Kept so that the layout - and kLibraryApiVersion - stay
-    // those of 0.23, whose callers set it.
-    const char* balancer = "temperature";
-
     // How much of the device one run may take: best | half
     const char* deviceShare = "best";
 
@@ -110,10 +105,8 @@ public:
     // The call stack of a device thread as the driver has it now
     virtual size_t deviceStack() const = 0;
 
-    // What the settings selected. The balancer is "none" since 1.0.0.
+    // The method the settings selected
     virtual const char* method() const = 0;
-
-    virtual const char* balancer() const = 0;
 
     // The trial step every block starts its first solve() from. Afterwards each
     // block carries over the step it ended the previous batch with.

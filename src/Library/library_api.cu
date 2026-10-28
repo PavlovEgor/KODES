@@ -62,9 +62,8 @@ constexpr label kPyJacParameterSize = 1;
 // in: the plan first, since every one of the rest is sized by it.
 //
 // There is no balancer. Every thread integrates its own system on its own, so
-// the order the batch is taken in changes nothing but which thread gets which
-// system. SolverSettings::balancer is not read and balancer() answers "none":
-// both stay so that this is still the interface version 0.23 spoke.
+// the order the batch is taken in would change nothing but which thread gets
+// which system.
 class LibrarySolver
 :
     public Solver
@@ -196,8 +195,6 @@ public:
     size_t deviceStack() const override { return kodes::deviceStack(); }
 
     const char* method() const override { return method_.name(); }
-
-    const char* balancer() const override { return "none"; }
 
     void setDeltaT(const double deltaT) override
     {
