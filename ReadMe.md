@@ -23,10 +23,10 @@ size, its own Jacobian, its own factorization, nothing to wait for.
 
 That is the 1.x line, and on purpose the simplest form of the idea. 0.20 to 0.23 integrated a whole
 block in lockstep, with one Jacobian and one LU factorization for all its threads, and sorted the
-batch with a `Balancer` so that a block got cells alike; that line lives on the `0.23.0` branch.
-1.0.0 keeps everything else 0.23 brought — the device object pattern, the type tables, the ODE
-system as a table row, the plan, the prebuilt per-mechanism libraries — and returns the solve to one
-system per thread.
+batch with a `Balancer` so that a block got cells alike; that line goes on as 2.x on the `kodes-v2`
+branch. 1.0.0 keeps everything else 0.23 brought — the device object pattern, the type tables, the
+ODE system as a table row, the plan, the prebuilt per-mechanism libraries — and returns the solve to
+one system per thread.
 
 Which integration method runs and every tolerance are read from a JSON settings file when the
 program starts — see *Typical run* below. How a class whose virtual functions only exist on the GPU
