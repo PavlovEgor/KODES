@@ -63,7 +63,10 @@ public:
     __device__ virtual void
     derivatives
     (
-        const scalar t, const scalar parameter, const scalar* y, scalar* dydt
+        const scalar t,
+        const scalar parameter,
+        const ThreadVector<const scalar> y,
+        const ThreadVector<scalar> dydt
     ) const = 0;
 
     // df/dy only: the systems this library integrates are autonomous, so the
@@ -72,7 +75,10 @@ public:
     __device__ virtual void
     jacobian
     (
-        const scalar t, const scalar parameter, const scalar* y, scalar* dfdy
+        const scalar t,
+        const scalar parameter,
+        const ThreadVector<const scalar> y,
+        const ThreadMatrix<scalar> dfdy
     ) const = 0;
 
     __device__ __host__ label batchSize() const { return batchSize_; }

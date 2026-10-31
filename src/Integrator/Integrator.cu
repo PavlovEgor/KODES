@@ -16,10 +16,9 @@ void kodes::solveKernel
 {
     kodes::IntegratorControls ctrl = controls;
 
-    const label systemSize = resources->systemSize();
     const label maxSteps = ctrl.maxSteps;
 
-    scalar* __restrict__ y = resources->currentVector();
+    const ThreadVector<scalar> y = resources->currentVector();
 
     for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
     {
@@ -35,39 +34,39 @@ void kodes::solveKernel
 
         const scalar tStart = 0;
         const scalar tEnd = ctrl.deltaT;
-        resources->currentT[INDEXVEC(0)] = tStart;
-        scalar& t = resources->currentT[INDEXVEC(0)];
+        resources->currentT = tStart;
+        scalar& t = resources->currentT;
 
         bool reachedEnd = false;
 
         for (label nStep = 0; nStep < maxSteps; ++nStep)
         {
-            const scalar dtTry0 = resources->deltaTTry[INDEXVEC(0)];
-            resources->reject[INDEXVEC(0)] = false;
+            const scalar dtTry0 = resources->deltaTTry;
+            resources->reject = false;
 
-            if ((t + resources->deltaTTry[INDEXVEC(0)] - tEnd)*(t + resources->deltaTTry[INDEXVEC(0)] - tStart) > 0)
+            if ((t + resources->deltaTTry - tEnd)*(t + resources->deltaTTry - tStart) > 0)
             {
-                resources->last[INDEXVEC(0)] = true;
-                resources->deltaTTry[INDEXVEC(0)] = tEnd - t;
+                resources->last = true;
+                resources->deltaTTry = tEnd - t;
             }
 
             method->advance(ode, resources, ctrl);
 
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
-                if (nStep > 0 && resources->last[INDEXVEC(0)])
+                if (nStep > 0 && resources->last)
                 {
-                    resources->deltaTTry[INDEXVEC(0)] = dtTry0;
+                    resources->deltaTTry = dtTry0;
                 }
                 reachedEnd = true;
                 break;
             }
 
-            resources->first[INDEXVEC(0)] = false;
+            resources->first = false;
 
-            if (resources->reject[INDEXVEC(0)])
+            if (resources->reject)
             {
-                resources->prevReject[INDEXVEC(0)] = true;
+                resources->prevReject = true;
             }
         }
 
@@ -77,13 +76,13 @@ void kodes::solveKernel
             (
                 "Integration steps greater than maximum %d : system %d, "
                 "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps, system, t, tEnd, resources->deltaTDid[INDEXVEC(0)]
+                maxSteps, system, t, tEnd, resources->deltaTDid.get()
             );
         }
 
-        for (label i = 0; i < systemSize; ++i)
+        for (label i = 0; i < y.size; ++i)
         {
-            y[INDEXVEC(i)] = max(0.0, y[INDEXVEC(i)]);
+            y[i] = max(0.0, y[i]);
         }
 
         resources->storeSystem(system);

@@ -7,27 +7,27 @@
 namespace kodes
 {
     // Step bookkeeping of the system a thread is integrating right now. Scratch
-    // space: one entry per resident thread, addressed with INDEXVEC(0). Nothing
+    // space: one value per resident thread, each a ThreadValue. Nothing
     // here outlives a system - resetStep() reseeds it from the trial step the
     // slot ended the previous system with.
     class StepState
     {
     public:
 
-        bool* forward;
-        scalar* deltaTTry;
-        scalar* deltaTDid;
-        scalar* currentT;
-        bool* first;
-        bool* last;
-        bool* reject;
-        bool* prevReject;
+        ThreadValue<bool> forward;
+        ThreadValue<scalar> deltaTTry;
+        ThreadValue<scalar> deltaTDid;
+        ThreadValue<scalar> currentT;
+        ThreadValue<bool> first;
+        ThreadValue<bool> last;
+        ThreadValue<bool> reject;
+        ThreadValue<bool> prevReject;
 
         // Empty, and written out rather than `= default`, which is not the
         // same thing here.
         //
         // This constructor runs *after* the stub has been byte-copied to the
-        // device, so anything it wrote to the pointers above - a null
+        // device, so anything it wrote to the views above - a null
         // included - would overwrite the addresses the copy just brought (see
         // Factory/device_object.cuh). A `= default` constructor is not
         // user-provided, and DeviceResources names this base in its

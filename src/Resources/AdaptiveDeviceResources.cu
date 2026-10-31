@@ -8,15 +8,15 @@ kodes::AdaptiveDeviceResources::allocate()
 {
     DeviceResources::allocate();
 
-    CUDA_CHECK(cudaMalloc(&yTemp_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&dydt0_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    yTemp_.allocate(systemSize_, scratchSize_);
+    dydt0_.allocate(systemSize_, scratchSize_);
 }
 
 __host__ void
 kodes::AdaptiveDeviceResources::deallocate()
 {
-    CUDA_CHECK(cudaFree(yTemp_));
-    CUDA_CHECK(cudaFree(dydt0_));
+    yTemp_.deallocate();
+    dydt0_.deallocate();
 
     DeviceResources::deallocate();
 }

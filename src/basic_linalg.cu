@@ -4,12 +4,13 @@
 __device__
 void kodes::LUDecompose
 (
-    scalar* __restrict__ matrix,
-    label* __restrict__ pivotIndices,
-    scalar* __restrict__ vv,
-    const label size
+    const ThreadMatrix<scalar> matrix,
+    const ThreadVector<label> pivotIndices,
+    const ThreadVector<scalar> vv
 )
 {
+    const label size = matrix.size;
+
     for (label i = 0; i < size; ++i)
     {
         scalar largestCoeff = 0.0;
@@ -17,7 +18,7 @@ void kodes::LUDecompose
 
         for (label j = 0; j < size; ++j)
         {
-            if ((temp = fabs(matrix[INDEXMAT(i, j, size)])) > largestCoeff)
+            if ((temp = fabs(matrix(i, j))) > largestCoeff)
             {
                 largestCoeff = temp;
             }
@@ -26,19 +27,19 @@ void kodes::LUDecompose
         {
             printf("Singular matrix");
         }
-        vv[INDEXVEC(i)] = 1.0/largestCoeff;
+        vv[i] = 1.0/largestCoeff;
     }
 
     for (label j = 0; j < size; ++j)
     {
         for (label i = 0; i < j; ++i)
         {
-            scalar sum = matrix[INDEXMAT(i, j, size)];
+            scalar sum = matrix(i, j);
             for (label k = 0; k < i; ++k)
             {
-                sum -= matrix[INDEXMAT(i, k, size)]*matrix[INDEXMAT(k, j, size)];
+                sum -= matrix(i, k)*matrix(k, j);
             }
-            matrix[INDEXMAT(i, j, size)] = sum;
+            matrix(i, j) = sum;
         }
 
         label iMax = j;
@@ -46,47 +47,47 @@ void kodes::LUDecompose
         scalar largestCoeff = 0.0;
         for (label i = j; i < size; ++i)
         {
-            scalar sum = matrix[INDEXMAT(i, j, size)];
+            scalar sum = matrix(i, j);
 
             for (label k = 0; k < j; ++k)
             {
-                sum -= matrix[INDEXMAT(i, k, size)]*matrix[INDEXMAT(k, j, size)];
+                sum -= matrix(i, k)*matrix(k, j);
             }
 
-            matrix[INDEXMAT(i, j, size)] = sum;
+            matrix(i, j) = sum;
 
             scalar temp;
-            if ((temp = vv[INDEXVEC(i)]*fabs(sum)) >= largestCoeff)
+            if ((temp = vv[i]*fabs(sum)) >= largestCoeff)
             {
                 largestCoeff = temp;
                 iMax = i;
             }
         }
 
-        pivotIndices[INDEXVEC(j)] = iMax;
+        pivotIndices[j] = iMax;
 
         if (j != iMax)
         {
             for (label k = 0; k < size; ++k)
             {
-                cuda::std::swap(matrix[INDEXMAT(j, k, size)], matrix[INDEXMAT(iMax, k, size)]);
+                cuda::std::swap(matrix(j, k), matrix(iMax, k));
             }
 
-            vv[INDEXVEC(iMax)] = vv[INDEXVEC(j)];
+            vv[iMax] = vv[j];
         }
 
-        if (matrix[INDEXMAT(j, j, size)] == 0.0)
+        if (matrix(j, j) == 0.0)
         {
-            matrix[INDEXMAT(j, j, size)] = SMALL;
+            matrix(j, j) = SMALL;
         }
 
         if (j != size-1)
         {
-            scalar rDiag = 1.0/matrix[INDEXMAT(j, j, size)];
+            scalar rDiag = 1.0/matrix(j, j);
 
             for (label i = j + 1; i < size; ++i)
             {
-                matrix[INDEXMAT(i, j, size)] *= rDiag;
+                matrix(i, j) *= rDiag;
             }
         }
     }
@@ -95,25 +96,26 @@ void kodes::LUDecompose
 __device__
 void kodes::LUBacksubstitute
 (
-    const scalar* __restrict__ luMatrix,
-    const label* __restrict__ pivotIndices,
-    scalar* __restrict__ source,
-    const label size
+    const ThreadMatrix<const scalar> luMatrix,
+    const ThreadVector<const label> pivotIndices,
+    const ThreadVector<scalar> source
 )
 {
+    const label size = luMatrix.size;
+
     label ii = 0;
 
     for (label i = 0; i < size; ++i)
     {
-        label ip = pivotIndices[INDEXVEC(i)];
-        scalar sum = source[INDEXVEC(ip)];
-        source[INDEXVEC(ip)] = source[INDEXVEC(i)];
+        label ip = pivotIndices[i];
+        scalar sum = source[ip];
+        source[ip] = source[i];
 
         if (ii != 0)
         {
             for (label j = ii - 1; j < i; ++j)
             {
-                sum -= luMatrix[INDEXMAT(i, j, size)]*source[INDEXVEC(j)];
+                sum -= luMatrix(i, j)*source[j];
             }
         }
         else if (sum != 0.0)
@@ -121,18 +123,18 @@ void kodes::LUBacksubstitute
             ii = i + 1;
         }
 
-        source[INDEXVEC(i)] = sum;
+        source[i] = sum;
     }
 
     for (label i = size - 1; i >= 0; --i)
     {
-        scalar sum = source[INDEXVEC(i)];
+        scalar sum = source[i];
 
         for (label j = i + 1; j < size; ++j)
         {
-            sum -= luMatrix[INDEXMAT(i, j, size)]*source[INDEXVEC(j)];
+            sum -= luMatrix(i, j)*source[j];
         }
 
-        source[INDEXVEC(i)] = sum/luMatrix[INDEXMAT(i, i, size)];
+        source[i] = sum/luMatrix(i, i);
     }
 }

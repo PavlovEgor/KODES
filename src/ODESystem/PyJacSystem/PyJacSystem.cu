@@ -48,13 +48,25 @@ kodes::PyJacSystem::deallocate()
 }
 
 __device__
-void kodes::PyJacSystem::derivatives(const scalar t, const scalar pressure, const scalar* y, scalar* dy) const
+void kodes::PyJacSystem::derivatives
+(
+    const scalar t,
+    const scalar pressure,
+    const ThreadVector<const scalar> y,
+    const ThreadVector<scalar> dy
+) const
 {
-    dydt(t, pressure, y, dy, deviceMemory_);
+    dydt(t, pressure, y.data, dy.data, deviceMemory_);
 }
 
 __device__
-void kodes::PyJacSystem::jacobian(const scalar t, const scalar pressure, const scalar* y, scalar* dfdy) const
+void kodes::PyJacSystem::jacobian
+(
+    const scalar t,
+    const scalar pressure,
+    const ThreadVector<const scalar> y,
+    const ThreadMatrix<scalar> dfdy
+) const
 {
-    eval_jacob(t, pressure, y, dfdy, deviceMemory_);
+    eval_jacob(t, pressure, y.data, dfdy.data, deviceMemory_);
 }

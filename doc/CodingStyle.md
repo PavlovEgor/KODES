@@ -212,9 +212,14 @@ copy-then-construct в фабрике, запрет трогать указат�
   где они возникают (rapidjson в `Config`), ловит их и переходит на тот же
   способ. Проверять `cudaError_t` руками не нужно — есть `CUDA_CHECK` и
   `CUDA_CHECK_LAST`.
-* **Индексация** делается только макросами `INDEXVEC`/`INDEXMAT` (scratch) и
-  `INDEXSTATE` (state), не арифметикой на месте: перепутать шаг `GRID_DIM` и
-  `batchSize` слишком легко, и ошибка проявится не там, где сделана.
+* **Индексация** живёт только в представлениях — `ThreadVector`, `ThreadMatrix`,
+  `ThreadValue`, `BatchArray` в `basic_types.cuh` и `ExtrapolationTable` у
+  Seulex. Они применяют макросы `INDEXVEC`/`INDEXMAT` (scratch) и `INDEXSTATE`
+  (state), а весь остальной код пишет `y[i]`, `a(i, j)`, `vectors(system, i)`
+  и не считает адрес на месте: перепутать шаг `GRID_DIM` и
+  `batchSize` слишком легко, и ошибка проявится не там, где сделана. Голый
+  указатель на буфер появляется только на границе с чужим кодом: `.data` для
+  pyJac в `PyJacSystem` и `BatchArray::component()` для `cudaMemcpy`.
 
 ## 7. Именованные исключения
 

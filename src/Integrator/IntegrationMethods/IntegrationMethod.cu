@@ -19,21 +19,19 @@ kodes::IntegrationMethod::adaptiveStep
     AdaptiveDeviceResources* res =
         static_cast<AdaptiveDeviceResources*>(resources);
 
-    const label systemSize = res->systemSize();
-
     const scalar safeScale = controls.safeScale;
     const scalar alphaInc = controls.alphaIncrease;
     const scalar alphaDec = controls.alphaDecrease;
     const scalar minScale = controls.minScale;
     const scalar maxScale = controls.maxScale;
 
-    scalar* __restrict__ yTemp = res->yTemp();
-    scalar* __restrict__ dydt0 = res->dydt0();
+    const ThreadVector<scalar> yTemp = res->yTemp();
+    const ThreadVector<scalar> dydt0 = res->dydt0();
 
-    scalar* __restrict__ y = res->currentVector();
-    scalar& t = res->currentT[INDEXVEC(0)];
+    const ThreadVector<scalar> y = res->currentVector();
+    scalar& t = res->currentT;
 
-    scalar dt = res->deltaTTry[INDEXVEC(0)];
+    scalar dt = res->deltaTTry;
     scalar err = 0.0;
 
     ode->derivatives(t, res->currentParameter(0), y, dydt0);
@@ -50,7 +48,7 @@ kodes::IntegrationMethod::adaptiveStep
         {
             scalar scale = max(safeScale*pow(err, -alphaDec), minScale);
             dt *= scale;
-            res->deltaTTry[INDEXVEC(0)] = dt;
+            res->deltaTTry = dt;
 
             if (dt < SMALL)
             {
@@ -61,18 +59,18 @@ kodes::IntegrationMethod::adaptiveStep
 
     // Update the state
     t += dt;
-    res->deltaTDid[INDEXVEC(0)] = dt;
+    res->deltaTDid = dt;
 
-    copyVec(y, yTemp, systemSize);
+    y = yTemp;
 
     // If the error is small increase the step-size
     if (err > pow(maxScale/safeScale, -1.0/alphaInc))
     {
         scalar scale = safeScale*pow(err, -alphaInc);
-        res->deltaTTry[INDEXVEC(0)] = cuda::std::clamp(scale, minScale, maxScale)*dt;
+        res->deltaTTry = cuda::std::clamp(scale, minScale, maxScale)*dt;
     }
     else
     {
-        res->deltaTTry[INDEXVEC(0)] = safeScale*maxScale*dt;
+        res->deltaTTry = safeScale*maxScale*dt;
     }
 }

@@ -12,45 +12,26 @@ namespace kodes
 
 template <typename T>
 __device__ inline
-void copyVec(T* result, const T* source, const label size)
-{
-    for(label i=0; i<size; ++i)
-    {
-        result[INDEXVEC(i)] = source[INDEXVEC(i)];
-    }
-}
-
-template <typename T>
-__device__ inline
-void sumVec(T* result, const T* source1, const T* source2, const label size)
-{
-    for(label i=0; i<size; ++i)
-    {
-        result[INDEXVEC(i)] = source1[INDEXVEC(i)] + source2[INDEXVEC(i)];
-    }
-}
-
-template <typename T>
-__device__ inline
 T sqr(const T& x)
 {
     return x * x;
 }
 
 __device__ inline
-scalar normalizeError (
-    const scalar* __restrict__ y0, 
-    const scalar* __restrict__ y, 
-    const scalar* __restrict__ err, 
-    const label sizeOfSystem, 
-    const scalar absTol, 
-    const scalar relTol)
+scalar normalizeError
+(
+    const ThreadVector<const scalar> y0,
+    const ThreadVector<const scalar> y,
+    const ThreadVector<const scalar> err,
+    const scalar absTol,
+    const scalar relTol
+)
 {
     scalar maxErr = 0.0;
-    for (label i=0; i < sizeOfSystem; ++i)
+    for (label i=0; i < y.size; ++i)
     {
-        scalar tol = absTol + (relTol)*max(fabs(y0[INDEXVEC(i)]), fabs(y[INDEXVEC(i)]));
-        maxErr = max(maxErr, fabs(err[INDEXVEC(i)])/tol);
+        scalar tol = absTol + (relTol)*max(fabs(y0[i]), fabs(y[i]));
+        maxErr = max(maxErr, fabs(err[i])/tol);
     }
 
     return maxErr;
@@ -58,27 +39,25 @@ scalar normalizeError (
 
 // In place LU factorization of the calling thread's own matrix, with scaled
 // partial pivoting - Crout's form, as OpenFOAM's LUDecompose. matrix and
-// pivotIndices are the thread's scratch slot, indexed with INDEXMAT/INDEXVEC;
-// so is vv, `size` scalars for the row scales of the implicit pivoting. It
+// pivotIndices are the thread's scratch slot; so is vv, `matrix.size` scalars
+// for the row scales of the implicit pivoting. It
 // used to be a local array with a hard 128 entry bound, which a mechanism of
 // more than 128 species ran past in silence.
 __device__
 void LUDecompose
 (
-    scalar* matrix,
-    label* pivotIndices,
-    scalar* vv,
-    const label size
+    const ThreadMatrix<scalar> matrix,
+    const ThreadVector<label> pivotIndices,
+    const ThreadVector<scalar> vv
 );
 
 // Solve for one right hand side against the factors above, in place
 __device__
 void LUBacksubstitute
 (
-    const scalar* luMatrix,
-    const label* pivotIndices,
-    scalar* source,
-    const label size
+    const ThreadMatrix<const scalar> luMatrix,
+    const ThreadVector<const label> pivotIndices,
+    const ThreadVector<scalar> source
 );
 
 }

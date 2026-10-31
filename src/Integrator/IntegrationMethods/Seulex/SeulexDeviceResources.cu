@@ -11,26 +11,26 @@ kodes::SeulexDeviceResources::allocate()
     const label orderSize = orderStorage(systemSize_);
 
     table_.allocate(systemSize_, scratchSize_);
-    CUDA_CHECK(cudaMalloc(&dfdy_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&a_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
+    dfdy_.allocate(systemSize_, scratchSize_);
+    a_.allocate(systemSize_, scratchSize_);
 
-    CUDA_CHECK(cudaMalloc(&pivotIndices_, size_t(systemSize_) * scratchSize_ * sizeof(label)));
-    CUDA_CHECK(cudaMalloc(&vv_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    pivotIndices_.allocate(systemSize_, scratchSize_);
+    vv_.allocate(systemSize_, scratchSize_);
 
     // indexed by the extrapolation order, not by the component
-    CUDA_CHECK(cudaMalloc(&dtOpt_, size_t(orderSize) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&temp_, size_t(orderSize) * scratchSize_ * sizeof(scalar)));
+    dtOpt_.allocate(orderSize, scratchSize_);
+    temp_.allocate(orderSize, scratchSize_);
 
-    CUDA_CHECK(cudaMalloc(&y0_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&ySequence_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&scale_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&dy_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&yTemp_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
-    CUDA_CHECK(cudaMalloc(&dydt_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    y0_.allocate(systemSize_, scratchSize_);
+    ySequence_.allocate(systemSize_, scratchSize_);
+    scale_.allocate(systemSize_, scratchSize_);
+    dy_.allocate(systemSize_, scratchSize_);
+    yTemp_.allocate(systemSize_, scratchSize_);
+    dydt_.allocate(systemSize_, scratchSize_);
 
     // one entry per thread: step control that survives a step, not a system
-    CUDA_CHECK(cudaMalloc(&kTarg_, size_t(scratchSize_) * sizeof(label)));
-    CUDA_CHECK(cudaMalloc(&theta_, size_t(scratchSize_) * sizeof(scalar)));
+    kTarg_.allocate(scratchSize_);
+    theta_.allocate(scratchSize_);
 
     uploadSeulexConstants();
 }
@@ -39,24 +39,24 @@ __host__ void
 kodes::SeulexDeviceResources::deallocate()
 {
     table_.deallocate();
-    CUDA_CHECK(cudaFree(dfdy_));
-    CUDA_CHECK(cudaFree(a_));
+    dfdy_.deallocate();
+    a_.deallocate();
 
-    CUDA_CHECK(cudaFree(pivotIndices_));
-    CUDA_CHECK(cudaFree(vv_));
+    pivotIndices_.deallocate();
+    vv_.deallocate();
 
-    CUDA_CHECK(cudaFree(dtOpt_));
-    CUDA_CHECK(cudaFree(temp_));
+    dtOpt_.deallocate();
+    temp_.deallocate();
 
-    CUDA_CHECK(cudaFree(y0_));
-    CUDA_CHECK(cudaFree(ySequence_));
-    CUDA_CHECK(cudaFree(scale_));
-    CUDA_CHECK(cudaFree(dy_));
-    CUDA_CHECK(cudaFree(yTemp_));
-    CUDA_CHECK(cudaFree(dydt_));
+    y0_.deallocate();
+    ySequence_.deallocate();
+    scale_.deallocate();
+    dy_.deallocate();
+    yTemp_.deallocate();
+    dydt_.deallocate();
 
-    CUDA_CHECK(cudaFree(kTarg_));
-    CUDA_CHECK(cudaFree(theta_));
+    kTarg_.deallocate();
+    theta_.deallocate();
 
     DeviceResources::deallocate();
 }

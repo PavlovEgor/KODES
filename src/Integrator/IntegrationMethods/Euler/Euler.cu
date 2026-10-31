@@ -15,25 +15,23 @@ kodes::scalar kodes::Euler::step
     EulerDeviceResources* resources =
         static_cast<EulerDeviceResources*>(deviceResources);
 
-    const label systemSize = resources->systemSize();
-
     const scalar absTol = controls.absTol;
     const scalar relTol = controls.relTol;
 
-    scalar* __restrict__ yTemp = resources->yTemp();
-    scalar* __restrict__ dydt0 = resources->dydt0();
-    scalar* __restrict__ err  = resources->err();
+    const ThreadVector<scalar> yTemp = resources->yTemp();
+    const ThreadVector<scalar> dydt0 = resources->dydt0();
+    const ThreadVector<scalar> err = resources->err();
 
-    scalar* __restrict__ y = resources->currentVector();
-    const scalar dt = resources->deltaTTry[INDEXVEC(0)];
+    const ThreadVector<scalar> y = resources->currentVector();
+    const scalar dt = resources->deltaTTry;
 
     // the trial state goes to yTemp, adaptiveStep copies the accepted one back
     // into y, so a rejected step is retried from an untouched y
-    for(label i=0; i<systemSize; ++i)
+    for(label i=0; i<y.size; ++i)
     {
-        err[INDEXVEC(i)] = dt*dydt0[INDEXVEC(i)];
-        yTemp[INDEXVEC(i)] = y[INDEXVEC(i)] + err[INDEXVEC(i)];
+        err[i] = dt*dydt0[i];
+        yTemp[i] = y[i] + err[i];
     }
 
-    return normalizeError(y, yTemp, err, systemSize, absTol, relTol);
+    return normalizeError(y, yTemp, err, absTol, relTol);
 }

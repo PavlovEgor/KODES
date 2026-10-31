@@ -16,32 +16,32 @@ class SeulexDeviceResources
 {
 protected:
     ExtrapolationTable table_;
-    scalar* dfdy_;
-    scalar* a_;
+    ThreadMatrix<scalar> dfdy_;
+    ThreadMatrix<scalar> a_;
 
-    label* pivotIndices_;
+    ThreadVector<label> pivotIndices_;
 
     // Row scales of the implicit pivoting in LUDecompose. They used to be a
     // local scalar[128] there, which a mechanism of more than 128 species ran
     // past in silence - into the thread's stack.
-    scalar* vv_;
+    ThreadVector<scalar> vv_;
 
-    scalar* dtOpt_;
-    scalar* temp_;
-    scalar* y0_;
-    scalar* ySequence_ ;
-    scalar* scale_;
-    scalar* dy_;
-    scalar* yTemp_;
-    scalar* dydt_;
+    ThreadVector<scalar> dtOpt_;
+    ThreadVector<scalar> temp_;
+    ThreadVector<scalar> y0_;
+    ThreadVector<scalar> ySequence_;
+    ThreadVector<scalar> scale_;
+    ThreadVector<scalar> dy_;
+    ThreadVector<scalar> yTemp_;
+    ThreadVector<scalar> dydt_;
 
     // Order and Jacobian control carried from one step of a system to the next:
     // the target extrapolation order the previous step settled on, and the
     // contraction rate that decides whether the Jacobian may be reused. They
     // outlive a step but not a system, so they are scratch like everything
     // else here - a step re-reads what the previous one left in its slot.
-    label*  kTarg_;
-    scalar* theta_;
+    ThreadValue<label>  kTarg_;
+    ThreadValue<scalar> theta_;
 
 public:
 
@@ -88,49 +88,49 @@ public:
     }
 
     __device__ ExtrapolationTable
-    table() { return table_; }
+    table() const { return table_; }
 
-    __device__ scalar*
-    dfdy() { return dfdy_; }
+    __device__ ThreadMatrix<scalar>
+    dfdy() const { return dfdy_; }
 
-    __device__ scalar*
-    a() { return a_; }
+    __device__ ThreadMatrix<scalar>
+    a() const { return a_; }
 
-    __device__ label*
-    pivotIndices() { return pivotIndices_; }
+    __device__ ThreadVector<label>
+    pivotIndices() const { return pivotIndices_; }
 
-    __device__ scalar*
-    vv() { return vv_; }
+    __device__ ThreadVector<scalar>
+    vv() const { return vv_; }
 
-    __device__ scalar*
-    dtOpt() { return dtOpt_; }
+    __device__ ThreadVector<scalar>
+    dtOpt() const { return dtOpt_; }
 
-    __device__ scalar*
-    temp() { return temp_; }
+    __device__ ThreadVector<scalar>
+    temp() const { return temp_; }
 
-    __device__ scalar*
-    y0() { return y0_; }
+    __device__ ThreadVector<scalar>
+    y0() const { return y0_; }
 
-    __device__ scalar*
-    ySequence() { return ySequence_; }
+    __device__ ThreadVector<scalar>
+    ySequence() const { return ySequence_; }
 
-    __device__ scalar*
-    scale() { return scale_; }
+    __device__ ThreadVector<scalar>
+    scale() const { return scale_; }
 
-    __device__ scalar*
-    dy() { return dy_; }
+    __device__ ThreadVector<scalar>
+    dy() const { return dy_; }
 
-    __device__ scalar*
-    yTemp() { return yTemp_; }
+    __device__ ThreadVector<scalar>
+    yTemp() const { return yTemp_; }
 
-    __device__ scalar*
-    dydt() { return dydt_; }
+    __device__ ThreadVector<scalar>
+    dydt() const { return dydt_; }
 
-    __device__ label*
-    kTarg() { return kTarg_; }
+    __device__ ThreadValue<label>
+    kTarg() const { return kTarg_; }
 
-    __device__ scalar*
-    theta() { return theta_; }
+    __device__ ThreadValue<scalar>
+    theta() const { return theta_; }
 };
 
 }

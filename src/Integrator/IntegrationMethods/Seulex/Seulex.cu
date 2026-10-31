@@ -13,18 +13,18 @@ bool kodes::Seulex::seul (
     scalar& theta
 )
 {
-    scalar* __restrict__ dfdy  = resources->dfdy();
-    scalar* __restrict__ a     = resources->a();
-    label* __restrict__ pivotIndices = resources->pivotIndices();
-    scalar* __restrict__ vv    = resources->vv();
+    const ThreadMatrix<scalar> dfdy = resources->dfdy();
+    const ThreadMatrix<scalar> a = resources->a();
+    const ThreadVector<label> pivotIndices = resources->pivotIndices();
+    const ThreadVector<scalar> vv = resources->vv();
 
-    scalar* __restrict__ y0    = resources->y0();
-    scalar* __restrict__ scale = resources->scale();
+    const ThreadVector<scalar> y0 = resources->y0();
+    const ThreadVector<scalar> scale = resources->scale();
 
-    scalar* __restrict__ dy    = resources->dy();
-    scalar* __restrict__ yTemp = resources->yTemp();
-    scalar* __restrict__ dydt  = resources->dydt();
-    scalar* __restrict__ y      = resources->ySequence();
+    const ThreadVector<scalar> dy = resources->dy();
+    const ThreadVector<scalar> yTemp = resources->yTemp();
+    const ThreadVector<scalar> dydt = resources->dydt();
+    const ThreadVector<scalar> y = resources->ySequence();
 
     const label systemSize = resources->systemSize();
 
@@ -35,23 +35,23 @@ bool kodes::Seulex::seul (
     {
         for (label j=0; j<systemSize; j++)
         {
-            a[INDEXMAT(i, j, systemSize)] = -dfdy[INDEXMAT(i, j, systemSize)];
+            a(i, j) = -dfdy(i, j);
         }
-        a[INDEXMAT(i, i, systemSize)] += 1/dt;
+        a(i, i) += 1/dt;
     }
 
-    LUDecompose(a, pivotIndices, vv, systemSize);
+    LUDecompose(a, pivotIndices, vv);
 
     scalar tNew = t0 + dt;
     ode->derivatives(tNew, resources->currentParameter(0), y0, dy);
 
-    LUBacksubstitute(a, pivotIndices, dy, systemSize);
+    LUBacksubstitute(a, pivotIndices, dy);
 
-    copyVec(yTemp, y0, systemSize);
+    yTemp = y0;
 
     for (label nn=1; nn<nSteps; nn++)
     {
-        sumVec(yTemp, yTemp, dy, systemSize);
+        yTemp += dy;
 
         tNew += dt;
 
@@ -60,30 +60,30 @@ bool kodes::Seulex::seul (
             scalar dy1 = 0;
             for (label i=0; i<systemSize; i++)
             {
-                dy1 += sqr(dy[INDEXVEC(i)]/scale[INDEXVEC(i)]);
+                dy1 += sqr(dy[i]/scale[i]);
             }
             dy1 = sqrt(dy1);
 
             ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp, dydt);
             for (label i=0; i<systemSize; i++)
             {
-                dy[INDEXVEC(i)] = dydt[INDEXVEC(i)] - dy[INDEXVEC(i)]/dt;
+                dy[i] = dydt[i] - dy[i]/dt;
             }
 
-            LUBacksubstitute(a, pivotIndices, dy, systemSize);
+            LUBacksubstitute(a, pivotIndices, dy);
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
             for (label i=0; i<systemSize; i++)
             {
                 // Test of dy[i] to avoid overflow
-                if (fabs(dy[INDEXVEC(i)]) > scale[INDEXVEC(i)]*denom)
+                if (fabs(dy[i]) > scale[i]*denom)
                 {
                     theta = 1;
                     return false;
                 }
 
-                dy2 += sqr(dy[INDEXVEC(i)]/scale[INDEXVEC(i)]);
+                dy2 += sqr(dy[i]/scale[i]);
             }
             dy2 = sqrt(dy2);
             theta = dy2/denom;
@@ -95,10 +95,10 @@ bool kodes::Seulex::seul (
         }
 
         ode->derivatives(tNew, resources->currentParameter(0), yTemp, dy);
-        LUBacksubstitute(a, pivotIndices, dy, systemSize);
+        LUBacksubstitute(a, pivotIndices, dy);
     }
 
-    sumVec(y, yTemp, dy, systemSize);
+    y = yTemp + dy;
 
     return true;
 }
@@ -126,32 +126,32 @@ kodes::scalar kodes::Seulex::step
     // system settled on, theta the contraction rate it measured. They live in
     // the thread's scratch slot, since a local would be indeterminate on every
     // step after the first - which is the one the first_ branch below writes.
-    label&  kTarg = resources->kTarg()[INDEXVEC(0)];
-    scalar& theta = resources->theta()[INDEXVEC(0)];
+    label&  kTarg = resources->kTarg();
+    scalar& theta = resources->theta();
 
     const ExtrapolationTable table = resources->table();
-    scalar* __restrict__ dfdy  = resources->dfdy();
+    const ThreadMatrix<scalar> dfdy = resources->dfdy();
 
-    scalar* __restrict__ dtOpt = resources->dtOpt();
-    scalar* __restrict__ temp  = resources->temp();
-    scalar* __restrict__ y0    = resources->y0();
-    scalar* __restrict__ ySequence = resources->ySequence();
-    scalar* __restrict__ scale = resources->scale();
+    const ThreadVector<scalar> dtOpt = resources->dtOpt();
+    const ThreadVector<scalar> temp = resources->temp();
+    const ThreadVector<scalar> y0 = resources->y0();
+    const ThreadVector<scalar> ySequence = resources->ySequence();
+    const ThreadVector<scalar> scale = resources->scale();
 
-    scalar* __restrict__ y      = resources->currentVector();
-    scalar& t      = resources->currentT[INDEXVEC(0)];
+    const ThreadVector<scalar> y = resources->currentVector();
+    scalar& t = resources->currentT;
 
-    temp[INDEXVEC(0)] = GREAT;
-    scalar dt = resources->deltaTTry[INDEXVEC(0)];
-    copyVec(y0, y, systemSize);
-    dtOpt[INDEXVEC(0)] = fabs(0.1*dt);
+    temp[0] = GREAT;
+    scalar dt = resources->deltaTTry;
+    y0 = y;
+    dtOpt[0] = fabs(0.1*dt);
 
-    if (resources->first[INDEXVEC(0)] || resources->prevReject[INDEXVEC(0)])
+    if (resources->first || resources->prevReject)
     {
         theta = 2*jacRedo;
     }
 
-    if (resources->first[INDEXVEC(0)] )
+    if (resources->first)
     {
         const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
         kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
@@ -159,7 +159,7 @@ kodes::scalar kodes::Seulex::step
 
     for (label i=0; i < systemSize; ++i)
     {
-        scale[INDEXVEC(i)] = absTol + relTol*fabs(y[INDEXVEC(i)]);
+        scale[i] = absTol + relTol*fabs(y[i]);
     }
 
     bool jacUpdated = false;
@@ -174,11 +174,11 @@ kodes::scalar kodes::Seulex::step
     scalar dtNew = fabs(dt);
     bool firstk = true;
 
-    while (firstk || resources->reject[INDEXVEC(0)])
+    while (firstk || resources->reject)
     {
-        dt = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+        dt = resources->forward ? dtNew : -dtNew;
         firstk = false;
-        resources->reject[INDEXVEC(0)] = false;
+        resources->reject = false;
 
         if (fabs(dt) <= fabs(t) * sqr(SMALL))
         {
@@ -193,36 +193,33 @@ kodes::scalar kodes::Seulex::step
 
             if (!success)
             {
-                resources->reject[INDEXVEC(0)] = true;
+                resources->reject = true;
                 dtNew = fabs(dt)*kSeulexStepFactor5;
                 break;
             }
 
             if (k == 0)
             {
-                copyVec(y, ySequence, systemSize);
+                y = ySequence;
             }
             else
             {
-                for (label i=0; i<systemSize; ++i)
-                {
-                    table(i, k-1) = ySequence[INDEXVEC(i)];
-                }
+                table.column(k-1) = ySequence;
             }
 
             if (k != 0)
             {
-                table.extrapolate(k, ThreadVector<scalar>(y, systemSize));
+                table.extrapolate(k, y);
                 scalar err = 0;
                 for (label i=0; i<systemSize; ++i)
                 {
-                    scale[INDEXVEC(i)] = absTol + relTol*fabs(y0[INDEXVEC(i)]);
-                    err += sqr((y[INDEXVEC(i)] - table(i, 0))/scale[INDEXVEC(i)]);
+                    scale[i] = absTol + relTol*fabs(y0[i]);
+                    err += sqr((y[i] - table(i, 0))/scale[i]);
                 }
                 err = sqrt(err/systemSize);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
-                    resources->reject[INDEXVEC(0)] = true;
+                    resources->reject = true;
                     dtNew = fabs(dt)*kSeulexStepFactor5;
                     break;
                 }
@@ -239,10 +236,10 @@ kodes::scalar kodes::Seulex::step
                     fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
                     fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
                 }
-                dtOpt[INDEXVEC(k)] = fabs(dt*fac);
-                temp[INDEXVEC(k)] = kSeulexWorkEstimate[k]/dtOpt[INDEXVEC(k)];
+                dtOpt[k] = fabs(dt*fac);
+                temp[k] = kSeulexWorkEstimate[k]/dtOpt[k];
 
-                if ((resources->first[INDEXVEC(0)] || resources->last[INDEXVEC(0)]) && err <= 1)
+                if ((resources->first || resources->last) && err <= 1)
                 {
                     break;
                 }
@@ -250,8 +247,8 @@ kodes::scalar kodes::Seulex::step
                 if
                 (
                     k == kTarg - 1
-                && !resources->prevReject[INDEXVEC(0)]
-                && !resources->first[INDEXVEC(0)] && !resources->last[INDEXVEC(0)]
+                && !resources->prevReject
+                && !resources->first && !resources->last
                 )
                 {
                     if (err <= 1)
@@ -260,13 +257,13 @@ kodes::scalar kodes::Seulex::step
                     }
                     else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
+                        resources->reject = true;
                         kTarg = k;
-                        if (kTarg>1 && temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
+                        if (kTarg>1 && temp[k-1] < kSeulexKFactor1*temp[k])
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[INDEXVEC(kTarg)];
+                        dtNew = dtOpt[kTarg];
                         break;
                     }
                 }
@@ -279,12 +276,12 @@ kodes::scalar kodes::Seulex::step
                     }
                     else if (err > kSeulexStepSequence[k + 1]*2)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
-                        if (kTarg>1 && temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
+                        resources->reject = true;
+                        if (kTarg>1 && temp[k-1] < kSeulexKFactor1*temp[k])
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[INDEXVEC(kTarg)];
+                        dtNew = dtOpt[kTarg];
                         break;
                     }
                 }
@@ -293,24 +290,24 @@ kodes::scalar kodes::Seulex::step
                 {
                     if (err > 1)
                     {
-                        resources->reject[INDEXVEC(0)] = true;
+                        resources->reject = true;
                         if
                         (
                             kTarg > 1
-                        && temp[INDEXVEC(kTarg-1)] < kSeulexKFactor1*temp[INDEXVEC(kTarg)]
+                        && temp[kTarg-1] < kSeulexKFactor1*temp[kTarg]
                         )
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[INDEXVEC(kTarg)];
+                        dtNew = dtOpt[kTarg];
                     }
                     break;
                 }
             }
         }
-        if (resources->reject[INDEXVEC(0)])
+        if (resources->reject)
         {
-            resources->prevReject[INDEXVEC(0)] = true;
+            resources->prevReject = true;
             if (!jacUpdated)
             {
                 theta = 2*jacRedo;
@@ -326,7 +323,7 @@ kodes::scalar kodes::Seulex::step
     }
     jacUpdated = false;
 
-    resources->deltaTDid[INDEXVEC(0)] = dt;
+    resources->deltaTDid = dt;
     t += dt;
 
     label kopt;
@@ -337,11 +334,11 @@ kodes::scalar kodes::Seulex::step
     else if (k <= kTarg)
     {
         kopt=k;
-        if (temp[INDEXVEC(k-1)] < kSeulexKFactor1*temp[INDEXVEC(k)])
+        if (temp[k-1] < kSeulexKFactor1*temp[k])
         {
             kopt = k - 1;
         }
-        else if (temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(k - 1)])
+        else if (temp[k] < kSeulexKFactor2*temp[k - 1])
         {
             kopt = min(k + 1, kSeulexMaxOrder - 1);
         }
@@ -349,43 +346,43 @@ kodes::scalar kodes::Seulex::step
     else
     {
         kopt = k - 1;
-        if (k > 2 && temp[INDEXVEC(k-2)] < kSeulexKFactor1*temp[INDEXVEC(k - 1)])
+        if (k > 2 && temp[k-2] < kSeulexKFactor1*temp[k - 1])
         {
             kopt = k - 2;
         }
-        if (temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(kopt)])
+        if (temp[k] < kSeulexKFactor2*temp[kopt])
         {
             kopt = min(k, kSeulexMaxOrder - 1);
         }
     }
 
-    if (resources->prevReject[INDEXVEC(0)])
+    if (resources->prevReject)
     {
         kTarg = min(kopt, k);
-        dtNew = min(fabs(dt), dtOpt[INDEXVEC(kTarg)]);
-        resources->prevReject[INDEXVEC(0)] = false;
+        dtNew = min(fabs(dt), dtOpt[kTarg]);
+        resources->prevReject = false;
     }
     else
     {
         if (kopt <= k)
         {
-            dtNew = dtOpt[INDEXVEC(kopt)];
+            dtNew = dtOpt[kopt];
         }
         else
         {
-            if (k < kTarg && temp[INDEXVEC(k)] < kSeulexKFactor2*temp[INDEXVEC(k - 1)])
+            if (k < kTarg && temp[k] < kSeulexKFactor2*temp[k - 1])
             {
-                dtNew = dtOpt[INDEXVEC(k)]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
+                dtNew = dtOpt[k]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
             }
             else
             {
-                dtNew = dtOpt[INDEXVEC(k)]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
+                dtNew = dtOpt[k]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
             }
         }
         kTarg = kopt;
     }
 
-    resources->deltaTTry[INDEXVEC(0)] = resources->forward[INDEXVEC(0)] ? dtNew : -dtNew;
+    resources->deltaTTry = resources->forward ? dtNew : -dtNew;
 
     // the step is already accepted and sized; nothing for adaptiveStep to judge
     return 0.0;

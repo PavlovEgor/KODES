@@ -18,8 +18,8 @@ class AdaptiveDeviceResources
     public DeviceResources
 {
 protected:
-    scalar* yTemp_;
-    scalar* dydt0_;
+    ThreadVector<scalar> yTemp_;
+    ThreadVector<scalar> dydt0_;
 
 public:
 
@@ -47,11 +47,11 @@ public:
              + 2 * size_t(systemSize) * sizeof(scalar);
     }
 
-    __device__ scalar* __restrict__
-    yTemp() { return yTemp_; }
+    __device__ ThreadVector<scalar>
+    yTemp() const { return yTemp_; }
 
-    __device__ scalar* __restrict__
-    dydt0() { return dydt0_; }
+    __device__ ThreadVector<scalar>
+    dydt0() const { return dydt0_; }
 
 };
 

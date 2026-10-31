@@ -45,12 +45,12 @@ void kodes::Operator::cpyHostToDevice(label batchIndex)
 
     for (label i=0; i < systemSize_; i++)
     {
-        CUDA_CHECK(cudaMemcpy(deviceRes_->vectors + i * batchSize_, hostRes_->vectors[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(deviceRes_->vectors.component(i), hostRes_->vectors[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice));
     }
 
     for (label i=0; i < parameterSize_; i++)
     {
-        CUDA_CHECK(cudaMemcpy(deviceRes_->parameters + i * batchSize_, hostRes_->parameters[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(deviceRes_->parameters.component(i), hostRes_->parameters[i] + batchIndex * batchSize_, dataSize, cudaMemcpyHostToDevice));
     }
 }
 
@@ -66,12 +66,12 @@ void kodes::Operator::cpyDeviceToHost(label batchIndex)
 
     for (label i=0; i < systemSize_; i++)
     {
-        CUDA_CHECK(cudaMemcpy(hostRes_->vectors[i] + batchIndex * batchSize_, deviceRes_->vectors + i * batchSize_, dataSize, cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(hostRes_->vectors[i] + batchIndex * batchSize_, deviceRes_->vectors.component(i), dataSize, cudaMemcpyDeviceToHost));
     }
 
     for (label i=0; i < parameterSize_; i++)
     {
-        CUDA_CHECK(cudaMemcpy(hostRes_->parameters[i] + batchIndex * batchSize_, deviceRes_->parameters + i * batchSize_, dataSize, cudaMemcpyDeviceToHost));
+        CUDA_CHECK(cudaMemcpy(hostRes_->parameters[i] + batchIndex * batchSize_, deviceRes_->parameters.component(i), dataSize, cudaMemcpyDeviceToHost));
     }
 }
 

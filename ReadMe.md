@@ -46,14 +46,16 @@ On the device there are two distinct address spaces, and keeping them apart is w
 arbitrarily large ensemble run on a fixed amount of VRAM:
 
 - **state space** — the batch itself: `vectors` (`systemSize * batchSize`) and `parameters`. One
-  slot per *system*, stride `batchSize`, addressed with `INDEXSTATE(system, component, batchSize)`.
+  slot per *system*, stride `batchSize`, addressed with `INDEXSTATE(system, component, batchSize)`
+  — held as a `BatchArray` and read as `vectors(system, component)`.
   A handful of scalars per system, so a batch can be made large enough to fill the free VRAM, which
   keeps the number of `cudaMemcpy` rounds low.
 - **scratch space** — the working copy of the system a thread is integrating, its step state
   (`StepState`) and the temporaries an implicit method needs (Jacobian and LU work matrix, both
   `systemSize^2`, the extrapolation table, the pivot indices and row scales, ...). One slot per
   *resident thread*, stride `GRID_DIM` (the number of threads actually launched), addressed with
-  `INDEXVEC`/`INDEXMAT`. Allocating more of these than the device can keep resident at once is pure
+  `INDEXVEC`/`INDEXMAT` — held as `ThreadVector`s, `ThreadMatrix`es and `ThreadValue`s, so the
+  code reads `y[i]` and `a(i, j)`. Allocating more of these than the device can keep resident at once is pure
   waste, and for a large mechanism they are what actually exhausts the VRAM. Nothing here outlives
   the system that is currently in the slot except the trial step it ended with, which seeds the
   next system the slot picks up.
@@ -122,8 +124,8 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization with scaled partial pivoting, Crout's
   form as in OpenFOAM, and back-substitution, used to solve the linear systems in each implicit
-  step), plus small helpers (`copyVec`, `sumVec`, `sqr`, `normalizeError`). The
-  row scales of the pivoting are `systemSize` scalars of the thread's scratch slot, passed in as
+  step), plus small helpers (`sqr`, `normalizeError`). They take the views of `basic_types.cuh`;
+  copying and adding vectors are the views' own `=`, `+` and `+=`. The row scales of the pivoting are `systemSize` scalars of the thread's scratch slot, passed in as
   `vv`. In 0.19 they were a local `scalar vv[128]`, which a mechanism of more than 128 species ran
   past in silence, into the thread's stack.
 - **`kodes::Config`** (`Settings/Config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader

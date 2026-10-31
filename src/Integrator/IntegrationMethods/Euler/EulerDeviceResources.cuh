@@ -10,7 +10,7 @@ class EulerDeviceResources
     public AdaptiveDeviceResources
 {
 protected:
-    scalar* err_;
+    ThreadVector<scalar> err_;
 
 public:
 
@@ -40,8 +40,8 @@ public:
              + size_t(systemSize) * sizeof(scalar);
     }
 
-    __device__ scalar* __restrict__
-    err() { return err_; }
+    __device__ ThreadVector<scalar>
+    err() const { return err_; }
 };
 
 }

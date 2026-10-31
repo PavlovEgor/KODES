@@ -10,10 +10,10 @@ namespace kodes
 // Device side storage of one batch, split in two address spaces:
 //
 //  * vectors/parameters hold the whole batch, one slot per system, stride
-//    batchSize, addressed with INDEXSTATE
+//    batchSize: each a BatchArray
 //  * currentVector/currentParameters hold the system a thread is integrating
-//    right now, one slot per resident thread, stride scratchSize, addressed
-//    with INDEXVEC - as are the step state and every temporary an integrator
+//    right now, one slot per resident thread, stride scratchSize: each a
+//    ThreadVector - as are the step state and every temporary an integrator
 //    adds on top of them
 //
 // Every thread integrates its own system on its own: its own step size, its
@@ -45,16 +45,16 @@ class DeviceResources
 {
 public:
 
-    scalar*        vectors;
-    scalar*        parameters;
+    BatchArray<scalar>   vectors;
+    BatchArray<scalar>   parameters;
 
 protected:
 
     label          scratchSize_;
     label          blocks_;
 
-    scalar*        currentVector_;
-    scalar*        currentParameters_;
+    ThreadVector<scalar> currentVector_;
+    ThreadVector<scalar> currentParameters_;
 
 public:
 
@@ -78,14 +78,14 @@ public:
 
     __device__ static void* operator new(size_t size, void* ptr) { return ptr; }
 
-    // The device buffers, allocated into this object's own pointers. Every
+    // The device buffers, allocated into this object's own views. Every
     // subclass calls this one first and then adds its own - see
     // Factory/deviceObject.cuh for who calls them and when.
     __host__ void allocate();
 
     __host__ void deallocate();
 
-    __host__ __device__ void
+    __device__ void
     printVectori(const label i) const;
 
     __device__ __host__ label batchSize() const { return this->ensembleSize_; }
@@ -94,16 +94,16 @@ public:
 
     __device__ __host__ label blocks() const { return blocks_; }
 
-    __device__ scalar* __restrict__ currentVector() { return currentVector_; }
+    __device__ ThreadVector<scalar> currentVector() const { return currentVector_; }
 
     __device__ scalar currentParameter(const label i) const
     {
-        return currentParameters_[INDEXVEC(i)];
+        return currentParameters_[i];
     }
 
     __device__ scalar vectorComponent(const label system, const label i) const
     {
-        return vectors[INDEXSTATE(system, i, batchSize())];
+        return vectors(system, i);
     }
 
     // Consecutive threads touch consecutive systems, so both transfers between
@@ -112,12 +112,12 @@ public:
     {
         for (label i = 0; i < systemSize_; ++i)
         {
-            currentVector_[INDEXVEC(i)] = vectors[INDEXSTATE(system, i, batchSize())];
+            currentVector_[i] = vectors(system, i);
         }
 
         for (label i = 0; i < parameterSize_; ++i)
         {
-            currentParameters_[INDEXVEC(i)] = parameters[INDEXSTATE(system, i, batchSize())];
+            currentParameters_[i] = parameters(system, i);
         }
     }
 
@@ -125,7 +125,7 @@ public:
     {
         for (label i = 0; i < systemSize_; ++i)
         {
-            vectors[INDEXSTATE(system, i, batchSize())] = currentVector_[INDEXVEC(i)];
+            vectors(system, i) = currentVector_[i];
         }
     }
 

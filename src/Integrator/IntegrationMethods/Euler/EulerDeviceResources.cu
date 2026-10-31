@@ -7,13 +7,13 @@ kodes::EulerDeviceResources::allocate()
 {
     AdaptiveDeviceResources::allocate();
 
-    CUDA_CHECK(cudaMalloc(&err_, size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    err_.allocate(systemSize_, scratchSize_);
 }
 
 __host__ void
 kodes::EulerDeviceResources::deallocate()
 {
-    CUDA_CHECK(cudaFree(err_));
+    err_.deallocate();
 
     AdaptiveDeviceResources::deallocate();
 }

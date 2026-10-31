@@ -76,16 +76,25 @@ public:
         return required_mechanism_size();
     }
 
+    // The generated dydt()/eval_jacob() take bare pointers, laid out as the
+    // views are - pyJac's INDEX macro is INDEXVEC - so this is the one place
+    // a view is taken apart
     __device__ void
     derivatives
     (
-        const scalar t, const scalar pressure, const scalar* y, scalar* dy
+        const scalar t,
+        const scalar pressure,
+        const ThreadVector<const scalar> y,
+        const ThreadVector<scalar> dy
     ) const override;
 
     __device__ void
     jacobian
     (
-        const scalar t, const scalar pressure, const scalar* y, scalar* dfdy
+        const scalar t,
+        const scalar pressure,
+        const ThreadVector<const scalar> y,
+        const ThreadMatrix<scalar> dfdy
     ) const override;
 };
 
