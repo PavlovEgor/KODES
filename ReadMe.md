@@ -138,9 +138,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 - **`LinearAlgebra/basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization with scaled partial pivoting, Crout's
   form as in OpenFOAM, and back-substitution, used to solve the linear systems in each implicit
-  step), plus small helpers (`sqr`, `normalizeError`). They take `ThreadVector`s and `ThreadMatrix`es;
-  copying and adding vectors are the views' own `=`, `+` and `+=`. The row scales of the pivoting are `systemSize` scalars of the thread's scratch slot, passed in as
-  `vv`. In 0.19 they were a local `scalar vv[128]`, which a mechanism of more than 128 species ran
+  step), plus `sqr`. They take `ThreadVector`s and `ThreadMatrix`es; copying and adding vectors
+  are the views' own `=`, `+` and `+=`. The row scales of the pivoting are `systemSize` scalars of
+  the thread's scratch slot, passed in as `vv`. In 0.19 they were a local `scalar vv[128]`, which a mechanism of more than 128 species ran
   past in silence, into the thread's stack.
 - **`kodes::Config`** (`Settings/Config.cuh`/`.cu`) — a small RapidJSON-backed JSON config-file reader
   (`getDouble`/`getInt`/`getString`/`getBool`/`hasKey` with defaults), independent of the ODE

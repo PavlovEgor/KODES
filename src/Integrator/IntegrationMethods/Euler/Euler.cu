@@ -1,5 +1,5 @@
 #include "Euler.cuh"
-#include "basic_linalg.cuh"
+#include "thread_vector_functions.cuh"
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::Euler)
 
@@ -30,5 +30,7 @@ kodes::scalar kodes::Euler::step
     err = dt*dydt0;
     yTemp = y + err;
 
-    return normalizeError(y, yTemp, err, absTol, relTol);
+    // the error relative to the tolerance, in the worst component: the step is
+    // accepted at 1 or below
+    return cmptMax(cmptMag(err)/(absTol + relTol*cmptMax(cmptMag(y), cmptMag(yTemp))));
 }

@@ -8,7 +8,6 @@
 #include "basic_types.cuh"
 #include "ThreadVector.cuh"
 #include "ThreadMatrix.cuh"
-#include "thread_vector_functions.cuh"
 
 namespace kodes
 {
@@ -18,19 +17,6 @@ __device__ inline
 T sqr(const T& x)
 {
     return x * x;
-}
-
-__device__ inline
-scalar normalizeError
-(
-    const ThreadVector<const scalar> y0,
-    const ThreadVector<const scalar> y,
-    const ThreadVector<const scalar> err,
-    const scalar absTol,
-    const scalar relTol
-)
-{
-    return cmptMax(cmptMag(err)/(absTol + relTol*cmptMax(cmptMag(y0), cmptMag(y))));
 }
 
 // In place LU factorization of the calling thread's own matrix, with scaled

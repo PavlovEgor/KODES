@@ -1,5 +1,6 @@
 #include "Seulex.cuh"
 #include "basic_linalg.cuh"
+#include "thread_vector_functions.cuh"
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::Seulex)
 
