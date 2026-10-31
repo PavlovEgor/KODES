@@ -15,11 +15,13 @@ namespace kodes
 // The calling thread's own N x N matrix in scratch space: element (i, j) is at
 // INDEXMAT(i, j, N). N is a system unless said otherwise.
 template <typename T, label N = kSystemSize>
-struct ThreadMatrix
+class ThreadMatrix
 {
-    static constexpr label size = N;
+    T* data_;
 
-    T* data;
+public:
+
+    static constexpr label size = N;
 
     ThreadMatrix() = default;
 
@@ -28,28 +30,34 @@ struct ThreadMatrix
     ThreadMatrix& operator=(const ThreadMatrix&) = delete;
 
     __host__ __device__ explicit ThreadMatrix(T* data)
-        : data(data)
+        : data_(data)
     {}
 
     template <typename U, typename = std::enable_if_t<std::is_same_v<const U, T>>>
     __host__ __device__ ThreadMatrix(const ThreadMatrix<U, N>& m)
-        : data(m.data)
+        : data_(m.data())
     {}
+
+    // The bare buffer, for what takes one: pyJac in PyJacSystem
+    __host__ __device__ T* data() const
+    {
+        return data_;
+    }
 
     __device__ T& operator()(const label i, const label j) const
     {
-        return data[INDEXMAT(i, j, N)];
+        return data_[INDEXMAT(i, j, N)];
     }
 
     // N x N elements per resident thread
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data, size_t(N) * N * scratchSize * sizeof(T)));
+        CUDA_CHECK(cudaMalloc(&data_, size_t(N) * N * scratchSize * sizeof(T)));
     }
 
     __host__ void deallocate()
     {
-        CUDA_CHECK(cudaFree(data));
+        CUDA_CHECK(cudaFree(data_));
     }
 };
 

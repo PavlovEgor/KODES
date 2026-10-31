@@ -15,15 +15,17 @@ namespace kodes
 // kSeulexMaxOrder columns of a system each. Entry (i, k) is at
 // INDEXMAT(i, k, kSystemSize).
 //
-// A view, like those of basic_types.cuh: it owns nothing and cannot be
-// assigned; a column is a ThreadVector and can.
-struct ExtrapolationTable
+// A view, see ThreadVector.cuh: it owns nothing and cannot be assigned; a
+// column is a ThreadVector and can.
+class ExtrapolationTable
 {
+    scalar* data_;
+
+public:
+
     static constexpr label kColumns = kSeulexMaxOrder;
 
     static constexpr label size = kSystemSize;
-
-    scalar* data;
 
     ExtrapolationTable() = default;
 
@@ -33,12 +35,12 @@ struct ExtrapolationTable
 
     __device__ scalar& operator()(const label i, const label k) const
     {
-        return data[INDEXMAT(i, k, size)];
+        return data_[INDEXMAT(i, k, size)];
     }
 
     __device__ ThreadVector<scalar> column(const label k) const
     {
-        return ThreadVector<scalar>(data + size_t(k) * size * GRID_DIM);
+        return ThreadVector<scalar>(data_ + size_t(k) * size * GRID_DIM);
     }
 
     // Extrapolate the first k columns down into column 0, and from there into
@@ -66,12 +68,12 @@ struct ExtrapolationTable
 
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data, size_t(kColumns) * size * scratchSize * sizeof(scalar)));
+        CUDA_CHECK(cudaMalloc(&data_, size_t(kColumns) * size * scratchSize * sizeof(scalar)));
     }
 
     __host__ void deallocate()
     {
-        CUDA_CHECK(cudaFree(data));
+        CUDA_CHECK(cudaFree(data_));
     }
 };
 

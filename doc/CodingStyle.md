@@ -219,7 +219,7 @@ copy-then-construct в фабрике, запрет трогать указат�
   пишет `y[i]`, `a(i, j)`, `vectors(system, i)` и не считает адрес на месте:
   перепутать шаг `GRID_DIM` и `batchSize` слишком легко, и ошибка проявится не
   там, где сделана. Голый указатель на буфер появляется только на границе с
-  чужим кодом: `.data` для pyJac в `PyJacSystem` и `BatchArray::component()`
+  чужим кодом: `data()` для pyJac в `PyJacSystem` и `BatchArray::component()`
   для `cudaMemcpy`.
 
 ## 7. Именованные исключения

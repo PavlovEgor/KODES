@@ -26,49 +26,67 @@
 namespace kodes
 {
 
-template <typename T, label N> struct ThreadVector;
+template <typename T, label N> class ThreadVector;
 
 // a + b, evaluated element by element when it is assigned to a vector
 template <typename T, label N>
-struct ThreadVectorSum
+class ThreadVectorSum
 {
-    ThreadVector<const T, N> a;
-    ThreadVector<const T, N> b;
+    ThreadVector<const T, N> a_;
+    ThreadVector<const T, N> b_;
+
+public:
+
+    __device__ ThreadVectorSum
+    (
+        const ThreadVector<const T, N> a,
+        const ThreadVector<const T, N> b
+    )
+        : a_(a), b_(b)
+    {}
 
     __device__ T operator[](const label i) const
     {
-        return a[i] + b[i];
+        return a_[i] + b_[i];
     }
 };
 
 // The calling thread's own vector of N elements in scratch space: element i is
 // at INDEXVEC(i). N is a system unless said otherwise.
 template <typename T, label N = kSystemSize>
-struct ThreadVector
+class ThreadVector
 {
+    T* data_;
+
+public:
+
     using value_type = std::remove_const_t<T>;
 
     static constexpr label size = N;
-
-    T* data;
 
     ThreadVector() = default;
 
     ThreadVector(const ThreadVector&) = default;
 
     __host__ __device__ explicit ThreadVector(T* data)
-        : data(data)
+        : data_(data)
     {}
 
     // a read only view of a vector that may be written
     template <typename U, typename = std::enable_if_t<std::is_same_v<const U, T>>>
     __host__ __device__ ThreadVector(const ThreadVector<U, N>& v)
-        : data(v.data)
+        : data_(v.data())
     {}
+
+    // The bare buffer, for what takes one: pyJac in PyJacSystem
+    __host__ __device__ T* data() const
+    {
+        return data_;
+    }
 
     __device__ T& operator[](const label i) const
     {
-        return data[INDEXVEC(i)];
+        return data_[INDEXVEC(i)];
     }
 
     __device__ const ThreadVector& operator=(const ThreadVector& v) const
@@ -101,12 +119,12 @@ struct ThreadVector
     // N elements per resident thread
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data, size_t(N) * scratchSize * sizeof(T)));
+        CUDA_CHECK(cudaMalloc(&data_, size_t(N) * scratchSize * sizeof(T)));
     }
 
     __host__ void deallocate()
     {
-        CUDA_CHECK(cudaFree(data));
+        CUDA_CHECK(cudaFree(data_));
     }
 
 private:

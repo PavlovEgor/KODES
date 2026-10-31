@@ -15,13 +15,19 @@ namespace kodes
 // assigning to it, and get() names it where a T& is wanted - printf()
 // included, which takes no class.
 template <typename T>
-struct ThreadValue
+class ThreadValue
 {
-    T* data;
+    T* data_;
+
+public:
+
+    ThreadValue() = default;
+
+    ThreadValue(const ThreadValue&) = default;
 
     __device__ T& get() const
     {
-        return data[INDEXVEC(0)];
+        return data_[INDEXVEC(0)];
     }
 
     __device__ operator T&() const
@@ -43,12 +49,12 @@ struct ThreadValue
 
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data, size_t(scratchSize) * sizeof(T)));
+        CUDA_CHECK(cudaMalloc(&data_, size_t(scratchSize) * sizeof(T)));
     }
 
     __host__ void deallocate()
     {
-        CUDA_CHECK(cudaFree(data));
+        CUDA_CHECK(cudaFree(data_));
     }
 };
 

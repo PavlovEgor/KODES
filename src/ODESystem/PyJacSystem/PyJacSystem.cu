@@ -61,7 +61,7 @@ void kodes::PyJacSystem::derivatives
     const ThreadVector<scalar> dy
 ) const
 {
-    dydt(t, pressure, y.data, dy.data, deviceMemory_);
+    dydt(t, pressure, y.data(), dy.data(), deviceMemory_);
 }
 
 __device__
@@ -73,5 +73,5 @@ void kodes::PyJacSystem::jacobian
     const ThreadMatrix<scalar> dfdy
 ) const
 {
-    eval_jacob(t, pressure, y.data, dfdy.data, deviceMemory_);
+    eval_jacob(t, pressure, y.data(), dfdy.data(), deviceMemory_);
 }
