@@ -28,8 +28,8 @@
 
 // The header promises the caller double and int without including anything of
 // KODES; this is where that promise is checked
-static_assert(std::is_same<scalar, double>::value, "library_api.h says double");
-static_assert(std::is_same<label, int>::value, "library_api.h says int");
+static_assert(std::is_same<kodes::scalar, double>::value, "library_api.h says double");
+static_assert(std::is_same<kodes::label, int>::value, "library_api.h says int");
 
 static_assert
 (

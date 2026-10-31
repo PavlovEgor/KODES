@@ -25,7 +25,7 @@ __host__ const kodes::TypeEntry<kodes::ODESystem>* kodes::systemTable()
     return kodes::table;
 }
 
-__host__ label kodes::systemTableSize()
+__host__ kodes::label kodes::systemTableSize()
 {
     return kodes::tableSize;
 }

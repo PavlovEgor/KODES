@@ -1,5 +1,8 @@
 #include "seulex_constants.cuh"
 
+namespace kodes
+{
+
 __constant__ scalar kSeulexStepFactor1 = 0.6;
 __constant__ scalar kSeulexStepFactor2 = 0.93;
 __constant__ scalar kSeulexStepFactor3 = 0.1;
@@ -14,6 +17,8 @@ __constant__ scalar kSeulexExtrapolationCoeff
 [
     kSeulexTableSize * kSeulexTableSize
 ];
+
+}
 
 __host__ void kodes::uploadSeulexConstants()
 {

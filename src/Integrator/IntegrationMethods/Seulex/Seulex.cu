@@ -122,7 +122,7 @@ void kodes::Seulex::extrapolate (const label k, const label systemSize, scalar* 
 }
 
 __device__
-scalar kodes::Seulex::step
+kodes::scalar kodes::Seulex::step
 (
     kodes::ODESystem* ode,
     kodes::DeviceResources* deviceResources,

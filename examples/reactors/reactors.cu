@@ -2,6 +2,9 @@
 
 #include <chrono>
 
+using kodes::label;
+using kodes::scalar;
+
 // An ensemble of identical constant-pressure reactors, integrated on the GPU.
 //
 // One program, two cases. Which mechanism it holds is fixed when it is built,

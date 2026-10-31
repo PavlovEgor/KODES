@@ -96,7 +96,7 @@ void kodes::setDeltaTKernel(const scalar deltaT, kodes::DeviceResources* resourc
     resources->setDeltaT(deltaT);
 }
 
-__host__ label kodes::maxConcurrentSystems(const label threads, const size_t sharedMemSize)
+__host__ kodes::label kodes::maxConcurrentSystems(const label threads, const size_t sharedMemSize)
 {
     return maxConcurrentThreads((const void*)solveKernel, threads, sharedMemSize);
 }

@@ -35,7 +35,7 @@ __host__ const kodes::MethodType* kodes::methodTable()
     return kodes::table;
 }
 
-__host__ label kodes::methodTableSize()
+__host__ kodes::label kodes::methodTableSize()
 {
     return kodes::tableSize;
 }

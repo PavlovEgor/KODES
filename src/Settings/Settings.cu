@@ -88,17 +88,17 @@ kodes::IntegratorControls kodes::Settings::controls() const
     return controls;
 }
 
-label kodes::Settings::ensembleSize() const
+kodes::label kodes::Settings::ensembleSize() const
 {
     return config_.getInt("run.ensembleSize", 3 * 8192);
 }
 
-scalar kodes::Settings::endTime() const
+kodes::scalar kodes::Settings::endTime() const
 {
     return config_.getDouble("run.endTime", 10.0);
 }
 
-scalar kodes::Settings::initialTimeStep() const
+kodes::scalar kodes::Settings::initialTimeStep() const
 {
     // The first trial step of every thread slot. Seulex is happy to be handed
     // the whole interval and cut it down itself; a method taking trial steps

@@ -72,8 +72,8 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 
 ### Basic types and utilities
 
-- **`basic_types.cuh`** — the library's fundamental type aliases: `scalar` (`double`) and `label`
-  (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
+- **`basic_types.cuh`** — the library's fundamental type aliases: `kodes::scalar` (`double`) and
+  `kodes::label` (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
   values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID` plus
   `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data layout*).
 - **`kodes::LaunchConfig`** (`Integrator/LaunchConfig.cuh`) — how a solve is mapped onto the

@@ -4,7 +4,7 @@
 KODES_DEFINE_DEVICE_OBJECT(kodes::Euler)
 
 __device__
-scalar kodes::Euler::step
+kodes::scalar kodes::Euler::step
 (
     kodes::ODESystem* ode,
     kodes::DeviceResources* deviceResources,

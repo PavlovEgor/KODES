@@ -2,7 +2,7 @@
 #include "basic_linalg.cuh"
 
 __device__
-void LUDecompose
+void kodes::LUDecompose
 (
     scalar* __restrict__ matrix,
     label* __restrict__ pivotIndices,
@@ -93,7 +93,7 @@ void LUDecompose
 }
 
 __device__
-void LUBacksubstitute
+void kodes::LUBacksubstitute
 (
     const scalar* __restrict__ luMatrix,
     const label* __restrict__ pivotIndices,

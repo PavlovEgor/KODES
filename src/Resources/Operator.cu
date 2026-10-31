@@ -75,7 +75,7 @@ void kodes::Operator::cpyDeviceToHost(label batchIndex)
     }
 }
 
-label kodes::Operator::getRealBatchSize(label batchIndex)
+kodes::label kodes::Operator::getRealBatchSize(label batchIndex)
 {
     if (batchIndex < 0 || batchIndex > lastBatchIndex_)
     {

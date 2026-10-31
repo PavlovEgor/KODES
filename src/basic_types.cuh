@@ -4,8 +4,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-using scalar = double;
-using label  = int;
+namespace kodes
+{
+    using scalar = double;
+    using label  = int;
+}
 
 #define SMALL 1.0e-15
 #define GREAT 1.0e+15

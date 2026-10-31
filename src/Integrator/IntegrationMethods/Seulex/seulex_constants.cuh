@@ -5,6 +5,9 @@
 
 #include "basic_types.cuh"
 
+namespace kodes
+{
+
 // Highest extrapolation order Seulex may reach, and the length of the tables
 // indexed by it. Also what sizes the order-indexed part of the Seulex scratch,
 // which is why SeulexDeviceResources includes this header.
@@ -29,9 +32,6 @@ extern __constant__ scalar kSeulexKFactor2;
 extern __constant__ label  kSeulexStepSequence[kSeulexTableSize];
 extern __constant__ scalar kSeulexWorkEstimate[kSeulexTableSize];
 extern __constant__ scalar kSeulexExtrapolationCoeff[kSeulexTableSize * kSeulexTableSize];
-
-namespace kodes
-{
 
 // Fill the three tables above. Called from SeulexDeviceResources::allocate,
 // since it is the same tableau that sizes the order-indexed scratch.
