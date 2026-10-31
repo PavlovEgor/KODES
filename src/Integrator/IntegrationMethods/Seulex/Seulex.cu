@@ -104,24 +104,6 @@ bool kodes::Seulex::seul (
 }
 
 __device__
-void kodes::Seulex::extrapolate (const label k, const label systemSize, scalar* __restrict__ table, scalar* __restrict__ y)
-{
-    for (label j=k-1; j>0; j--)
-    {
-        for (label i=0; i<systemSize; i++)
-        {
-            table[INDEXMAT(i, j-1, systemSize)] =
-                table[INDEXMAT(i, j, systemSize)] + kSeulexExtrapolationCoeff[k + j*kSeulexTableSize]*(table[INDEXMAT(i, j, systemSize)] - table[INDEXMAT(i, j-1, systemSize)]);
-        }
-    }
-
-    for (label i=0; i<systemSize; i++)
-    {
-        y[INDEXVEC(i)] = table[INDEXMAT(i, 0, systemSize)] + kSeulexExtrapolationCoeff[k]*(table[INDEXMAT(i, 0, systemSize)] - y[INDEXVEC(i)]);
-    }
-}
-
-__device__
 kodes::scalar kodes::Seulex::step
 (
     kodes::ODESystem* ode,
@@ -147,7 +129,7 @@ kodes::scalar kodes::Seulex::step
     label&  kTarg = resources->kTarg()[INDEXVEC(0)];
     scalar& theta = resources->theta()[INDEXVEC(0)];
 
-    scalar* __restrict__ table = resources->table();
+    const ExtrapolationTable table = resources->table();
     scalar* __restrict__ dfdy  = resources->dfdy();
 
     scalar* __restrict__ dtOpt = resources->dtOpt();
@@ -224,18 +206,18 @@ kodes::scalar kodes::Seulex::step
             {
                 for (label i=0; i<systemSize; ++i)
                 {
-                    table[INDEXMAT(i, k-1, systemSize)] = ySequence[INDEXVEC(i)];
+                    table(i, k-1) = ySequence[INDEXVEC(i)];
                 }
             }
 
             if (k != 0)
             {
-                extrapolate(k, systemSize, table, y);
+                table.extrapolate(k, ThreadVector<scalar>(y, systemSize));
                 scalar err = 0;
                 for (label i=0; i<systemSize; ++i)
                 {
                     scale[INDEXVEC(i)] = absTol + relTol*fabs(y0[INDEXVEC(i)]);
-                    err += sqr((y[INDEXVEC(i)] - table[INDEXMAT(i, 0, systemSize)])/scale[INDEXVEC(i)]);
+                    err += sqr((y[INDEXVEC(i)] - table(i, 0))/scale[INDEXVEC(i)]);
                 }
                 err = sqrt(err/systemSize);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))

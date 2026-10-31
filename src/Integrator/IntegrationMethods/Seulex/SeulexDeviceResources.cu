@@ -10,7 +10,7 @@ kodes::SeulexDeviceResources::allocate()
 
     const label orderSize = orderStorage(systemSize_);
 
-    CUDA_CHECK(cudaMalloc(&table_, 12 * size_t(systemSize_) * scratchSize_ * sizeof(scalar)));
+    table_.allocate(systemSize_, scratchSize_);
     CUDA_CHECK(cudaMalloc(&dfdy_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
     CUDA_CHECK(cudaMalloc(&a_, size_t(systemSize_) * systemSize_ * scratchSize_ * sizeof(scalar)));
 
@@ -38,7 +38,7 @@ kodes::SeulexDeviceResources::allocate()
 __host__ void
 kodes::SeulexDeviceResources::deallocate()
 {
-    CUDA_CHECK(cudaFree(table_));
+    table_.deallocate();
     CUDA_CHECK(cudaFree(dfdy_));
     CUDA_CHECK(cudaFree(a_));
 

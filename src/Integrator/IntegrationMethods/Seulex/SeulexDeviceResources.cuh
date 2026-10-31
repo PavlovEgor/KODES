@@ -2,6 +2,7 @@
 #define KODES_SEULEX_DEVICE_RESOURCES
 #include "DeviceResources.cuh"
 #include "seulex_constants.cuh"
+#include "ExtrapolationTable.cuh"
 
 namespace kodes
 {
@@ -14,7 +15,7 @@ class SeulexDeviceResources
     public DeviceResources
 {
 protected:
-    scalar* table_;
+    ExtrapolationTable table_;
     scalar* dfdy_;
     scalar* a_;
 
@@ -77,7 +78,7 @@ public:
         const size_t n = size_t(systemSize);
 
         return DeviceResources::scratchBytesPerThread(systemSize, parameterSize)
-             + (12 * n                              // table_
+             + (ExtrapolationTable::kColumns * n    // table_
              + 2 * n * n                            // dfdy_, a_
              + 7 * n                                // vv_, y0_, ySequence_, scale_, dy_, yTemp_, dydt_
              + 2 * size_t(orderStorage(systemSize)) // dtOpt_, temp_
@@ -86,7 +87,7 @@ public:
              + (n + 1) * sizeof(label);             // pivotIndices_, kTarg_
     }
 
-    __device__ scalar*
+    __device__ ExtrapolationTable
     table() { return table_; }
 
     __device__ scalar*

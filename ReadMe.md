@@ -257,7 +257,8 @@ the same division as in `ODESystem`, whose base declares nothing but the placeme
   last is zero); a subclass extends whichever it adds to.
 - **`kodes::SeulexDeviceResources`** (`Integrator/IntegrationMethods/Seulex/`) — extends
   `DeviceResources` with the extra scratch the Seulex integrator needs, all of it per thread and
-  sized with `scratchSize`: the polynomial extrapolation table, the Jacobian `dfdy` and the LU work
+  sized with `scratchSize`: the polynomial extrapolation table (an `ExtrapolationTable`, a view
+  whose columns are vectors), the Jacobian `dfdy` and the LU work
   matrix `a`, the pivot indices and row scales of the factorization, the order-indexed step
   estimates, the target order and the contraction rate carried from one step to the next, and the
   vectors the outer step and the inner `seul` sub-stepping run through. Its `allocate()` also fills
@@ -286,7 +287,7 @@ the same division as in `ODESystem`, whose base declares nothing but the placeme
 - **`kodes::Seulex`** (`Integrator/IntegrationMethods/Seulex/`) — a GPU port of the
   semi-implicit Bulirsch-Stoer extrapolation method (the same algorithm as OpenFOAM's own `seulex`
   ODE solver). `step()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and
-  polynomial extrapolation (`extrapolate`) to control step size and order, so it controls its own
+  polynomial extrapolation (`ExtrapolationTable::extrapolate`) to control step size and order, so it controls its own
   step and `usesAdaptiveStep` is false. The step-control coefficients are `__constant__`s in
   `seulex_constants.cuh`; the tolerances come from `IntegratorControls`, i.e. from the settings
   file.
