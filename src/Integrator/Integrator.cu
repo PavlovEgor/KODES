@@ -1,4 +1,5 @@
 #include "Integrator.cuh"
+#include "thread_vector_functions.cuh"
 #include "method_table.cuh"
 #include "system_table.cuh"
 
@@ -80,10 +81,7 @@ void kodes::solveKernel
             );
         }
 
-        for (label i = 0; i < y.size; ++i)
-        {
-            y[i] = max(0.0, y[i]);
-        }
+        y = cmptMax(0.0, y);
 
         resources->storeSystem(system);
     }

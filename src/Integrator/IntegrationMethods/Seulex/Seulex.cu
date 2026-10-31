@@ -57,13 +57,7 @@ bool kodes::Seulex::seul (
 
         if (nn == 1 && k<=1)
         {
-            scalar dy1 = 0;
-            #pragma unroll 4
-            for (label i=0; i<kSystemSize; i++)
-            {
-                dy1 += sqr(dy[i]/scale[i]);
-            }
-            dy1 = sqrt(dy1);
+            const scalar dy1 = mag(dy/scale);
 
             ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp, dydt);
             dy = dydt - dy/dt;
@@ -154,11 +148,7 @@ kodes::scalar kodes::Seulex::step
         kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
 
-    #pragma unroll 4
-    for (label i=0; i < kSystemSize; ++i)
-    {
-        scale[i] = absTol + relTol*fabs(y[i]);
-    }
+    scale = absTol + relTol*cmptMag(y);
 
     bool jacUpdated = false;
 

@@ -91,6 +91,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   loop with no vector in between, and so are `+= -= *= /=`. Sizes are part of the type, so adding
   vectors of different sizes does not compile. Two statements are two loops - nvcc does not fuse
   them - so two results computed from the same data are better kept in one hand-written loop.
+  `LinearAlgebra/thread_vector_functions.cuh` adds the functions, named as in OpenFOAM:
+  `cmptMag`, `cmptSqr` and `cmptMax(a, b)` element by element, and the reductions `mag`, `magSqr`
+  and `cmptMax(v)` - `scale = absTol + relTol*cmptMag(y)`, `dy1 = mag(dy/scale)`.
 - **`system_dimensions.cuh`** — `kSystemSize` and `kParameterSize`, the sizes every view takes as a
   template argument. A library is built for one mechanism, so `kodes_pyjac_mechanism` reads `NSP`
   out of its `mechanism.cuh` when the build is configured, and the sizes that still arrive at run
@@ -475,9 +478,9 @@ of the family's directory, and each concrete class gets a directory of its own.
 src/
   basic_types.cuh         scalar, label, the indexing macros
   system_dimensions.cuh   kSystemSize, kParameterSize — fixed per mechanism
-  LinearAlgebra/          ThreadVector, ThreadMatrix, ThreadValue, and
-                          basic_linalg — LU factorisation and the small
-                          device helpers
+  LinearAlgebra/          ThreadVector, ThreadMatrix, ThreadValue, the vector
+                          functions, and basic_linalg — LU factorisation and
+                          the small device helpers
   mpi_select_device.{cuh,cu}
   Factory/                device_object.cuh, type_table.cuh — the pattern above
   ODESystem/              ODESystem.cuh, system_table — no mechanism is named

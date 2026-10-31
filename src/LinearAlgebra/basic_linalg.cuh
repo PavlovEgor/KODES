@@ -8,6 +8,7 @@
 #include "basic_types.cuh"
 #include "ThreadVector.cuh"
 #include "ThreadMatrix.cuh"
+#include "thread_vector_functions.cuh"
 
 namespace kodes
 {
@@ -29,14 +30,7 @@ scalar normalizeError
     const scalar relTol
 )
 {
-    scalar maxErr = 0.0;
-    for (label i=0; i < y.size; ++i)
-    {
-        scalar tol = absTol + (relTol)*max(fabs(y0[i]), fabs(y[i]));
-        maxErr = max(maxErr, fabs(err[i])/tol);
-    }
-
-    return maxErr;
+    return cmptMax(cmptMag(err)/(absTol + relTol*cmptMax(cmptMag(y0), cmptMag(y))));
 }
 
 // In place LU factorization of the calling thread's own matrix, with scaled
