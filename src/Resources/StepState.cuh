@@ -38,7 +38,6 @@ namespace kodes
         __device__ __host__
         StepState() {}
 
-        __device__ __host__
         ~StepState() = default;
 
         // The per thread arrays are allocated from the host, the host side stub
