@@ -73,9 +73,15 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 ### Basic types and utilities
 
 - **`basic_types.cuh`** — the library's fundamental type aliases: `kodes::scalar` (`double`) and
-  `kodes::label` (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT` sentinel
-  values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID` plus
-  `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data layout*).
+  `kodes::label` (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT`
+  sentinel values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID`
+  plus `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data
+  layout*), and the views every device buffer is held and passed as, which apply those macros so
+  that nothing else has to: `ThreadVector` (`y[i]`), `ThreadMatrix` (`a(i, j)`) and `ThreadValue` (one
+  value per thread) in scratch space, `BatchArray` (`vectors(system, i)`) in state space. A view
+  owns nothing and copies like a pointer, but assigning to a vector writes its elements, like
+  assigning through a reference: `y = yTemp`, `y = yTemp + dy` and `y += dy` are element-wise
+  loops. A matrix or a batch cannot be assigned at all.
 - **`kodes::LaunchConfig`** (`Integrator/LaunchConfig.cuh`) — how a solve is mapped onto the
   device: `threads`×`blocks` (`== scratchSize`, the systems integrated *simultaneously*, and thus
   the number of scratch slots to allocate), `batchSize` (systems per host↔device transfer) and the
