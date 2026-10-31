@@ -7,22 +7,8 @@
 
 #include "basic_types.cuh"
 #include "system_dimensions.cuh"
+#include "DeviceBuffer.cuh"
 
-// Views of device memory, which every buffer of the library is held and
-// passed as.
-//
-// A view owns nothing. Copying one, or passing it by value, gives another name
-// for the same memory, as copying a pointer does. Assigning to one writes the
-// elements, as assigning through a reference does: `y = yTemp` copies the
-// vector, `y = yTemp + dy` sums into it, neither repoints y. A view there is
-// nothing sensible to assign to - a matrix, the batch - cannot be assigned at
-// all, so that nobody repoints one by accident either.
-//
-// A default constructed view is left alone, which is what the device objects
-// need: their constructors run after the stub has been byte-copied to the
-// device, and must not overwrite what the copy brought (see
-// Factory/device_object.cuh). allocate() and deallocate() are called on that
-// stub, on the host.
 namespace kodes
 {
 
@@ -52,12 +38,13 @@ public:
 };
 
 // The calling thread's own vector of N elements in scratch space: element i is
-// at INDEXVEC(i). N is a system unless said otherwise.
+// at INDEXVEC(i). N is a system unless said otherwise. A view, see
+// DeviceBuffer.cuh: copied like a pointer, assigned like a reference.
 template <typename T, label N = kSystemSize>
 class ThreadVector
+    :
+    public DeviceBuffer<T>
 {
-    T* data_;
-
 public:
 
     using value_type = std::remove_const_t<T>;
@@ -69,24 +56,18 @@ public:
     ThreadVector(const ThreadVector&) = default;
 
     __host__ __device__ explicit ThreadVector(T* data)
-        : data_(data)
+        : DeviceBuffer<T>(data)
     {}
 
     // a read only view of a vector that may be written
     template <typename U, typename = std::enable_if_t<std::is_same_v<const U, T>>>
     __host__ __device__ ThreadVector(const ThreadVector<U, N>& v)
-        : data_(v.data())
+        : DeviceBuffer<T>(v.data())
     {}
-
-    // The bare buffer, for what takes one: pyJac in PyJacSystem
-    __host__ __device__ T* data() const
-    {
-        return data_;
-    }
 
     __device__ T& operator[](const label i) const
     {
-        return data_[INDEXVEC(i)];
+        return this->data_[INDEXVEC(i)];
     }
 
     __device__ const ThreadVector& operator=(const ThreadVector& v) const
@@ -119,12 +100,7 @@ public:
     // N elements per resident thread
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data_, size_t(N) * scratchSize * sizeof(T)));
-    }
-
-    __host__ void deallocate()
-    {
-        CUDA_CHECK(cudaFree(data_));
+        this->allocateElements(size_t(N) * scratchSize);
     }
 
 private:

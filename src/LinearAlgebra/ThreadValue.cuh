@@ -4,21 +4,21 @@
 #pragma once
 
 #include "basic_types.cuh"
+#include "DeviceBuffer.cuh"
 
-// A view, see ThreadVector.cuh: copied like a pointer, assigned like a
-// reference.
 namespace kodes
 {
 
 // One value per resident thread, the calling thread's at INDEXVEC(0). It
 // stands for that value: it is read where a T is expected and written by
 // assigning to it, and get() names it where a T& is wanted - printf()
-// included, which takes no class.
+// included, which takes no class. A view, see DeviceBuffer.cuh: copied like a
+// pointer, assigned like a reference.
 template <typename T>
 class ThreadValue
+    :
+    public DeviceBuffer<T>
 {
-    T* data_;
-
 public:
 
     ThreadValue() = default;
@@ -27,7 +27,7 @@ public:
 
     __device__ T& get() const
     {
-        return data_[INDEXVEC(0)];
+        return this->data_[INDEXVEC(0)];
     }
 
     __device__ operator T&() const
@@ -49,12 +49,7 @@ public:
 
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data_, size_t(scratchSize) * sizeof(T)));
-    }
-
-    __host__ void deallocate()
-    {
-        CUDA_CHECK(cudaFree(data_));
+        this->allocateElements(size_t(scratchSize));
     }
 };
 

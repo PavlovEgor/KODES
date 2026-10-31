@@ -5,18 +5,20 @@
 
 #include "basic_types.cuh"
 #include "system_dimensions.cuh"
+#include "DeviceBuffer.cuh"
 
-// A view, see ThreadVector.cuh: it owns nothing and cannot be assigned.
 namespace kodes
 {
 
 // The whole batch in state space, N components of batchSize systems:
 // component i of a system is at INDEXSTATE(system, i, batchSize_). N is fixed
-// when the library is built, the batch size when the plan is made.
+// when the library is built, the batch size when the plan is made. A view,
+// see DeviceBuffer.cuh: it owns nothing and cannot be assigned.
 template <typename T, label N>
 class BatchArray
+    :
+    public DeviceBuffer<T>
 {
-    T* data_;
     label batchSize_;
 
 public:
@@ -31,25 +33,20 @@ public:
 
     __device__ T& operator()(const label system, const label i) const
     {
-        return data_[INDEXSTATE(system, i, batchSize_)];
+        return this->data_[INDEXSTATE(system, i, batchSize_)];
     }
 
     // Where component i of the whole batch starts, for the host to copy a
     // batch in and out with cudaMemcpy
     __host__ T* component(const label i) const
     {
-        return data_ + size_t(i) * batchSize_;
+        return this->data_ + size_t(i) * batchSize_;
     }
 
     __host__ void allocate(const label systems)
     {
         batchSize_ = systems;
-        CUDA_CHECK(cudaMalloc(&data_, size_t(N) * systems * sizeof(T)));
-    }
-
-    __host__ void deallocate()
-    {
-        CUDA_CHECK(cudaFree(data_));
+        this->allocateElements(size_t(N) * systems);
     }
 };
 

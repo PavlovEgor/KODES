@@ -82,7 +82,8 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 - **Views** — every device buffer is held and passed as one, and they apply the macros above so
   that nothing else has to: `ThreadVector` (`y[i]`), `ThreadMatrix` (`a(i, j)`) and `ThreadValue`
   (one value per thread) in `LinearAlgebra/`, all three in scratch space, and `BatchArray`
-  (`vectors(system, i)`, state space) in `Resources/`. A view owns nothing and copies like a pointer, but assigning to a
+  (`vectors(system, i)`, state space) in `Resources/`, all on the one base `DeviceBuffer`
+  (`Resources/`) that holds the buffer, allocates it and frees it. A view owns nothing and copies like a pointer, but assigning to a
   vector writes its elements, like assigning through a reference: `y = yTemp`, `y = yTemp + dy`
   and `y += dy` are element-wise loops. A matrix or a batch cannot be assigned at all.
 - **`system_dimensions.cuh`** — `kSystemSize` and `kParameterSize`, the sizes every view takes as a
@@ -479,7 +480,8 @@ src/
     PyJacSystem/
   Resources/              only what any method can use: Resources,
                           DeviceResources, AdaptiveDeviceResources, StepState,
-                          the view BatchArray, and the host
+                          the view BatchArray and the DeviceBuffer every view
+                          is built on, and the host
                           side HostResources, Operator. No table
                           and no concrete classes — see the Resources section
                           above for why

@@ -5,6 +5,7 @@
 
 #include "basic_types.cuh"
 #include "ThreadVector.cuh"
+#include "DeviceBuffer.cuh"
 #include "seulex_constants.cuh"
 
 namespace kodes
@@ -15,12 +16,12 @@ namespace kodes
 // kSeulexMaxOrder columns of a system each. Entry (i, k) is at
 // INDEXMAT(i, k, kSystemSize).
 //
-// A view, see ThreadVector.cuh: it owns nothing and cannot be assigned; a
+// A view, see DeviceBuffer.cuh: it owns nothing and cannot be assigned; a
 // column is a ThreadVector and can.
 class ExtrapolationTable
+    :
+    public DeviceBuffer<scalar>
 {
-    scalar* data_;
-
 public:
 
     static constexpr label kColumns = kSeulexMaxOrder;
@@ -68,12 +69,7 @@ public:
 
     __host__ void allocate(const label scratchSize)
     {
-        CUDA_CHECK(cudaMalloc(&data_, size_t(kColumns) * size * scratchSize * sizeof(scalar)));
-    }
-
-    __host__ void deallocate()
-    {
-        CUDA_CHECK(cudaFree(data_));
+        allocateElements(size_t(kColumns) * size * scratchSize);
     }
 };
 
