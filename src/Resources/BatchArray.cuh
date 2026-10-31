@@ -4,18 +4,21 @@
 #pragma once
 
 #include "basic_types.cuh"
+#include "system_dimensions.cuh"
 
 // A view, see ThreadVector.cuh: it owns nothing and cannot be assigned.
 namespace kodes
 {
 
-// The whole batch in state space, `size` components of batchSize systems:
-// component i of a system is at INDEXSTATE(system, i, batchSize)
-template <typename T>
+// The whole batch in state space, N components of batchSize systems:
+// component i of a system is at INDEXSTATE(system, i, batchSize). N is fixed
+// when the library is built, the batch size when the plan is made.
+template <typename T, label N>
 struct BatchArray
 {
+    static constexpr label size = N;
+
     T* data;
-    label size;
     label batchSize;
 
     BatchArray() = default;
@@ -36,11 +39,10 @@ struct BatchArray
         return data + size_t(i) * batchSize;
     }
 
-    __host__ void allocate(const label n, const label systems)
+    __host__ void allocate(const label systems)
     {
-        size = n;
         batchSize = systems;
-        CUDA_CHECK(cudaMalloc(&data, size_t(n) * systems * sizeof(T)));
+        CUDA_CHECK(cudaMalloc(&data, size_t(N) * systems * sizeof(T)));
     }
 
     __host__ void deallocate()

@@ -6,13 +6,15 @@
 __host__ void
 kodes::DeviceResources::allocate()
 {
+    checkSystemDimensions(systemSize_, parameterSize_, "DeviceResources::allocate");
+
     // state space: the whole batch, one slot per system
-    vectors.allocate(systemSize_, ensembleSize_);
-    parameters.allocate(parameterSize_, ensembleSize_);
+    vectors.allocate(ensembleSize_);
+    parameters.allocate(ensembleSize_);
 
     // scratch space: one slot per resident thread
-    currentVector_.allocate(systemSize_, scratchSize_);
-    currentParameters_.allocate(parameterSize_, scratchSize_);
+    currentVector_.allocate(scratchSize_);
+    currentParameters_.allocate(scratchSize_);
 
     StepState::allocate(scratchSize_);
 }
@@ -32,7 +34,7 @@ kodes::DeviceResources::deallocate()
 __device__ void
 kodes::DeviceResources::printVectori(const label i) const
 {
-    for (label j = 0; j < systemSize_; ++j) {
+    for (label j = 0; j < kSystemSize; ++j) {
         printf("%0.2f ", vectors(i, j));
     }
     printf("\n");

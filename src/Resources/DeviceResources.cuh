@@ -47,16 +47,16 @@ class DeviceResources
 {
 public:
 
-    BatchArray<scalar>   vectors;
-    BatchArray<scalar>   parameters;
+    BatchArray<scalar, kSystemSize>    vectors;
+    BatchArray<scalar, kParameterSize> parameters;
 
 protected:
 
     label          scratchSize_;
     label          blocks_;
 
-    ThreadVector<scalar> currentVector_;
-    ThreadVector<scalar> currentParameters_;
+    ThreadVector<scalar>                 currentVector_;
+    ThreadVector<scalar, kParameterSize> currentParameters_;
 
 public:
 
@@ -112,12 +112,12 @@ public:
     // the batch and the scratch slots stay coalesced.
     __device__ void loadSystem(const label system)
     {
-        for (label i = 0; i < systemSize_; ++i)
+        for (label i = 0; i < kSystemSize; ++i)
         {
             currentVector_[i] = vectors(system, i);
         }
 
-        for (label i = 0; i < parameterSize_; ++i)
+        for (label i = 0; i < kParameterSize; ++i)
         {
             currentParameters_[i] = parameters(system, i);
         }
@@ -125,7 +125,7 @@ public:
 
     __device__ void storeSystem(const label system)
     {
-        for (label i = 0; i < systemSize_; ++i)
+        for (label i = 0; i < kSystemSize; ++i)
         {
             vectors(system, i) = currentVector_[i];
         }

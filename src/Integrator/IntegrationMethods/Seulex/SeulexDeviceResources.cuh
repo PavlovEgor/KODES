@@ -27,8 +27,12 @@ protected:
     // past in silence - into the thread's stack.
     ThreadVector<scalar> vv_;
 
-    ThreadVector<scalar> dtOpt_;
-    ThreadVector<scalar> temp_;
+    // Indexed by the extrapolation order k, not by the component. They were
+    // sized max(systemSize, kSeulexTableSize), for no reason but that the size
+    // was the system's before it was the table's.
+    ThreadVector<scalar, kSeulexTableSize> dtOpt_;
+    ThreadVector<scalar, kSeulexTableSize> temp_;
+
     ThreadVector<scalar> y0_;
     ThreadVector<scalar> ySequence_;
     ThreadVector<scalar> scale_;
@@ -66,13 +70,6 @@ public:
 
     __host__ void deallocate();
 
-    // dtOpt_/temp_ are indexed by the extrapolation order k, not by the
-    // component, so they need at least kSeulexTableSize entries per thread
-    __host__ __device__ static label orderStorage(const label systemSize)
-    {
-        return systemSize > kSeulexTableSize ? systemSize : kSeulexTableSize;
-    }
-
     // Device memory needed per resident thread
     __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
     {
@@ -82,7 +79,7 @@ public:
              + (ExtrapolationTable::kColumns * n    // table_
              + 2 * n * n                            // dfdy_, a_
              + 7 * n                                // vv_, y0_, ySequence_, scale_, dy_, yTemp_, dydt_
-             + 2 * size_t(orderStorage(systemSize)) // dtOpt_, temp_
+             + 2 * size_t(kSeulexTableSize)         // dtOpt_, temp_
              + 1                                    // theta_
                ) * sizeof(scalar)
              + (n + 1) * sizeof(label);             // pivotIndices_, kTarg_
@@ -103,10 +100,10 @@ public:
     __device__ ThreadVector<scalar>
     vv() const { return vv_; }
 
-    __device__ ThreadVector<scalar>
+    __device__ ThreadVector<scalar, kSeulexTableSize>
     dtOpt() const { return dtOpt_; }
 
-    __device__ ThreadVector<scalar>
+    __device__ ThreadVector<scalar, kSeulexTableSize>
     temp() const { return temp_; }
 
     __device__ ThreadVector<scalar>

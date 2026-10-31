@@ -3,6 +3,7 @@
 #include <type_traits>
 
 #include "basic_types.cuh"
+#include "system_dimensions.cuh"
 #include "HostResources.cuh"
 #include "DeviceResources.cuh"
 #include "Operator.cuh"
@@ -54,8 +55,9 @@ static_assert
     "the Species Indexes block of mechanism.cuh does not list NSP species"
 );
 
-// A pyJac system carries one parameter, the pressure
-constexpr label kPyJacParameterSize = 1;
+// A pyJac system carries one parameter, the pressure - which is what the
+// library was built for, see system_dimensions.cuh
+constexpr label kPyJacParameterSize = kodes::kParameterSize;
 
 // The three runtime-selected objects, the host buffers the Operator copies
 // through and the Integrator driving them, in the order they have to be built

@@ -6,6 +6,7 @@
 #include <type_traits>
 
 #include "basic_types.cuh"
+#include "system_dimensions.cuh"
 
 // Views of device memory, which every buffer of the library is held and
 // passed as.
@@ -25,14 +26,14 @@
 namespace kodes
 {
 
-template <typename T> struct ThreadVector;
+template <typename T, label N> struct ThreadVector;
 
 // a + b, evaluated element by element when it is assigned to a vector
-template <typename T>
+template <typename T, label N>
 struct ThreadVectorSum
 {
-    ThreadVector<const T> a;
-    ThreadVector<const T> b;
+    ThreadVector<const T, N> a;
+    ThreadVector<const T, N> b;
 
     __device__ T operator[](const label i) const
     {
@@ -40,28 +41,29 @@ struct ThreadVectorSum
     }
 };
 
-// The calling thread's own vector in scratch space: element i is at
-// INDEXVEC(i)
-template <typename T>
+// The calling thread's own vector of N elements in scratch space: element i is
+// at INDEXVEC(i). N is a system unless said otherwise.
+template <typename T, label N = kSystemSize>
 struct ThreadVector
 {
     using value_type = std::remove_const_t<T>;
 
+    static constexpr label size = N;
+
     T* data;
-    label size;
 
     ThreadVector() = default;
 
     ThreadVector(const ThreadVector&) = default;
 
-    __host__ __device__ ThreadVector(T* data, const label size)
-        : data(data), size(size)
+    __host__ __device__ explicit ThreadVector(T* data)
+        : data(data)
     {}
 
     // a read only view of a vector that may be written
     template <typename U, typename = std::enable_if_t<std::is_same_v<const U, T>>>
-    __host__ __device__ ThreadVector(const ThreadVector<U>& v)
-        : data(v.data), size(v.size)
+    __host__ __device__ ThreadVector(const ThreadVector<U, N>& v)
+        : data(v.data)
     {}
 
     __device__ T& operator[](const label i) const
@@ -75,31 +77,31 @@ struct ThreadVector
     }
 
     template <typename U>
-    __device__ const ThreadVector& operator=(const ThreadVector<U>& v) const
+    __device__ const ThreadVector& operator=(const ThreadVector<U, N>& v) const
     {
         return assign(v);
     }
 
-    __device__ const ThreadVector& operator=(const ThreadVectorSum<value_type>& v) const
+    __device__ const ThreadVector& operator=(const ThreadVectorSum<value_type, N>& v) const
     {
         return assign(v);
     }
 
     template <typename U>
-    __device__ const ThreadVector& operator+=(const ThreadVector<U>& v) const
+    __device__ const ThreadVector& operator+=(const ThreadVector<U, N>& v) const
     {
-        for (label i = 0; i < size; ++i)
+        #pragma unroll 4
+        for (label i = 0; i < N; ++i)
         {
             (*this)[i] += v[i];
         }
         return *this;
     }
 
-    // `n` elements per resident thread
-    __host__ void allocate(const label n, const label scratchSize)
+    // N elements per resident thread
+    __host__ void allocate(const label scratchSize)
     {
-        size = n;
-        CUDA_CHECK(cudaMalloc(&data, size_t(n) * scratchSize * sizeof(T)));
+        CUDA_CHECK(cudaMalloc(&data, size_t(N) * scratchSize * sizeof(T)));
     }
 
     __host__ void deallocate()
@@ -112,7 +114,8 @@ private:
     template <typename V>
     __device__ const ThreadVector& assign(const V& v) const
     {
-        for (label i = 0; i < size; ++i)
+        #pragma unroll 4
+        for (label i = 0; i < N; ++i)
         {
             (*this)[i] = v[i];
         }
@@ -120,9 +123,9 @@ private:
     }
 };
 
-template <typename A, typename B>
-__device__ ThreadVectorSum<std::remove_const_t<A>>
-operator+(const ThreadVector<A>& a, const ThreadVector<B>& b)
+template <typename A, typename B, label N>
+__device__ ThreadVectorSum<std::remove_const_t<A>, N>
+operator+(const ThreadVector<A, N>& a, const ThreadVector<B, N>& b)
 {
     static_assert
     (

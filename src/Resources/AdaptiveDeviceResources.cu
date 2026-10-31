@@ -8,8 +8,8 @@ kodes::AdaptiveDeviceResources::allocate()
 {
     DeviceResources::allocate();
 
-    yTemp_.allocate(systemSize_, scratchSize_);
-    dydt0_.allocate(systemSize_, scratchSize_);
+    yTemp_.allocate(scratchSize_);
+    dydt0_.allocate(scratchSize_);
 }
 
 __host__ void

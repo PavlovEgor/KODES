@@ -85,6 +85,10 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   state space) in `Resources/`. A view owns nothing and copies like a pointer, but assigning to a
   vector writes its elements, like assigning through a reference: `y = yTemp`, `y = yTemp + dy`
   and `y += dy` are element-wise loops. A matrix or a batch cannot be assigned at all.
+- **`system_dimensions.cuh`** — `kSystemSize` and `kParameterSize`, the sizes every view takes as a
+  template argument. A library is built for one mechanism, so `kodes_pyjac_mechanism` reads `NSP`
+  out of its `mechanism.cuh` when the build is configured, and the sizes that still arrive at run
+  time are checked against these where they enter (`planLaunch`, `DeviceResources::allocate`).
 - **`kodes::LaunchConfig`** (`Integrator/LaunchConfig.cuh`) — how a solve is mapped onto the
   device: `threads`×`blocks` (`== scratchSize`, the systems integrated *simultaneously*, and thus
   the number of scratch slots to allocate), `batchSize` (systems per host↔device transfer) and the
@@ -464,6 +468,7 @@ of the family's directory, and each concrete class gets a directory of its own.
 ```
 src/
   basic_types.cuh         scalar, label, the indexing macros
+  system_dimensions.cuh   kSystemSize, kParameterSize — fixed per mechanism
   LinearAlgebra/          ThreadVector, ThreadMatrix, and basic_linalg — LU
                           factorisation and the small device helpers
   mpi_select_device.{cuh,cu}

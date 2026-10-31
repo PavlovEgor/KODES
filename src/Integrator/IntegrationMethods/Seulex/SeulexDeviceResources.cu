@@ -8,25 +8,23 @@ kodes::SeulexDeviceResources::allocate()
 {
     DeviceResources::allocate();
 
-    const label orderSize = orderStorage(systemSize_);
+    table_.allocate(scratchSize_);
+    dfdy_.allocate(scratchSize_);
+    a_.allocate(scratchSize_);
 
-    table_.allocate(systemSize_, scratchSize_);
-    dfdy_.allocate(systemSize_, scratchSize_);
-    a_.allocate(systemSize_, scratchSize_);
-
-    pivotIndices_.allocate(systemSize_, scratchSize_);
-    vv_.allocate(systemSize_, scratchSize_);
+    pivotIndices_.allocate(scratchSize_);
+    vv_.allocate(scratchSize_);
 
     // indexed by the extrapolation order, not by the component
-    dtOpt_.allocate(orderSize, scratchSize_);
-    temp_.allocate(orderSize, scratchSize_);
+    dtOpt_.allocate(scratchSize_);
+    temp_.allocate(scratchSize_);
 
-    y0_.allocate(systemSize_, scratchSize_);
-    ySequence_.allocate(systemSize_, scratchSize_);
-    scale_.allocate(systemSize_, scratchSize_);
-    dy_.allocate(systemSize_, scratchSize_);
-    yTemp_.allocate(systemSize_, scratchSize_);
-    dydt_.allocate(systemSize_, scratchSize_);
+    y0_.allocate(scratchSize_);
+    ySequence_.allocate(scratchSize_);
+    scale_.allocate(scratchSize_);
+    dy_.allocate(scratchSize_);
+    yTemp_.allocate(scratchSize_);
+    dydt_.allocate(scratchSize_);
 
     // one entry per thread: step control that survives a step, not a system
     kTarg_.allocate(scratchSize_);

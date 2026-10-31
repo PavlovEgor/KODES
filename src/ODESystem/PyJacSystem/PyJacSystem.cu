@@ -1,5 +1,10 @@
 #include "PyJacSystem.cuh"
 
+// What cmake/kodes.cmake read out of this mechanism.cuh to size the views
+// with, checked against the mechanism the build actually compiles
+static_assert(NSP == kodes::kSystemSize, "KODES_SYSTEM_SIZE is not this mechanism's NSP");
+static_assert(kodes::kParameterSize == 1, "a pyJac system has one parameter, the pressure");
+
 // The four host statics, all of them the shared ones. This file is compiled by
 // nvcc and is where the vtable of a host side PyJacSystem is emitted; no caller
 // ever has to emit one of its own.

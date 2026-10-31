@@ -7,7 +7,7 @@ kodes::EulerDeviceResources::allocate()
 {
     AdaptiveDeviceResources::allocate();
 
-    err_.allocate(systemSize_, scratchSize_);
+    err_.allocate(scratchSize_);
 }
 
 __host__ void

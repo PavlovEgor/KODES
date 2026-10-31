@@ -26,14 +26,14 @@ bool kodes::Seulex::seul (
     const ThreadVector<scalar> dydt = resources->dydt();
     const ThreadVector<scalar> y = resources->ySequence();
 
-    const label systemSize = resources->systemSize();
-
     label nSteps = kSeulexStepSequence[k];
     scalar dt = dtTot/nSteps;
 
-    for (label i=0; i<systemSize; i++)
+    #pragma unroll 4
+    for (label i=0; i<kSystemSize; i++)
     {
-        for (label j=0; j<systemSize; j++)
+        #pragma unroll 4
+        for (label j=0; j<kSystemSize; j++)
         {
             a(i, j) = -dfdy(i, j);
         }
@@ -58,14 +58,16 @@ bool kodes::Seulex::seul (
         if (nn == 1 && k<=1)
         {
             scalar dy1 = 0;
-            for (label i=0; i<systemSize; i++)
+            #pragma unroll 4
+            for (label i=0; i<kSystemSize; i++)
             {
                 dy1 += sqr(dy[i]/scale[i]);
             }
             dy1 = sqrt(dy1);
 
             ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp, dydt);
-            for (label i=0; i<systemSize; i++)
+            #pragma unroll 4
+            for (label i=0; i<kSystemSize; i++)
             {
                 dy[i] = dydt[i] - dy[i]/dt;
             }
@@ -74,7 +76,8 @@ bool kodes::Seulex::seul (
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
-            for (label i=0; i<systemSize; i++)
+            #pragma unroll 4
+            for (label i=0; i<kSystemSize; i++)
             {
                 // Test of dy[i] to avoid overflow
                 if (fabs(dy[i]) > scale[i]*denom)
@@ -115,8 +118,6 @@ kodes::scalar kodes::Seulex::step
     SeulexDeviceResources* resources =
         static_cast<SeulexDeviceResources*>(deviceResources);
 
-    const label systemSize = resources->systemSize();
-
     const scalar absTol = controls.absTol;
     const scalar relTol = controls.relTol;
 
@@ -132,8 +133,8 @@ kodes::scalar kodes::Seulex::step
     const ExtrapolationTable table = resources->table();
     const ThreadMatrix<scalar> dfdy = resources->dfdy();
 
-    const ThreadVector<scalar> dtOpt = resources->dtOpt();
-    const ThreadVector<scalar> temp = resources->temp();
+    const ThreadVector<scalar, kSeulexTableSize> dtOpt = resources->dtOpt();
+    const ThreadVector<scalar, kSeulexTableSize> temp = resources->temp();
     const ThreadVector<scalar> y0 = resources->y0();
     const ThreadVector<scalar> ySequence = resources->ySequence();
     const ThreadVector<scalar> scale = resources->scale();
@@ -157,7 +158,8 @@ kodes::scalar kodes::Seulex::step
         kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
 
-    for (label i=0; i < systemSize; ++i)
+    #pragma unroll 4
+    for (label i=0; i < kSystemSize; ++i)
     {
         scale[i] = absTol + relTol*fabs(y[i]);
     }
@@ -211,12 +213,13 @@ kodes::scalar kodes::Seulex::step
             {
                 table.extrapolate(k, y);
                 scalar err = 0;
-                for (label i=0; i<systemSize; ++i)
+                #pragma unroll 4
+                for (label i=0; i<kSystemSize; ++i)
                 {
                     scale[i] = absTol + relTol*fabs(y0[i]);
                     err += sqr((y[i] - table(i, 0))/scale[i]);
                 }
-                err = sqrt(err/systemSize);
+                err = sqrt(err/kSystemSize);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
                     resources->reject = true;

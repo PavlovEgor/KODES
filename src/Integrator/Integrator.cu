@@ -118,6 +118,8 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         std::exit(EXIT_FAILURE);
     }
 
+    checkSystemDimensions(systemSize, parameterSize, "kodes::planLaunch");
+
     // Zero leaves the driver's own value alone, which is what it should be
     // doing: see KODES_DEVICE_STACK_BYTES. When a caller does override it, this
     // has to happen before freeDeviceMemory() below - the driver reserves the
