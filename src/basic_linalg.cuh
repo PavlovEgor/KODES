@@ -38,21 +38,6 @@ T sqr(const T& x)
     return x * x;
 }
 
-template <typename T>
-__device__ inline 
-T clamp(const T& value, const T& minVal, const T& maxVal)
-{
-    return (value < minVal) ? minVal : (value > maxVal) ? maxVal : value;
-}
-
-template <typename T>
-__device__ inline
-void swap(T& a, T& b) {
-    T temp = a;
-    a = b;
-    b = temp;
-}
-
 __device__ inline
 scalar normalizeError (
     const scalar* __restrict__ y0, 

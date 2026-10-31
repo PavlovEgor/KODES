@@ -1,3 +1,4 @@
+#include <cuda/std/utility>
 #include "basic_linalg.cuh"
 
 __device__
@@ -68,7 +69,7 @@ void LUDecompose
         {
             for (label k = 0; k < size; ++k)
             {
-                swap(matrix[INDEXMAT(j, k, size)], matrix[INDEXMAT(iMax, k, size)]);
+                cuda::std::swap(matrix[INDEXMAT(j, k, size)], matrix[INDEXMAT(iMax, k, size)]);
             }
 
             vv[INDEXVEC(iMax)] = vv[INDEXVEC(j)];

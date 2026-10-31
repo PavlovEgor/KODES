@@ -116,7 +116,7 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 - **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization with scaled partial pivoting, Crout's
   form as in OpenFOAM, and back-substitution, used to solve the linear systems in each implicit
-  step), plus small helpers (`copyVec`, `sumVec`, `sqr`, `clamp`, `swap`, `normalizeError`). The
+  step), plus small helpers (`copyVec`, `sumVec`, `sqr`, `normalizeError`). The
   row scales of the pivoting are `systemSize` scalars of the thread's scratch slot, passed in as
   `vv`. In 0.19 they were a local `scalar vv[128]`, which a mechanism of more than 128 species ran
   past in silence, into the thread's stack.

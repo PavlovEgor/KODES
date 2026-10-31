@@ -1,3 +1,4 @@
+#include <cuda/std/algorithm>
 #include "IntegrationMethod.cuh"
 #include "AdaptiveDeviceResources.cuh"
 #include "basic_linalg.cuh"
@@ -68,7 +69,7 @@ kodes::IntegrationMethod::adaptiveStep
     if (err > pow(maxScale/safeScale, -1.0/alphaInc))
     {
         scalar scale = safeScale*pow(err, -alphaInc);
-        res->deltaTTry[INDEXVEC(0)] = clamp(scale, minScale, maxScale)*dt;
+        res->deltaTTry[INDEXVEC(0)] = cuda::std::clamp(scale, minScale, maxScale)*dt;
     }
     else
     {
