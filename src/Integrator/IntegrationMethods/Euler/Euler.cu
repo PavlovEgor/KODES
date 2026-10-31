@@ -27,11 +27,8 @@ kodes::scalar kodes::Euler::step
 
     // the trial state goes to yTemp, adaptiveStep copies the accepted one back
     // into y, so a rejected step is retried from an untouched y
-    for(label i=0; i<y.size; ++i)
-    {
-        err[i] = dt*dydt0[i];
-        yTemp[i] = y[i] + err[i];
-    }
+    err = dt*dydt0;
+    yTemp = y + err;
 
     return normalizeError(y, yTemp, err, absTol, relTol);
 }

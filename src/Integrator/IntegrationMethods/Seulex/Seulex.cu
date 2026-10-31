@@ -66,11 +66,7 @@ bool kodes::Seulex::seul (
             dy1 = sqrt(dy1);
 
             ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp, dydt);
-            #pragma unroll 4
-            for (label i=0; i<kSystemSize; i++)
-            {
-                dy[i] = dydt[i] - dy[i]/dt;
-            }
+            dy = dydt - dy/dt;
 
             LUBacksubstitute(a, pivotIndices, dy);
 

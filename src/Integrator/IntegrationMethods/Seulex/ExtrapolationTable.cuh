@@ -48,23 +48,19 @@ public:
     // y, which holds the state of the first sequence
     __device__ void extrapolate(const label k, const ThreadVector<scalar> y) const
     {
+        // a loop over columns, not over a system, but unrolled the same way:
+        // left to itself it costs Seulex::step 16 more bytes of stack
         #pragma unroll 4
         for (label j = k - 1; j > 0; j--)
         {
             const scalar coeff = kSeulexExtrapolationCoeff[k + j*kSeulexTableSize];
 
-            #pragma unroll 4
-            for (label i = 0; i < size; i++)
-            {
-                (*this)(i, j-1) = (*this)(i, j) + coeff*((*this)(i, j) - (*this)(i, j-1));
-            }
+            column(j-1) = column(j) + coeff*(column(j) - column(j-1));
         }
 
-        #pragma unroll 4
-        for (label i = 0; i < size; i++)
-        {
-            y[i] = (*this)(i, 0) + kSeulexExtrapolationCoeff[k]*((*this)(i, 0) - y[i]);
-        }
+        const scalar coeff = kSeulexExtrapolationCoeff[k];
+
+        y = column(0) + coeff*(column(0) - y);
     }
 
     __host__ void allocate(const label scratchSize)
