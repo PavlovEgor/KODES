@@ -212,8 +212,8 @@ copy-then-construct в фабрике, запрет трогать указат�
   где они возникают (rapidjson в `Config`), ловит их и переходит на тот же
   способ. Проверять `cudaError_t` руками не нужно — есть `CUDA_CHECK` и
   `CUDA_CHECK_LAST`.
-* **Индексация** живёт только в представлениях — `ThreadVector` и
-  `ThreadMatrix` в `LinearAlgebra/`, `ThreadValue` и `BatchArray` в
+* **Индексация** живёт только в представлениях — `ThreadVector`,
+  `ThreadMatrix` и `ThreadValue` в `LinearAlgebra/`, `BatchArray` в
   `Resources/`, `ExtrapolationTable` у Seulex. Они применяют макросы
   `INDEXVEC`/`INDEXMAT` (scratch) и `INDEXSTATE` (state), а весь остальной код
   пишет `y[i]`, `a(i, j)`, `vectors(system, i)` и не считает адрес на месте:
