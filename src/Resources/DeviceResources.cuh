@@ -2,6 +2,8 @@
 #define KODES_DEVICE_RESOURCES
 #include "Resources.cuh"
 #include "StepState.cuh"
+#include "BatchArray.cuh"
+#include "ThreadVector.cuh"
 #include "device_object.cuh"
 
 namespace kodes

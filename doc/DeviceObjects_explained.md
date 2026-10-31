@@ -95,7 +95,7 @@ __global__ void constructDeviceObjectKernel(T* object, ...)
 
 > **Конструктор такого класса не имеет права трогать ни один буфер.** Только
 > value-поля (размеры, флаги). Буферы лежат в представлениях (`ThreadVector`,
-> `ThreadMatrix`, ... из `basic_types.cuh`), и строчка вида `dfdy_()` или
+> `ThreadMatrix`, ... из `LinearAlgebra/` и `Resources/`), и строчка вида `dfdy_()` или
 > `dfdy_(nullptr, 0)` в списке инициализации молча затрёт адрес, выделенный на
 > шаге 2, и всё развалится в ядре. Конструктор представления по умолчанию
 > ничего не пишет как раз поэтому.
@@ -350,7 +350,8 @@ Integrator/IntegrationMethods/
 экстраполяции из `seulex_constants.cuh`, так что пока хранилища лежали в
 `Resources/`, каталоги включали друг друга в обе стороны. Теперь зависимость
 односторонняя: `IntegrationMethods` включает из `Resources` (за базой), а
-`Resources` не включает ничего, кроме `basic_types.cuh` и `Factory/`.
+`Resources` не включает ничего, кроме `basic_types.cuh`, `LinearAlgebra/` и
+`Factory/`.
 
 ### Таблица из одной строки — зачем она
 

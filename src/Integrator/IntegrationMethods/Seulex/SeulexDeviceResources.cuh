@@ -1,6 +1,7 @@
 #ifndef KODES_SEULEX_DEVICE_RESOURCES
 #define KODES_SEULEX_DEVICE_RESOURCES
 #include "DeviceResources.cuh"
+#include "ThreadMatrix.cuh"
 #include "seulex_constants.cuh"
 #include "ExtrapolationTable.cuh"
 

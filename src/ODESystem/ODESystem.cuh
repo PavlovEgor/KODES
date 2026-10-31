@@ -3,6 +3,8 @@
 #pragma once
 
 #include "basic_types.cuh"
+#include "ThreadVector.cuh"
+#include "ThreadMatrix.cuh"
 
 namespace kodes
 {

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "basic_types.cuh"
+#include "ThreadVector.cuh"
 #include "seulex_constants.cuh"
 
 namespace kodes

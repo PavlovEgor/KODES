@@ -78,12 +78,13 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   `kodes::label` (`int`), used everywhere instead of the built-in types. Also defines `SMALL`/`GREAT`
   sentinel values and the device-indexing macros used throughout the integrators: `GRID_DIM`/`T_ID`
   plus `INDEXVEC`/`INDEXMAT` for scratch space and `INDEXSTATE` for state space (see *Core data
-  layout*), and the views every device buffer is held and passed as, which apply those macros so
-  that nothing else has to: `ThreadVector` (`y[i]`), `ThreadMatrix` (`a(i, j)`) and `ThreadValue` (one
-  value per thread) in scratch space, `BatchArray` (`vectors(system, i)`) in state space. A view
-  owns nothing and copies like a pointer, but assigning to a vector writes its elements, like
-  assigning through a reference: `y = yTemp`, `y = yTemp + dy` and `y += dy` are element-wise
-  loops. A matrix or a batch cannot be assigned at all.
+  layout*).
+- **Views** — every device buffer is held and passed as one, and they apply the macros above so
+  that nothing else has to: `ThreadVector` (`y[i]`) and `ThreadMatrix` (`a(i, j)`) in
+  `LinearAlgebra/`, `ThreadValue` (one value per thread) and `BatchArray` (`vectors(system, i)`,
+  state space) in `Resources/`. A view owns nothing and copies like a pointer, but assigning to a
+  vector writes its elements, like assigning through a reference: `y = yTemp`, `y = yTemp + dy`
+  and `y += dy` are element-wise loops. A matrix or a batch cannot be assigned at all.
 - **`kodes::LaunchConfig`** (`Integrator/LaunchConfig.cuh`) — how a solve is mapped onto the
   device: `threads`×`blocks` (`== scratchSize`, the systems integrated *simultaneously*, and thus
   the number of scratch slots to allocate), `batchSize` (systems per host↔device transfer) and the
@@ -121,10 +122,10 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   all, because the driver reserves it out of the same VRAM the plan is about to divide up — and by
   default none is asked for: 0 leaves the driver's own value alone (see
   `KODES_DEVICE_STACK_BYTES`).
-- **`basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
+- **`LinearAlgebra/basic_linalg.cuh`/`.cu`** — device-side building blocks used by the integrators:
   `LUDecompose`/`LUBacksubstitute` (in-place LU factorization with scaled partial pivoting, Crout's
   form as in OpenFOAM, and back-substitution, used to solve the linear systems in each implicit
-  step), plus small helpers (`sqr`, `normalizeError`). They take the views of `basic_types.cuh`;
+  step), plus small helpers (`sqr`, `normalizeError`). They take `ThreadVector`s and `ThreadMatrix`es;
   copying and adding vectors are the views' own `=`, `+` and `+=`. The row scales of the pivoting are `systemSize` scalars of the thread's scratch slot, passed in as
   `vv`. In 0.19 they were a local `scalar vv[128]`, which a mechanism of more than 128 species ran
   past in silence, into the thread's stack.
@@ -463,7 +464,8 @@ of the family's directory, and each concrete class gets a directory of its own.
 ```
 src/
   basic_types.cuh         scalar, label, the indexing macros
-  basic_linalg.{cuh,cu}   LU factorisation and the small device helpers
+  LinearAlgebra/          ThreadVector, ThreadMatrix, and basic_linalg — LU
+                          factorisation and the small device helpers
   mpi_select_device.{cuh,cu}
   Factory/                device_object.cuh, type_table.cuh — the pattern above
   ODESystem/              ODESystem.cuh, system_table — no mechanism is named
@@ -471,7 +473,8 @@ src/
     PyJacSystem/
   Resources/              only what any method can use: Resources,
                           DeviceResources, AdaptiveDeviceResources, StepState,
-                          and the host side HostResources, Operator. No table
+                          the views ThreadValue and BatchArray, and the host
+                          side HostResources, Operator. No table
                           and no concrete classes — see the Resources section
                           above for why
   Integrator/             Integrator, LaunchConfig, IntegratorControls

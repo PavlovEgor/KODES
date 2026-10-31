@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 
 #include "basic_types.cuh"
+#include "ThreadValue.cuh"
 
 namespace kodes
 {

@@ -6,6 +6,8 @@
 #include <cuda/cmath>
 #include <cuda_runtime.h>
 #include "basic_types.cuh"
+#include "ThreadVector.cuh"
+#include "ThreadMatrix.cuh"
 
 namespace kodes
 {

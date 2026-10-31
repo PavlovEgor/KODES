@@ -124,7 +124,7 @@ Seulex/
 
 * `src/<Подсистема>` — `UpperCamelCase`, по имени подсистемы:
   `Integrator/`, `Resources/`, `Factory/`, `Settings/`, `ODESystem/`,
-  `Library/`.
+  `LinearAlgebra/`, `Library/`.
 * У семейства, выбираемого по имени в рантайме, в корне подсистемы лежат только
   **абстрактная база и таблица типов**, а каждый **конкретный** класс — в
   каталоге своего имени: `Integrator/IntegrationMethods/Seulex/`,
@@ -212,14 +212,15 @@ copy-then-construct в фабрике, запрет трогать указат�
   где они возникают (rapidjson в `Config`), ловит их и переходит на тот же
   способ. Проверять `cudaError_t` руками не нужно — есть `CUDA_CHECK` и
   `CUDA_CHECK_LAST`.
-* **Индексация** живёт только в представлениях — `ThreadVector`, `ThreadMatrix`,
-  `ThreadValue`, `BatchArray` в `basic_types.cuh` и `ExtrapolationTable` у
-  Seulex. Они применяют макросы `INDEXVEC`/`INDEXMAT` (scratch) и `INDEXSTATE`
-  (state), а весь остальной код пишет `y[i]`, `a(i, j)`, `vectors(system, i)`
-  и не считает адрес на месте: перепутать шаг `GRID_DIM` и
-  `batchSize` слишком легко, и ошибка проявится не там, где сделана. Голый
-  указатель на буфер появляется только на границе с чужим кодом: `.data` для
-  pyJac в `PyJacSystem` и `BatchArray::component()` для `cudaMemcpy`.
+* **Индексация** живёт только в представлениях — `ThreadVector` и
+  `ThreadMatrix` в `LinearAlgebra/`, `ThreadValue` и `BatchArray` в
+  `Resources/`, `ExtrapolationTable` у Seulex. Они применяют макросы
+  `INDEXVEC`/`INDEXMAT` (scratch) и `INDEXSTATE` (state), а весь остальной код
+  пишет `y[i]`, `a(i, j)`, `vectors(system, i)` и не считает адрес на месте:
+  перепутать шаг `GRID_DIM` и `batchSize` слишком легко, и ошибка проявится не
+  там, где сделана. Голый указатель на буфер появляется только на границе с
+  чужим кодом: `.data` для pyJac в `PyJacSystem` и `BatchArray::component()`
+  для `cudaMemcpy`.
 
 ## 7. Именованные исключения
 

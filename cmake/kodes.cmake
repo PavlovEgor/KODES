@@ -22,7 +22,7 @@ file(STRINGS ${KODES_ROOT_DIR}/VERSION KODES_VERSION LIMIT_COUNT 1)
 string(STRIP "${KODES_VERSION}" KODES_VERSION)
 
 set(KODES_SOURCES
-    ${KODES_SRC_DIR}/basic_linalg.cu
+    ${KODES_SRC_DIR}/LinearAlgebra/basic_linalg.cu
 
     ${KODES_SRC_DIR}/Resources/StepState.cu
     ${KODES_SRC_DIR}/Resources/HostResources.cu
@@ -49,6 +49,7 @@ set(KODES_SOURCES
 set(KODES_INCLUDE_DIRS
     ${KODES_SRC_DIR}
     ${KODES_SRC_DIR}/Factory
+    ${KODES_SRC_DIR}/LinearAlgebra
     ${KODES_SRC_DIR}/ODESystem
     ${KODES_SRC_DIR}/Resources
     ${KODES_SRC_DIR}/Integrator
