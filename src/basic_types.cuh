@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-typedef double scalar;
-typedef int    label;
+using scalar = double;
+using label  = int;
 
 #define SMALL 1.0e-15
 #define GREAT 1.0e+15

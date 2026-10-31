@@ -7,10 +7,6 @@
 #include <cuda_runtime.h>
 #include "basic_types.cuh"
 
-
-typedef double scalar;
-typedef int    label;
-
 template <typename T>
 __device__ inline
 void copyVec(T* result, const T* source, const label size)
