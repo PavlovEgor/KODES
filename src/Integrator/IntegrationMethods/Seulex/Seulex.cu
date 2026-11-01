@@ -147,6 +147,9 @@ bool kodes::Seulex::seul
     return true;
 }
 
+// One accepted step: OpenFOAM's seulex::solve, cut where it changes subject.
+// The arithmetic and the order of every decision are the same; what were
+// breaks out of the middle of the order loop are now return values.
 __device__
 void kodes::Seulex::advance
 (
@@ -154,49 +157,24 @@ void kodes::Seulex::advance
     kodes::IntegratorControls controls
 ) const
 {
-    const scalar absTol = controls.absTol;
-    const scalar relTol = controls.relTol;
+    const scalar jacRedo = min(1e-4, controls.relTol);
 
-    const scalar jacRedo = min(1e-4, relTol);
-
-    // Both outlive this call: kTarg is the order the previous step of this
-    // system settled on, theta the contraction rate it measured. They live in
-    // the thread's scratch slot, since a local would be indeterminate on every
-    // step after the first - which is the one the first_ branch below writes.
-    label&  kTarg = kTarg_;
-    scalar& theta = theta_;
+    startStep(controls, jacRedo);
 
     const ThreadVector<scalar> y = currentVector();
     scalar& t = currentT;
 
-    temp_[0] = GREAT;
-    scalar dt = deltaTTry;
-    y0_ = y;
-    dtOpt_[0] = fabs(0.1*dt);
-
-    if (first || prevReject)
-    {
-        theta = 2*jacRedo;
-    }
-
-    if (first)
-    {
-        const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
-        kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
-    }
-
-    scale_ = absTol + relTol*cmptMag(y);
-
     bool jacUpdated = false;
 
-    if (theta > jacRedo)
+    if (theta_ > jacRedo)
     {
         ode->jacobian(t, currentParameter(0), y, dfdy_);
         jacUpdated = true;
     }
 
-    label k;
+    scalar dt = deltaTTry;
     scalar dtNew = fabs(dt);
+    label k;
 
     do
     {
@@ -208,123 +186,18 @@ void kodes::Seulex::advance
             printf("step size underflow : %0.16f \n", dt);
         }
 
-        scalar errOld = 0;
+        k = tryOrders(ode, controls, dt, dtNew);
 
-        for (k=0; k<=kTarg+1; k++)
-        {
-            bool success = seul(ode, t, dt, k);
-
-            if (!success)
-            {
-                reject = true;
-                dtNew = fabs(dt)*kSeulexStepFactor5;
-                break;
-            }
-
-            if (k == 0)
-            {
-                y = ySequence_;
-                continue;
-            }
-
-            table_.column(k-1) = ySequence_;
-
-            table_.extrapolate(k, y);
-            // one pass for both, so copies of the views, see seul()
-            const ThreadVector<scalar> scale = scale_;
-            const ThreadVector<const scalar> y0 = y0_;
-            const ThreadVector<const scalar> extrapolated = table_.column(0);
-
-            scalar err = 0;
-            #pragma unroll 4
-            for (label i=0; i<kSystemSize; ++i)
-            {
-                scale[i] = absTol + relTol*fabs(y0[i]);
-                err += sqr((y[i] - extrapolated[i])/scale[i]);
-            }
-            err = sqrt(err/kSystemSize);
-            if (err > 1/SMALL || (k > 1 && err >= errOld))
-            {
-                reject = true;
-                dtNew = fabs(dt)*kSeulexStepFactor5;
-                break;
-            }
-            errOld = min(4*err, 1.0);
-            scalar expo = 1.0/(k + 1);
-            scalar facmin = pow(kSeulexStepFactor3, expo);
-            scalar fac;
-            if (err == 0)
-            {
-                fac = 1/facmin;
-            }
-            else
-            {
-                fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
-                fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
-            }
-            dtOpt_[k] = fabs(dt*fac);
-            temp_[k] = kSeulexWorkEstimate[k]/dtOpt_[k];
-
-            if ((first || last) && err <= 1)
-            {
-                break;
-            }
-
-            if
-            (
-                k == kTarg - 1
-            && !prevReject
-            && !first && !last
-            )
-            {
-                if (err <= 1)
-                {
-                    break;
-                }
-                else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
-                {
-                    reject = true;
-                    kTarg = lowerOrderIfCheaper(k);
-                    dtNew = dtOpt_[kTarg];
-                    break;
-                }
-            }
-
-            if (k == kTarg)
-            {
-                if (err <= 1)
-                {
-                    break;
-                }
-                else if (err > kSeulexStepSequence[k + 1]*2)
-                {
-                    reject = true;
-                    kTarg = lowerOrderIfCheaper(kTarg);
-                    dtNew = dtOpt_[kTarg];
-                    break;
-                }
-            }
-
-            if (k == kTarg+1)
-            {
-                if (err > 1)
-                {
-                    reject = true;
-                    kTarg = lowerOrderIfCheaper(kTarg);
-                    dtNew = dtOpt_[kTarg];
-                }
-                break;
-            }
-        }
         if (reject)
         {
             prevReject = true;
+
             if (!jacUpdated)
             {
-                theta = 2*jacRedo;
+                theta_ = 2*jacRedo;
 
                 // false only for a relTol of 0 or less
-                if (theta > jacRedo)
+                if (theta_ > jacRedo)
                 {
                     ode->jacobian(t, currentParameter(0), y, dfdy_);
                     jacUpdated = true;
@@ -336,14 +209,225 @@ void kodes::Seulex::advance
     deltaTDid = dt;
     t += dt;
 
+    const scalar dtNext = chooseStepSize(k, chooseOrder(k), dt);
+
+    deltaTTry = forward ? dtNext : -dtNext;
+}
+
+__device__
+void kodes::Seulex::startStep
+(
+    const kodes::IntegratorControls& controls,
+    const scalar jacRedo
+) const
+{
+    const scalar absTol = controls.absTol;
+    const scalar relTol = controls.relTol;
+
+    temp_[0] = GREAT;
+    y0_ = currentVector();
+    dtOpt_[0] = fabs(0.1*deltaTTry);
+
+    if (first || prevReject)
+    {
+        theta_ = 2*jacRedo;
+    }
+
+    if (first)
+    {
+        const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
+        kTarg_ = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
+    }
+
+    scale_ = absTol + relTol*cmptMag(currentVector());
+}
+
+__device__
+kodes::label kodes::Seulex::tryOrders
+(
+    kodes::ODESystem* ode,
+    const kodes::IntegratorControls& controls,
+    const scalar dt,
+    scalar& dtNew
+) const
+{
+    const ThreadVector<scalar> y = currentVector();
+
+    scalar errOld = 0;
+    label k;
+
+    for (k = 0; k <= kTarg_ + 1; k++)
+    {
+        if (!seul(ode, currentT, dt, k))
+        {
+            reject = true;
+            dtNew = fabs(dt)*kSeulexStepFactor5;
+            break;
+        }
+
+        if (k == 0)
+        {
+            y = ySequence_;
+            continue;
+        }
+
+        table_.column(k-1) = ySequence_;
+        table_.extrapolate(k, y);
+
+        const scalar err = measureError(controls);
+
+        if (err > 1/SMALL || (k > 1 && err >= errOld))
+        {
+            reject = true;
+            dtNew = fabs(dt)*kSeulexStepFactor5;
+            break;
+        }
+
+        errOld = min(4*err, 1.0);
+
+        estimateOrderCost(k, err, dt);
+
+        const Convergence convergence = checkConvergence(k, err);
+
+        if (convergence == Convergence::Undecided)
+        {
+            continue;
+        }
+
+        if (convergence == Convergence::Rejected)
+        {
+            reject = true;
+            dtNew = dtOpt_[kTarg_];
+        }
+
+        break;
+    }
+
+    return k;
+}
+
+__device__
+kodes::scalar kodes::Seulex::measureError
+(
+    const kodes::IntegratorControls& controls
+) const
+{
+    const scalar absTol = controls.absTol;
+    const scalar relTol = controls.relTol;
+
+    // one pass for both, so copies of the views, see seul()
+    const ThreadVector<const scalar> y = currentVector();
+    const ThreadVector<scalar> scale = scale_;
+    const ThreadVector<const scalar> y0 = y0_;
+    const ThreadVector<const scalar> extrapolated = table_.column(0);
+
+    scalar err = 0;
+    #pragma unroll 4
+    for (label i=0; i<kSystemSize; ++i)
+    {
+        scale[i] = absTol + relTol*fabs(y0[i]);
+        err += sqr((y[i] - extrapolated[i])/scale[i]);
+    }
+
+    return sqrt(err/kSystemSize);
+}
+
+__device__
+void kodes::Seulex::estimateOrderCost
+(
+    const label k,
+    const scalar err,
+    const scalar dt
+) const
+{
+    const scalar expo = 1.0/(k + 1);
+    const scalar facmin = pow(kSeulexStepFactor3, expo);
+
+    scalar fac;
+    if (err == 0)
+    {
+        fac = 1/facmin;
+    }
+    else
+    {
+        fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
+        fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
+    }
+
+    dtOpt_[k] = fabs(dt*fac);
+    temp_[k] = kSeulexWorkEstimate[k]/dtOpt_[k];
+}
+
+__device__
+kodes::Seulex::Convergence kodes::Seulex::checkConvergence
+(
+    const label k,
+    const scalar err
+) const
+{
+    label& kTarg = kTarg_;
+
+    if ((first || last) && err <= 1)
+    {
+        return Convergence::Accepted;
+    }
+
+    // one order short of the target, on a step that follows an accepted one
+    if (k == kTarg - 1 && !prevReject && !first && !last)
+    {
+        if (err <= 1)
+        {
+            return Convergence::Accepted;
+        }
+
+        if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
+        {
+            kTarg = lowerOrderIfCheaper(k);
+            return Convergence::Rejected;
+        }
+    }
+
+    if (k == kTarg)
+    {
+        if (err <= 1)
+        {
+            return Convergence::Accepted;
+        }
+
+        if (err > kSeulexStepSequence[k + 1]*2)
+        {
+            kTarg = lowerOrderIfCheaper(kTarg);
+            return Convergence::Rejected;
+        }
+    }
+
+    // one past the target: the last order this step tries
+    if (k == kTarg + 1)
+    {
+        if (err > 1)
+        {
+            kTarg = lowerOrderIfCheaper(kTarg);
+            return Convergence::Rejected;
+        }
+
+        return Convergence::Accepted;
+    }
+
+    return Convergence::Undecided;
+}
+
+__device__
+kodes::label kodes::Seulex::chooseOrder(const label k) const
+{
     label kopt;
+
     if (k == 1)
     {
         kopt = 2;
     }
-    else if (k <= kTarg)
+    else if (k <= kTarg_)
     {
-        kopt=k;
+        kopt = k;
         if (temp_[k-1] < kSeulexKFactor1*temp_[k])
         {
             kopt = k - 1;
@@ -366,31 +450,43 @@ void kodes::Seulex::advance
         }
     }
 
+    return kopt;
+}
+
+__device__
+kodes::scalar kodes::Seulex::chooseStepSize
+(
+    const label k,
+    const label kopt,
+    const scalar dt
+) const
+{
+    label& kTarg = kTarg_;
+
     if (prevReject)
     {
         kTarg = min(kopt, k);
-        dtNew = min(fabs(dt), dtOpt_[kTarg]);
         prevReject = false;
+
+        return min(fabs(dt), dtOpt_[kTarg]);
+    }
+
+    scalar dtNew;
+
+    if (kopt <= k)
+    {
+        dtNew = dtOpt_[kopt];
+    }
+    else if (k < kTarg && temp_[k] < kSeulexKFactor2*temp_[k - 1])
+    {
+        dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
     }
     else
     {
-        if (kopt <= k)
-        {
-            dtNew = dtOpt_[kopt];
-        }
-        else
-        {
-            if (k < kTarg && temp_[k] < kSeulexKFactor2*temp_[k - 1])
-            {
-                dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
-            }
-            else
-            {
-                dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
-            }
-        }
-        kTarg = kopt;
+        dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
     }
 
-    deltaTTry = forward ? dtNew : -dtNew;
+    kTarg = kopt;
+
+    return dtNew;
 }

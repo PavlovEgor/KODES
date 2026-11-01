@@ -113,6 +113,66 @@ public:
         const label k
     ) const;
 
+    // The steps advance() is made of, in the order it takes them
+
+    // Reset the order-indexed estimates, keep the state the step starts from,
+    // and settle theta_ and, on a system's first step, kTarg_
+    __device__ void
+    startStep
+    (
+        const IntegratorControls& controls,
+        const scalar jacRedo
+    ) const;
+
+    // Raise the order k from 0 until an extrapolation is accepted or the step
+    // is rejected, which sets reject and the step to retry with in dtNew.
+    // Returns the order it stopped at.
+    __device__ label
+    tryOrders
+    (
+        ODESystem* ode,
+        const IntegratorControls& controls,
+        const scalar dt,
+        scalar& dtNew
+    ) const;
+
+    // The error of the extrapolated state against the lowest column of the
+    // table, normalised so that 1 is the tolerance
+    __device__ scalar measureError(const IntegratorControls& controls) const;
+
+    // dtOpt_[k], the step order k asks for, and temp_[k], the work per unit
+    // time it would cost
+    __device__ void
+    estimateOrderCost
+    (
+        const label k,
+        const scalar err,
+        const scalar dt
+    ) const;
+
+    // What the error of order k decides: accept the step, reject it - having
+    // lowered kTarg_ if that is cheaper - or try the next order
+    enum class Convergence
+    {
+        Accepted,
+        Rejected,
+        Undecided
+    };
+
+    __device__ Convergence checkConvergence(const label k, const scalar err) const;
+
+    // The order to aim the next step at, from the work estimates
+    __device__ label chooseOrder(const label k) const;
+
+    // The size of the next step, and kTarg_ for it
+    __device__ scalar
+    chooseStepSize
+    (
+        const label k,
+        const label kopt,
+        const scalar dt
+    ) const;
+
     // kTarg, or the order below it if that would have done the work for less,
     // by the work estimates temp_ - what a rejected step falls back to
     __device__ label lowerOrderIfCheaper(const label kTarg) const
