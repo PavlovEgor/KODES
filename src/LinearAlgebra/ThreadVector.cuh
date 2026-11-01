@@ -124,25 +124,25 @@ constexpr bool kAreThreadVectorOperands =
  || (kIsThreadVectorScalar<L> && kIsThreadVectorOperand<R>);
 
 template <typename L, typename R, typename = std::enable_if_t<kAreThreadVectorOperands<L, R>>>
-__device__ ThreadVectorExpression<Plus, L, R> operator+(const L& l, const R& r)
+__device__ ThreadVectorExpression<Plus, L, R> operator+(const L l, const R r)
 {
     return {l, r};
 }
 
 template <typename L, typename R, typename = std::enable_if_t<kAreThreadVectorOperands<L, R>>>
-__device__ ThreadVectorExpression<Minus, L, R> operator-(const L& l, const R& r)
+__device__ ThreadVectorExpression<Minus, L, R> operator-(const L l, const R r)
 {
     return {l, r};
 }
 
 template <typename L, typename R, typename = std::enable_if_t<kAreThreadVectorOperands<L, R>>>
-__device__ ThreadVectorExpression<Times, L, R> operator*(const L& l, const R& r)
+__device__ ThreadVectorExpression<Times, L, R> operator*(const L l, const R r)
 {
     return {l, r};
 }
 
 template <typename L, typename R, typename = std::enable_if_t<kAreThreadVectorOperands<L, R>>>
-__device__ ThreadVectorExpression<Divide, L, R> operator/(const L& l, const R& r)
+__device__ ThreadVectorExpression<Divide, L, R> operator/(const L l, const R r)
 {
     return {l, r};
 }

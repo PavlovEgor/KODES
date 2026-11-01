@@ -295,6 +295,10 @@ leaves declare the four statics, the same division as in `ODESystem`.
 - **`kodes::Euler`** (`Integrator/IntegrationMethods/Euler/`) — an `AdaptiveIntegrationMethod` whose
   `trialStep()` is one explicit step and its error. The simplest thing the machinery can be checked
   against, not something to point at a stiff mechanism.
+- **`kodes::Rosenbrock34`** (`Integrator/IntegrationMethods/Rosenbrock34/`) — an
+  `AdaptiveIntegrationMethod` whose `trialStep()` is OpenFOAM's `Rosenbrock34`: the four stage,
+  third order L-stable linearly implicit method with an embedded error estimate, one Jacobian and
+  one LU decomposition per trial step. The df/dt terms are left out: the systems are autonomous.
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — drives the solve. It owns the
   `solveKernel` kernel: the grid-stride loop over the batch and the step-count loop that walks one
   system from local time 0 to the target end time. `solve(deltaT, realBatchSize)` launches it for
@@ -480,6 +484,7 @@ src/
       Seulex/             Seulex, ExtrapolationTable, seulex_constants — one
                           directory per row of method_table
       Euler/              Euler
+      Rosenbrock34/       Rosenbrock34
   Settings/               Config (JSON reader), Settings
   Library/                library_api.h — the CUDA-free interface of a prebuilt
                           libkodes_<mechanism>.so — and library_api.cu behind it

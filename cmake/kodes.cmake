@@ -35,6 +35,7 @@ set(KODES_SOURCES
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/Seulex.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/seulex_constants.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler/Euler.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Rosenbrock34/Rosenbrock34.cu
 
     ${KODES_SRC_DIR}/ODESystem/PyJacSystem/PyJacSystem.cu
     ${KODES_SRC_DIR}/ODESystem/system_table.cu

@@ -49,7 +49,7 @@ typedef const Library* (*LibraryFunction)();
 // library itself. The defaults are the library's own.
 struct SolverSettings
 {
-    // seulex | euler
+    // seulex | euler | rosenbrock34
     const char* method = "seulex";
 
     // How much of the device one run may take: best | half
