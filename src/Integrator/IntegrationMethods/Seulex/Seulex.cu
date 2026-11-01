@@ -29,7 +29,7 @@ kodes::Seulex::allocate()
 
     // one entry per thread: step control that survives a step, not a system
     kTarg_.allocate(scratchSize_);
-    theta_.allocate(scratchSize_);
+    refreshJacobian_.allocate(scratchSize_);
 
     uploadSeulexConstants();
 }
@@ -55,18 +55,19 @@ kodes::Seulex::deallocate()
     dydt_.deallocate();
 
     kTarg_.deallocate();
-    theta_.deallocate();
+    refreshJacobian_.deallocate();
 
     IntegrationMethod::deallocate();
 }
 
 __device__
-bool kodes::Seulex::seul
+kodes::Seulex::Sequence kodes::Seulex::seul
 (
     kodes::ODESystem* ode,
     const scalar t0,
     const scalar dtTot,
-    const label k
+    const label k,
+    const scalar jacRedo
 ) const
 {
     label nSteps = kSeulexStepSequence[k];
@@ -123,18 +124,20 @@ bool kodes::Seulex::seul
                 // Test of dy_[i] to avoid overflow
                 if (fabs(dy_[i]) > scale_[i]*denom)
                 {
-                    theta_ = 1;
-                    return false;
+                    refreshJacobian_ = true;
+                    return Sequence::Overflowed;
                 }
 
                 dy2 += sqr(dy_[i]/scale_[i]);
             }
             dy2 = sqrt(dy2);
-            theta_ = dy2/denom;
+            const scalar contraction = dy2/denom;
 
-            if (theta_ > 1)
+            refreshJacobian_ = contraction > jacRedo;
+
+            if (contraction > 1)
             {
-                return false;
+                return Sequence::Diverged;
             }
         }
 
@@ -144,7 +147,7 @@ bool kodes::Seulex::seul
 
     ySequence_ = yTemp_ + dy_;
 
-    return true;
+    return Sequence::Converged;
 }
 
 // One accepted step: OpenFOAM's seulex::solve, cut where it changes subject.
@@ -159,14 +162,14 @@ void kodes::Seulex::advance
 {
     const scalar jacRedo = min(1e-4, controls.relTol);
 
-    startStep(controls, jacRedo);
+    startStep(controls);
 
     const ThreadVector<scalar> y = currentVector();
     scalar& t = currentT;
 
     bool jacUpdated = false;
 
-    if (theta_ > jacRedo)
+    if (refreshJacobian_)
     {
         ode->jacobian(t, currentParameter(0), y, dfdy_);
         jacUpdated = true;
@@ -186,7 +189,7 @@ void kodes::Seulex::advance
             printf("step size underflow : %0.16f \n", dt);
         }
 
-        k = tryOrders(ode, controls, dt, dtNew);
+        k = tryOrders(ode, controls, jacRedo, dt, dtNew);
 
         if (reject)
         {
@@ -213,8 +216,7 @@ void kodes::Seulex::advance
 __device__
 void kodes::Seulex::startStep
 (
-    const kodes::IntegratorControls& controls,
-    const scalar jacRedo
+    const kodes::IntegratorControls& controls
 ) const
 {
     const scalar absTol = controls.absTol;
@@ -226,7 +228,7 @@ void kodes::Seulex::startStep
 
     if (first || prevReject)
     {
-        theta_ = 2*jacRedo;
+        refreshJacobian_ = true;
     }
 
     if (first)
@@ -243,6 +245,7 @@ kodes::label kodes::Seulex::tryOrders
 (
     kodes::ODESystem* ode,
     const kodes::IntegratorControls& controls,
+    const scalar jacRedo,
     const scalar dt,
     scalar& dtNew
 ) const
@@ -254,7 +257,7 @@ kodes::label kodes::Seulex::tryOrders
 
     for (k = 0; k <= kTarg_ + 1; k++)
     {
-        if (!seul(ode, currentT, dt, k))
+        if (seul(ode, currentT, dt, k, jacRedo) != Sequence::Converged)
         {
             reject = true;
             dtNew = fabs(dt)*kSeulexStepFactor5;

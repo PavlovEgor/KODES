@@ -56,12 +56,17 @@ protected:
     ThreadVector<scalar> dydt_;
 
     // Order and Jacobian control carried from one step of a system to the next:
-    // the target extrapolation order the previous step settled on, and the
-    // contraction rate that decides whether the Jacobian may be reused. They
-    // outlive a step but not a system, so they are scratch like everything
-    // else here - a step re-reads what the previous one left in its slot.
-    ThreadValue<label>  kTarg_;
-    ThreadValue<scalar> theta_;
+    // the target extrapolation order the previous step settled on, and whether
+    // the next step needs a fresh Jacobian. They outlive a step but not a
+    // system, so they are scratch like everything else here - a step re-reads
+    // what the previous one left in its slot.
+    ThreadValue<label> kTarg_;
+
+    // Set by a system's first step, and by every sequence of order 0 and 1:
+    // when it fails, or converges more slowly than jacRedo. Until 1.2.5 this
+    // was the contraction rate itself, theta_, which nothing read but to
+    // compare with jacRedo.
+    ThreadValue<bool> refreshJacobian_;
 
 public:
 
@@ -97,32 +102,49 @@ public:
              + 2 * n * n                            // dfdy_, a_
              + 7 * n                                // vv_, y0_, ySequence_, scale_, dy_, yTemp_, dydt_
              + 2 * size_t(kSeulexTableSize)         // dtOpt_, temp_
-             + 1                                    // theta_
                ) * sizeof(scalar)
-             + (n + 1) * sizeof(label);             // pivotIndices_, kTarg_
+             + (n + 1) * sizeof(label)              // pivotIndices_, kTarg_
+             + sizeof(bool);                        // refreshJacobian_
     }
 
+    // How one sub-stepping sequence ended. Both failures reject the step
+    // alike; they are told apart for what they say about it.
+    enum class Sequence
+    {
+        Converged,
+
+        // An increment beyond its scale, which the next one would overflow
+        // past - found before the contraction rate could be measured
+        Overflowed,
+
+        // A contraction rate above 1: the sub-steps move away from each other
+        Diverged
+    };
+
     // One linearly implicit sub-stepping sequence of kSeulexStepSequence[k]
-    // steps over dtTot, from y0_ into ySequence_
-    __device__ bool
+    // steps over dtTot, from y0_ into ySequence_.
+    //
+    // The orders 0 and 1 also measure the contraction rate of their first
+    // sub-steps, and decide refreshJacobian_ with it there and then: a rate
+    // above jacRedo, or a sequence that fails, asks the next step for a fresh
+    // Jacobian. Returning the rate instead and deciding in tryOrders() reads
+    // better, but keeps it alive across the rest of the sequence's calls into
+    // the system and the LU solve, and costs both functions 8 bytes of stack.
+    __device__ Sequence
     seul
     (
         ODESystem* ode,
         const scalar t0,
         const scalar dtTot,
-        const label k
+        const label k,
+        const scalar jacRedo
     ) const;
 
     // The steps advance() is made of, in the order it takes them
 
     // Reset the order-indexed estimates, keep the state the step starts from,
-    // and settle theta_ and, on a system's first step, kTarg_
-    __device__ void
-    startStep
-    (
-        const IntegratorControls& controls,
-        const scalar jacRedo
-    ) const;
+    // and on a system's first step settle kTarg_ and ask for a Jacobian
+    __device__ void startStep(const IntegratorControls& controls) const;
 
     // Raise the order k from 0 until an extrapolation is accepted or the step
     // is rejected, which sets reject and the step to retry with in dtNew.
@@ -132,6 +154,7 @@ public:
     (
         ODESystem* ode,
         const IntegratorControls& controls,
+        const scalar jacRedo,
         const scalar dt,
         scalar& dtNew
     ) const;

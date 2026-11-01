@@ -285,9 +285,9 @@ leaves declare the four statics, the same division as in `ODESystem`.
   ODE solver), with the same work arrays under the same names: the extrapolation table `table_` (an
   `ExtrapolationTable`, a view whose columns are vectors), the Jacobian `dfdy_` and the LU work
   matrix `a_`, the pivot indices and row scales of the factorization, the order-indexed step
-  estimates, the target order and the contraction rate carried from one step to the next, and the
-  vectors the outer step and the inner `seul` sub-stepping run through - all per thread, sized with
-  `scratchSize`. `advance()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves
+  estimates, the target order and whether to refresh the Jacobian, carried from one step to the
+  next, and the vectors the outer step and the inner `seul` sub-stepping run through - all per
+  thread, sized with `scratchSize`. `advance()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves
   and polynomial extrapolation (`ExtrapolationTable::extrapolate`) to control step size and order
   itself. Its `allocate()` also fills the `__constant__` step sequence and extrapolation
   coefficients of `seulex_constants.cuh`; the tolerances come from `IntegratorControls`, i.e. from
