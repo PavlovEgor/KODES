@@ -113,6 +113,18 @@ public:
         const label k
     ) const;
 
+    // kTarg, or the order below it if that would have done the work for less,
+    // by the work estimates temp_ - what a rejected step falls back to
+    __device__ label lowerOrderIfCheaper(const label kTarg) const
+    {
+        if (kTarg > 1 && temp_[kTarg-1] < kSeulexKFactor1*temp_[kTarg])
+        {
+            return kTarg - 1;
+        }
+
+        return kTarg;
+    }
+
     __device__ void
     advance
     (

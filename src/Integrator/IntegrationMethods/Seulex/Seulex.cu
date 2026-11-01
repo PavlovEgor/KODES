@@ -197,12 +197,10 @@ void kodes::Seulex::advance
 
     label k;
     scalar dtNew = fabs(dt);
-    bool firstk = true;
 
-    while (firstk || reject)
+    do
     {
         dt = forward ? dtNew : -dtNew;
-        firstk = false;
         reject = false;
 
         if (fabs(dt) <= fabs(t) * sqr(SMALL))
@@ -226,114 +224,96 @@ void kodes::Seulex::advance
             if (k == 0)
             {
                 y = ySequence_;
+                continue;
+            }
+
+            table_.column(k-1) = ySequence_;
+
+            table_.extrapolate(k, y);
+            // one pass for both, so copies of the views, see seul()
+            const ThreadVector<scalar> scale = scale_;
+            const ThreadVector<const scalar> y0 = y0_;
+            const ThreadVector<const scalar> extrapolated = table_.column(0);
+
+            scalar err = 0;
+            #pragma unroll 4
+            for (label i=0; i<kSystemSize; ++i)
+            {
+                scale[i] = absTol + relTol*fabs(y0[i]);
+                err += sqr((y[i] - extrapolated[i])/scale[i]);
+            }
+            err = sqrt(err/kSystemSize);
+            if (err > 1/SMALL || (k > 1 && err >= errOld))
+            {
+                reject = true;
+                dtNew = fabs(dt)*kSeulexStepFactor5;
+                break;
+            }
+            errOld = min(4*err, 1.0);
+            scalar expo = 1.0/(k + 1);
+            scalar facmin = pow(kSeulexStepFactor3, expo);
+            scalar fac;
+            if (err == 0)
+            {
+                fac = 1/facmin;
             }
             else
             {
-                table_.column(k-1) = ySequence_;
+                fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
+                fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
+            }
+            dtOpt_[k] = fabs(dt*fac);
+            temp_[k] = kSeulexWorkEstimate[k]/dtOpt_[k];
+
+            if ((first || last) && err <= 1)
+            {
+                break;
             }
 
-            if (k != 0)
+            if
+            (
+                k == kTarg - 1
+            && !prevReject
+            && !first && !last
+            )
             {
-                table_.extrapolate(k, y);
-                // one pass for both, so copies of the views, see seul()
-                const ThreadVector<scalar> scale = scale_;
-                const ThreadVector<const scalar> y0 = y0_;
-                const ThreadVector<const scalar> extrapolated = table_.column(0);
-
-                scalar err = 0;
-                #pragma unroll 4
-                for (label i=0; i<kSystemSize; ++i)
+                if (err <= 1)
                 {
-                    scale[i] = absTol + relTol*fabs(y0[i]);
-                    err += sqr((y[i] - extrapolated[i])/scale[i]);
+                    break;
                 }
-                err = sqrt(err/kSystemSize);
-                if (err > 1/SMALL || (k > 1 && err >= errOld))
+                else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
                 {
                     reject = true;
-                    dtNew = fabs(dt)*kSeulexStepFactor5;
+                    kTarg = lowerOrderIfCheaper(k);
+                    dtNew = dtOpt_[kTarg];
                     break;
                 }
-                errOld = min(4*err, 1.0);
-                scalar expo = 1.0/(k + 1);
-                scalar facmin = pow(kSeulexStepFactor3, expo);
-                scalar fac;
-                if (err == 0)
-                {
-                    fac = 1/facmin;
-                }
-                else
-                {
-                    fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
-                    fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
-                }
-                dtOpt_[k] = fabs(dt*fac);
-                temp_[k] = kSeulexWorkEstimate[k]/dtOpt_[k];
+            }
 
-                if ((first || last) && err <= 1)
+            if (k == kTarg)
+            {
+                if (err <= 1)
                 {
                     break;
                 }
-
-                if
-                (
-                    k == kTarg - 1
-                && !prevReject
-                && !first && !last
-                )
+                else if (err > kSeulexStepSequence[k + 1]*2)
                 {
-                    if (err <= 1)
-                    {
-                        break;
-                    }
-                    else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
-                    {
-                        reject = true;
-                        kTarg = k;
-                        if (kTarg>1 && temp_[k-1] < kSeulexKFactor1*temp_[k])
-                        {
-                            kTarg--;
-                        }
-                        dtNew = dtOpt_[kTarg];
-                        break;
-                    }
-                }
-
-                if (k == kTarg)
-                {
-                    if (err <= 1)
-                    {
-                        break;
-                    }
-                    else if (err > kSeulexStepSequence[k + 1]*2)
-                    {
-                        reject = true;
-                        if (kTarg>1 && temp_[k-1] < kSeulexKFactor1*temp_[k])
-                        {
-                            kTarg--;
-                        }
-                        dtNew = dtOpt_[kTarg];
-                        break;
-                    }
-                }
-
-                if (k == kTarg+1)
-                {
-                    if (err > 1)
-                    {
-                        reject = true;
-                        if
-                        (
-                            kTarg > 1
-                        && temp_[kTarg-1] < kSeulexKFactor1*temp_[kTarg]
-                        )
-                        {
-                            kTarg--;
-                        }
-                        dtNew = dtOpt_[kTarg];
-                    }
+                    reject = true;
+                    kTarg = lowerOrderIfCheaper(kTarg);
+                    dtNew = dtOpt_[kTarg];
                     break;
                 }
+            }
+
+            if (k == kTarg+1)
+            {
+                if (err > 1)
+                {
+                    reject = true;
+                    kTarg = lowerOrderIfCheaper(kTarg);
+                    dtNew = dtOpt_[kTarg];
+                }
+                break;
             }
         }
         if (reject)
@@ -343,16 +323,15 @@ void kodes::Seulex::advance
             {
                 theta = 2*jacRedo;
 
-                if (theta > jacRedo && !jacUpdated)
+                // false only for a relTol of 0 or less
+                if (theta > jacRedo)
                 {
                     ode->jacobian(t, currentParameter(0), y, dfdy_);
                     jacUpdated = true;
                 }
             }
         }
-
-    }
-    jacUpdated = false;
+    } while (reject);
 
     deltaTDid = dt;
     t += dt;
