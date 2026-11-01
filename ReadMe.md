@@ -175,14 +175,14 @@ in short:
 - **`Factory/type_table.cuh`** — how one of them is chosen by name. A `TypeEntry` is a concrete class
   reduced to plain function pointers, so the dispatch needs no host vtable at all: a caller nvcc did
   not compile can still select and own a class whose virtuals only exist on the device. That is the
-  reason for `createStub` — `step()` and `derivatives()` are device-only virtuals, and the host vtable of a
+  reason for `createStub` — `advance()` and `derivatives()` are device-only virtuals, and the host vtable of a
   class with one can only be emitted by a compiler that invents a host stub for it, which nvcc does
   and `nvc++ -cuda` does not. Keeping construction inside the library's own `.cu` leaves callers
   holding nothing but a pointer. `Handle<Base>` owns the device object and its stub together and
   returns both to the class that made them.
 
-The tables are `Integrator/IntegrationMethods/method_table.cu` and `ODESystem/system_table.cu`; a method's entry names the `DeviceResources` subclass holding its
-scratch, since the two can only be chosen together.
+The tables are `Integrator/IntegrationMethods/method_table.cu` and `ODESystem/system_table.cu`,
+one class per row in both.
 - **`kodes::mpiSelectDevice`** (`mpi_select_device.cuh`/`.cu`) — optional MPI device-binding helper for
   running across an arbitrary number of ranks and an arbitrary number of GPUs (single node or a
   heterogeneous multi-node cluster). Each rank is assumed to already own its own local slice of
@@ -232,27 +232,18 @@ scratch, since the two can only be chosen together.
 
 ### `Resources` — state storage, host and device
 
-This is the one family with no table and no concrete classes of its own, and both are deliberate.
+This is the one family with no table and no concrete classes of its own. The concrete device-side
+storage is the integration method itself: `IntegrationMethod` derives from `DeviceResources`, and
+`Seulex` and `Euler` add their scratch to it as members, as OpenFOAM's `seulex` holds its own work
+arrays. Until 1.2 each method had a `DeviceResources` subclass of its own, a second object chosen by
+the same row of the method table and reached by casting the pointer the method was handed down to
+it; merging the two removed that cast, the second row field and three classes.
 
-A method and the resources holding its scratch can only be chosen *together*, because `Seulex::step()`
-casts the base pointer down to `SeulexDeviceResources*` and `IntegrationMethod::adaptiveStep()` to
-`AdaptiveDeviceResources*`. So the row that selects a subclass is a *field* of the method's row in
-`method_table.cu` rather than a table of its own — one with a name of its own would make
-`{"method": "euler", "resources": "seulexResources"}` a legal settings file that fails inside the
-kernel.
-
-The tree says the same thing: `SeulexDeviceResources` lives in `IntegrationMethods/Seulex/` beside
-the method it exists for, and `EulerDeviceResources` in `IntegrationMethods/Euler/`. What stays
-here is only what any method can use — the abstract part of the family (`Resources`,
-`DeviceResources`, `AdaptiveDeviceResources`), the `StepState` mixin, and the two host-side classes
-that are not device objects at all (`HostResources`, `Operator`). That also keeps the dependency
-one-way: `IntegrationMethods` includes from `Resources`, never the reverse. It used to be the
-reverse as well, since `SeulexDeviceResources` needs the Seulex tableau in `seulex_constants.cuh`.
-
-For the same reason `DeviceResources` and `AdaptiveDeviceResources` carry no
-`KODES_DECLARE_DEVICE_OBJECT`: neither is ever a row, so only the leaves declare the four statics —
-the same division as in `ODESystem`, whose base declares nothing but the placement
-`operator new` either.
+What stays here is only what any method can use — `Resources` and `DeviceResources`, the
+`StepState` mixin, the view `BatchArray` and the `DeviceBuffer` every view is built on — and the
+two host-side classes that are not device objects at all (`HostResources`, `Operator`).
+`DeviceResources` carries no `KODES_DECLARE_DEVICE_OBJECT`, since it is never a row: only the
+leaves declare the four statics, the same division as in `ODESystem`.
 
 - **`kodes::Resources`** (`Resources/Resources.cuh`) — common base: `numOfSystems`,
   `sizeOfSystem`, `numOfParameters` and their accessors.
@@ -266,57 +257,51 @@ the same division as in `ODESystem`, whose base declares nothing but the placeme
   `currentVector()` and `currentParameter(i)`, the working copy of the system a thread is
   integrating right now, sized with `scratchSize`, and the `StepState` arrays - the trial step, the
   local time, the direction and the first/last/reject flags of that system.
-  `loadSystem(system)`/`storeSystem(system)` move one system between the two. A device object like
-  every other, so its buffers are allocated by its own `allocate()` into a host stub that `Operator`
-  then reads to find them. The statics `stateBytesPerSystem`/`scratchBytesPerThread`/
+  `loadSystem(system)`/`storeSystem(system)` move one system between the two. The base of every
+  integration method, so its buffers are allocated by the method's `allocate()` into a host stub
+  that `Operator` then reads to find them. The statics `stateBytesPerSystem`/`scratchBytesPerThread`/
   `scratchBytesPerBlock` report the per-system, per-thread and per-block cost to `planLaunch` (the
-  last is zero); a subclass extends whichever it adds to.
-- **`kodes::SeulexDeviceResources`** (`Integrator/IntegrationMethods/Seulex/`) — extends
-  `DeviceResources` with the extra scratch the Seulex integrator needs, all of it per thread and
-  sized with `scratchSize`: the polynomial extrapolation table (an `ExtrapolationTable`, a view
-  whose columns are vectors), the Jacobian `dfdy` and the LU work
-  matrix `a`, the pivot indices and row scales of the factorization, the order-indexed step
-  estimates, the target order and the contraction rate carried from one step to the next, and the
-  vectors the outer step and the inner `seul` sub-stepping run through. Its `allocate()` also fills
-  the `__constant__` step sequence and extrapolation coefficients.
-- **`kodes::AdaptiveDeviceResources`** (`Resources/`) / **`kodes::EulerDeviceResources`**
-  (`Integrator/IntegrationMethods/Euler/`) — the same for a method that takes trial steps: the two
-  vectors `IntegrationMethod::adaptiveStep` needs to hold a trial state and the derivative it
-  started from, plus the error vector Euler writes. The intermediate stays in `Resources/` because
-  any trial-step method uses it; only the leaf belongs to one method.
+  last is zero); a method extends whichever it adds to.
 - **`kodes::Operator`** (`Resources/Operator.cuh`) — copies state between a `HostResources` and a
-  `DeviceResources` (or subclass): `cpyHostToDevice(batchIndex)`/`cpyDeviceToHost(batchIndex)`
-  transfer every component and parameter of one batch, translating between the host's per-component
+  `DeviceResources`, which is the integration method: `cpyHostToDevice(batchIndex)`/
+  `cpyDeviceToHost(batchIndex)` transfer every component and parameter of one batch, translating between the host's per-component
   pointers and the device's flat state-space layout. `getRealBatchSize(batchIndex)` gives the size
   of that batch — the last one is normally shorter than `batchSize`.
 
 ### `Integrators` — advancing the ODEs
 
 - **`kodes::IntegrationMethod`** (`Integrator/IntegrationMethods/IntegrationMethod.cuh`) — abstract
-  base for one numerical method, a device object like the ODE system: `__device__ virtual scalar
-  step(ode, resources, controls)` advances the system the calling thread holds in its scratch slot,
-  and which subclass runs is a name in `method_table`. `usesAdaptiveStep()` says whether that step
-  is a *trial* step, in which case the base's own `adaptiveStep()` — the step-size controller —
-  retries it smaller until the error is inside the tolerance, and then grows the next one. A method
-  owns no storage: the `DeviceResources` subclass named in the same table entry holds all of it,
-  which is what makes it safe for `step()` to cast the base pointer down to it.
+  base for one numerical method, a device object like the ODE system, and a `DeviceResources`:
+  `__device__ virtual void advance(ode, controls)` takes one accepted step of the system the
+  calling thread holds in its scratch slot, and which subclass runs is a name in `method_table`. A
+  method adds the scratch it needs to the batch and the step state it inherits, and uses it by name.
+- **`kodes::AdaptiveIntegrationMethod`** (`Integrator/IntegrationMethods/`) — the intermediate for a
+  method that only takes *trial* steps: its `advance()` is the step-size controller they share,
+  which retries a subclass's `trialStep()` smaller until the error is inside the tolerance and then
+  grows the next one, and its `yTemp_`/`dydt0_` hold the trial state and the derivative it started
+  from.
 - **`kodes::Seulex`** (`Integrator/IntegrationMethods/Seulex/`) — a GPU port of the
   semi-implicit Bulirsch-Stoer extrapolation method (the same algorithm as OpenFOAM's own `seulex`
-  ODE solver). `step()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves and
-  polynomial extrapolation (`ExtrapolationTable::extrapolate`) to control step size and order, so it controls its own
-  step and `usesAdaptiveStep` is false. The step-control coefficients are `__constant__`s in
-  `seulex_constants.cuh`; the tolerances come from `IntegratorControls`, i.e. from the settings
-  file.
-- **`kodes::Euler`** (`Integrator/IntegrationMethods/Euler/`) — one explicit step and its error,
-  to be accepted or rejected by `adaptiveStep`. The simplest thing the machinery can be checked
+  ODE solver), with the same work arrays under the same names: the extrapolation table `table_` (an
+  `ExtrapolationTable`, a view whose columns are vectors), the Jacobian `dfdy_` and the LU work
+  matrix `a_`, the pivot indices and row scales of the factorization, the order-indexed step
+  estimates, the target order and the contraction rate carried from one step to the next, and the
+  vectors the outer step and the inner `seul` sub-stepping run through - all per thread, sized with
+  `scratchSize`. `advance()` uses `LUDecompose`/`LUBacksubstitute` for the implicit linear solves
+  and polynomial extrapolation (`ExtrapolationTable::extrapolate`) to control step size and order
+  itself. Its `allocate()` also fills the `__constant__` step sequence and extrapolation
+  coefficients of `seulex_constants.cuh`; the tolerances come from `IntegratorControls`, i.e. from
+  the settings file.
+- **`kodes::Euler`** (`Integrator/IntegrationMethods/Euler/`) — an `AdaptiveIntegrationMethod` whose
+  `trialStep()` is one explicit step and its error. The simplest thing the machinery can be checked
   against, not something to point at a stiff mechanism.
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — drives the solve. It owns the
   `solveKernel` kernel: the grid-stride loop over the batch and the step-count loop that walks one
   system from local time 0 to the target end time. `solve(deltaT, realBatchSize)` launches it for
   one batch and `setDeltaT` seeds the trial step of every scratch slot; a slot carries the step it
   ended one system with into the next, so a system starts warm from its predecessor. It is not a
-  template: the ODE system, the method and the resources are all device objects it dispatches on, so
-  there is one instantiation of the kernel however the run was configured.
+  template: the ODE system and the method are device objects it dispatches on, so there is one
+  instantiation of the kernel however the run was configured.
 
 ## Typical run
 
@@ -347,19 +332,17 @@ kodes::LaunchConfig config = kodes::planLaunch
 //    pyJac's scratch is one of those buffers. It is padded to the resident
 //    threads, not to the batch, and newSystem() is handed config.scratchSize
 //    for it.
-auto resources = kodes::newResources(method, config.batchSize, config.scratchSize,
-                                     config.blocks, systemSize, parameterSize);
 auto integrationMethod = kodes::newMethod(method, config.batchSize, config.scratchSize,
                                           config.blocks, systemSize, parameterSize);
 auto ode = kodes::newSystem(odeSystem, config.batchSize, config.scratchSize,
                             config.blocks, systemSize, parameterSize);
 
-// 4) solve batch by batch
-kodes::Operator op(&host_res, resources.host());
+// 4) solve batch by batch; the method holds the device side of the batch too
+kodes::Operator op(&host_res, integrationMethod.host());
 
 kodes::Integrator solver
 (
-    ode.device(), resources.device(), integrationMethod.device(), config, settings.controls()
+    ode.device(), integrationMethod.device(), config, settings.controls()
 );
 
 solver.setDeltaT(settings.initialTimeStep());
@@ -487,18 +470,16 @@ src/
                           anywhere in src/
     PyJacSystem/
   Resources/              only what any method can use: Resources,
-                          DeviceResources, AdaptiveDeviceResources, StepState,
-                          the view BatchArray and the DeviceBuffer every view
-                          is built on, and the host
-                          side HostResources, Operator. No table
-                          and no concrete classes — see the Resources section
-                          above for why
+                          DeviceResources, StepState, the view BatchArray and
+                          the DeviceBuffer every view is built on, and the
+                          host side HostResources, Operator. No table and no
+                          concrete classes — see the Resources section above
   Integrator/             Integrator, LaunchConfig, IntegratorControls
-    IntegrationMethods/   IntegrationMethod, method_table
-      Seulex/             Seulex, SeulexDeviceResources, seulex_constants —
-                          one directory per row of method_table, because a
-                          method and its storage are one choice
-      Euler/              Euler, EulerDeviceResources
+    IntegrationMethods/   IntegrationMethod, AdaptiveIntegrationMethod,
+                          method_table
+      Seulex/             Seulex, ExtrapolationTable, seulex_constants — one
+                          directory per row of method_table
+      Euler/              Euler
   Settings/               Config (JSON reader), Settings
   Library/                library_api.h — the CUDA-free interface of a prebuilt
                           libkodes_<mechanism>.so — and library_api.cu behind it

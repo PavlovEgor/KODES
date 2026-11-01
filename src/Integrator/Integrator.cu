@@ -10,8 +10,7 @@ __global__
 void kodes::solveKernel
 (
     kodes::ODESystem* ode,
-    kodes::DeviceResources* resources,
-    const kodes::IntegrationMethod* method,
+    kodes::IntegrationMethod* method,
     kodes::IntegratorControls controls
 )
 {
@@ -19,55 +18,55 @@ void kodes::solveKernel
 
     const label maxSteps = ctrl.maxSteps;
 
-    const ThreadVector<scalar> y = resources->currentVector();
+    const ThreadVector<scalar> y = method->currentVector();
 
     for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
     {
-        if (resources->vectorComponent(system, 0) <= ctrl.Treact)
+        if (method->vectorComponent(system, 0) <= ctrl.Treact)
         {
             continue;
         }
 
         ctrl.system = system;
 
-        resources->loadSystem(system);
-        resources->resetStep();
+        method->loadSystem(system);
+        method->resetStep();
 
         const scalar tStart = 0;
         const scalar tEnd = ctrl.deltaT;
-        resources->currentT = tStart;
-        scalar& t = resources->currentT;
+        method->currentT = tStart;
+        scalar& t = method->currentT;
 
         bool reachedEnd = false;
 
         for (label nStep = 0; nStep < maxSteps; ++nStep)
         {
-            const scalar dtTry0 = resources->deltaTTry;
-            resources->reject = false;
+            const scalar dtTry0 = method->deltaTTry;
+            method->reject = false;
 
-            if ((t + resources->deltaTTry - tEnd)*(t + resources->deltaTTry - tStart) > 0)
+            if ((t + method->deltaTTry - tEnd)*(t + method->deltaTTry - tStart) > 0)
             {
-                resources->last = true;
-                resources->deltaTTry = tEnd - t;
+                method->last = true;
+                method->deltaTTry = tEnd - t;
             }
 
-            method->advance(ode, resources, ctrl);
+            method->advance(ode, ctrl);
 
             if ((t - tEnd)*(tEnd - tStart) >= 0)
             {
-                if (nStep > 0 && resources->last)
+                if (nStep > 0 && method->last)
                 {
-                    resources->deltaTTry = dtTry0;
+                    method->deltaTTry = dtTry0;
                 }
                 reachedEnd = true;
                 break;
             }
 
-            resources->first = false;
+            method->first = false;
 
-            if (resources->reject)
+            if (method->reject)
             {
-                resources->prevReject = true;
+                method->prevReject = true;
             }
         }
 
@@ -77,13 +76,13 @@ void kodes::solveKernel
             (
                 "Integration steps greater than maximum %d : system %d, "
                 "t = %0.16e, tEnd = %0.16e, deltaTDid = %0.16e \n",
-                maxSteps, system, t, tEnd, resources->deltaTDid.get()
+                maxSteps, system, t, tEnd, method->deltaTDid.get()
             );
         }
 
         y = cmptMax(0.0, y);
 
-        resources->storeSystem(system);
+        method->storeSystem(system);
     }
 }
 
@@ -168,17 +167,16 @@ __host__ kodes::LaunchConfig kodes::planLaunch
 kodes::Integrator::Integrator
 (
     kodes::ODESystem* ode,
-    kodes::DeviceResources* resources,
-    const kodes::IntegrationMethod* method,
+    kodes::IntegrationMethod* method,
     const kodes::LaunchConfig& config,
     const kodes::IntegratorControls& controls
 )
-: config_(config), ode_(ode), resources_(resources), method_(method),
+: config_(config), ode_(ode), method_(method),
   controls_(controls)
 {
-    if (!ode_ || !resources_ || !method_)
+    if (!ode_ || !method_)
     {
-        fprintf(stderr, "Integrator ctor error at %s:%d: null ode/resources/method pointer\n", __FILE__, __LINE__);
+        fprintf(stderr, "Integrator ctor error at %s:%d: null ode/method pointer\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
 
@@ -211,7 +209,7 @@ void kodes::Integrator::setDeltaT(const scalar deltaT)
     // One trial step per scratch slot, seeded by the thread that owns it
     kodes::setDeltaTKernel
         <<<config_.blocks, config_.threads, config_.sharedMemSize>>>
-        (deltaT, resources_);
+        (deltaT, method_);
     CUDA_CHECK_LAST();
 }
 
@@ -228,6 +226,6 @@ void kodes::Integrator::solve(scalar deltaT, label realBatchSize)
 
     kodes::solveKernel
         <<<config_.blocks, config_.threads, config_.sharedMemSize>>>
-        (ode_, resources_, method_, controls_);
+        (ode_, method_, controls_);
     CUDA_CHECK_LAST();
 }

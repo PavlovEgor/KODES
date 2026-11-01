@@ -12,7 +12,7 @@
 // kodes::mpiSelectDevice().
 //
 // After mpiSelectDevice() returns, the rest of the kodes API
-// (HostResources/SeulexDeviceResources/Operator/Seulex) is used exactly as
+// (HostResources/Operator/Seulex/Integrator) is used exactly as
 // in a single-GPU program: each rank already owns its own local slice of
 // systems, and every subsequent CUDA call this thread makes lands on the
 // bound device.

@@ -4,111 +4,156 @@
 
 KODES_DEFINE_DEVICE_OBJECT(kodes::Seulex)
 
+__host__ void
+kodes::Seulex::allocate()
+{
+    IntegrationMethod::allocate();
+
+    table_.allocate(scratchSize_);
+    dfdy_.allocate(scratchSize_);
+    a_.allocate(scratchSize_);
+
+    pivotIndices_.allocate(scratchSize_);
+    vv_.allocate(scratchSize_);
+
+    // indexed by the extrapolation order, not by the component
+    dtOpt_.allocate(scratchSize_);
+    temp_.allocate(scratchSize_);
+
+    y0_.allocate(scratchSize_);
+    ySequence_.allocate(scratchSize_);
+    scale_.allocate(scratchSize_);
+    dy_.allocate(scratchSize_);
+    yTemp_.allocate(scratchSize_);
+    dydt_.allocate(scratchSize_);
+
+    // one entry per thread: step control that survives a step, not a system
+    kTarg_.allocate(scratchSize_);
+    theta_.allocate(scratchSize_);
+
+    uploadSeulexConstants();
+}
+
+__host__ void
+kodes::Seulex::deallocate()
+{
+    table_.deallocate();
+    dfdy_.deallocate();
+    a_.deallocate();
+
+    pivotIndices_.deallocate();
+    vv_.deallocate();
+
+    dtOpt_.deallocate();
+    temp_.deallocate();
+
+    y0_.deallocate();
+    ySequence_.deallocate();
+    scale_.deallocate();
+    dy_.deallocate();
+    yTemp_.deallocate();
+    dydt_.deallocate();
+
+    kTarg_.deallocate();
+    theta_.deallocate();
+
+    IntegrationMethod::deallocate();
+}
+
 __device__
-bool kodes::Seulex::seul (
-    kodes::SeulexDeviceResources* resources,
+bool kodes::Seulex::seul
+(
     kodes::ODESystem* ode,
     const scalar t0,
     const scalar dtTot,
-    const label k,
-    scalar& theta
-)
+    const label k
+) const
 {
-    const ThreadMatrix<scalar> dfdy = resources->dfdy();
-    const ThreadMatrix<scalar> a = resources->a();
-    const ThreadVector<label> pivotIndices = resources->pivotIndices();
-    const ThreadVector<scalar> vv = resources->vv();
-
-    const ThreadVector<scalar> y0 = resources->y0();
-    const ThreadVector<scalar> scale = resources->scale();
-
-    const ThreadVector<scalar> dy = resources->dy();
-    const ThreadVector<scalar> yTemp = resources->yTemp();
-    const ThreadVector<scalar> dydt = resources->dydt();
-    const ThreadVector<scalar> y = resources->ySequence();
-
     label nSteps = kSeulexStepSequence[k];
     scalar dt = dtTot/nSteps;
 
-    #pragma unroll 4
-    for (label i=0; i<kSystemSize; i++)
     {
+        // Copies of the two views, as ThreadVector::update makes them: written
+        // through a member of this object, a_ and dfdy_ would have their
+        // pointers read back out of it after every element
+        const ThreadMatrix<scalar> a = a_;
+        const ThreadMatrix<const scalar> dfdy = dfdy_;
+
         #pragma unroll 4
-        for (label j=0; j<kSystemSize; j++)
+        for (label i=0; i<kSystemSize; i++)
         {
-            a(i, j) = -dfdy(i, j);
+            #pragma unroll 4
+            for (label j=0; j<kSystemSize; j++)
+            {
+                a(i, j) = -dfdy(i, j);
+            }
+            a(i, i) += 1/dt;
         }
-        a(i, i) += 1/dt;
     }
 
-    LUDecompose(a, pivotIndices, vv);
+    LUDecompose(a_, pivotIndices_, vv_);
 
     scalar tNew = t0 + dt;
-    ode->derivatives(tNew, resources->currentParameter(0), y0, dy);
+    ode->derivatives(tNew, currentParameter(0), y0_, dy_);
 
-    LUBacksubstitute(a, pivotIndices, dy);
+    LUBacksubstitute(a_, pivotIndices_, dy_);
 
-    yTemp = y0;
+    yTemp_ = y0_;
 
     for (label nn=1; nn<nSteps; nn++)
     {
-        yTemp += dy;
+        yTemp_ += dy_;
 
         tNew += dt;
 
         if (nn == 1 && k<=1)
         {
-            const scalar dy1 = mag(dy/scale);
+            const scalar dy1 = mag(dy_/scale_);
 
-            ode->derivatives(t0 + dt, resources->currentParameter(0), yTemp, dydt);
-            dy = dydt - dy/dt;
+            ode->derivatives(t0 + dt, currentParameter(0), yTemp_, dydt_);
+            dy_ = dydt_ - dy_/dt;
 
-            LUBacksubstitute(a, pivotIndices, dy);
+            LUBacksubstitute(a_, pivotIndices_, dy_);
 
             const scalar denom = min(1.0, dy1 + SMALL);
             scalar dy2 = 0;
             #pragma unroll 4
             for (label i=0; i<kSystemSize; i++)
             {
-                // Test of dy[i] to avoid overflow
-                if (fabs(dy[i]) > scale[i]*denom)
+                // Test of dy_[i] to avoid overflow
+                if (fabs(dy_[i]) > scale_[i]*denom)
                 {
-                    theta = 1;
+                    theta_ = 1;
                     return false;
                 }
 
-                dy2 += sqr(dy[i]/scale[i]);
+                dy2 += sqr(dy_[i]/scale_[i]);
             }
             dy2 = sqrt(dy2);
-            theta = dy2/denom;
+            theta_ = dy2/denom;
 
-            if (theta > 1)
+            if (theta_ > 1)
             {
                 return false;
             }
         }
 
-        ode->derivatives(tNew, resources->currentParameter(0), yTemp, dy);
-        LUBacksubstitute(a, pivotIndices, dy);
+        ode->derivatives(tNew, currentParameter(0), yTemp_, dy_);
+        LUBacksubstitute(a_, pivotIndices_, dy_);
     }
 
-    y = yTemp + dy;
+    ySequence_ = yTemp_ + dy_;
 
     return true;
 }
 
 __device__
-kodes::scalar kodes::Seulex::step
+void kodes::Seulex::advance
 (
     kodes::ODESystem* ode,
-    kodes::DeviceResources* deviceResources,
     kodes::IntegratorControls controls
 ) const
 {
-    // safe: the table entry that made this method made these resources
-    SeulexDeviceResources* resources =
-        static_cast<SeulexDeviceResources*>(deviceResources);
-
     const scalar absTol = controls.absTol;
     const scalar relTol = controls.relTol;
 
@@ -118,44 +163,35 @@ kodes::scalar kodes::Seulex::step
     // system settled on, theta the contraction rate it measured. They live in
     // the thread's scratch slot, since a local would be indeterminate on every
     // step after the first - which is the one the first_ branch below writes.
-    label&  kTarg = resources->kTarg();
-    scalar& theta = resources->theta();
+    label&  kTarg = kTarg_;
+    scalar& theta = theta_;
 
-    const ExtrapolationTable table = resources->table();
-    const ThreadMatrix<scalar> dfdy = resources->dfdy();
+    const ThreadVector<scalar> y = currentVector();
+    scalar& t = currentT;
 
-    const ThreadVector<scalar, kSeulexTableSize> dtOpt = resources->dtOpt();
-    const ThreadVector<scalar, kSeulexTableSize> temp = resources->temp();
-    const ThreadVector<scalar> y0 = resources->y0();
-    const ThreadVector<scalar> ySequence = resources->ySequence();
-    const ThreadVector<scalar> scale = resources->scale();
+    temp_[0] = GREAT;
+    scalar dt = deltaTTry;
+    y0_ = y;
+    dtOpt_[0] = fabs(0.1*dt);
 
-    const ThreadVector<scalar> y = resources->currentVector();
-    scalar& t = resources->currentT;
-
-    temp[0] = GREAT;
-    scalar dt = resources->deltaTTry;
-    y0 = y;
-    dtOpt[0] = fabs(0.1*dt);
-
-    if (resources->first || resources->prevReject)
+    if (first || prevReject)
     {
         theta = 2*jacRedo;
     }
 
-    if (resources->first)
+    if (first)
     {
         const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
         kTarg = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
 
-    scale = absTol + relTol*cmptMag(y);
+    scale_ = absTol + relTol*cmptMag(y);
 
     bool jacUpdated = false;
 
     if (theta > jacRedo)
     {
-        ode->jacobian(t, resources->currentParameter(0), y, dfdy);
+        ode->jacobian(t, currentParameter(0), y, dfdy_);
         jacUpdated = true;
     }
 
@@ -163,11 +199,11 @@ kodes::scalar kodes::Seulex::step
     scalar dtNew = fabs(dt);
     bool firstk = true;
 
-    while (firstk || resources->reject)
+    while (firstk || reject)
     {
-        dt = resources->forward ? dtNew : -dtNew;
+        dt = forward ? dtNew : -dtNew;
         firstk = false;
-        resources->reject = false;
+        reject = false;
 
         if (fabs(dt) <= fabs(t) * sqr(SMALL))
         {
@@ -178,38 +214,43 @@ kodes::scalar kodes::Seulex::step
 
         for (k=0; k<=kTarg+1; k++)
         {
-            bool success = seul(resources, ode, t, dt, k, theta);
+            bool success = seul(ode, t, dt, k);
 
             if (!success)
             {
-                resources->reject = true;
+                reject = true;
                 dtNew = fabs(dt)*kSeulexStepFactor5;
                 break;
             }
 
             if (k == 0)
             {
-                y = ySequence;
+                y = ySequence_;
             }
             else
             {
-                table.column(k-1) = ySequence;
+                table_.column(k-1) = ySequence_;
             }
 
             if (k != 0)
             {
-                table.extrapolate(k, y);
+                table_.extrapolate(k, y);
+                // one pass for both, so copies of the views, see seul()
+                const ThreadVector<scalar> scale = scale_;
+                const ThreadVector<const scalar> y0 = y0_;
+                const ThreadVector<const scalar> extrapolated = table_.column(0);
+
                 scalar err = 0;
                 #pragma unroll 4
                 for (label i=0; i<kSystemSize; ++i)
                 {
                     scale[i] = absTol + relTol*fabs(y0[i]);
-                    err += sqr((y[i] - table(i, 0))/scale[i]);
+                    err += sqr((y[i] - extrapolated[i])/scale[i]);
                 }
                 err = sqrt(err/kSystemSize);
                 if (err > 1/SMALL || (k > 1 && err >= errOld))
                 {
-                    resources->reject = true;
+                    reject = true;
                     dtNew = fabs(dt)*kSeulexStepFactor5;
                     break;
                 }
@@ -226,10 +267,10 @@ kodes::scalar kodes::Seulex::step
                     fac = kSeulexStepFactor2/pow(err/kSeulexStepFactor1, expo);
                     fac = max(facmin/kSeulexStepFactor4, min(1/facmin, fac));
                 }
-                dtOpt[k] = fabs(dt*fac);
-                temp[k] = kSeulexWorkEstimate[k]/dtOpt[k];
+                dtOpt_[k] = fabs(dt*fac);
+                temp_[k] = kSeulexWorkEstimate[k]/dtOpt_[k];
 
-                if ((resources->first || resources->last) && err <= 1)
+                if ((first || last) && err <= 1)
                 {
                     break;
                 }
@@ -237,8 +278,8 @@ kodes::scalar kodes::Seulex::step
                 if
                 (
                     k == kTarg - 1
-                && !resources->prevReject
-                && !resources->first && !resources->last
+                && !prevReject
+                && !first && !last
                 )
                 {
                     if (err <= 1)
@@ -247,13 +288,13 @@ kodes::scalar kodes::Seulex::step
                     }
                     else if (err > kSeulexStepSequence[kTarg]*kSeulexStepSequence[kTarg + 1]*4)
                     {
-                        resources->reject = true;
+                        reject = true;
                         kTarg = k;
-                        if (kTarg>1 && temp[k-1] < kSeulexKFactor1*temp[k])
+                        if (kTarg>1 && temp_[k-1] < kSeulexKFactor1*temp_[k])
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[kTarg];
+                        dtNew = dtOpt_[kTarg];
                         break;
                     }
                 }
@@ -266,12 +307,12 @@ kodes::scalar kodes::Seulex::step
                     }
                     else if (err > kSeulexStepSequence[k + 1]*2)
                     {
-                        resources->reject = true;
-                        if (kTarg>1 && temp[k-1] < kSeulexKFactor1*temp[k])
+                        reject = true;
+                        if (kTarg>1 && temp_[k-1] < kSeulexKFactor1*temp_[k])
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[kTarg];
+                        dtNew = dtOpt_[kTarg];
                         break;
                     }
                 }
@@ -280,31 +321,31 @@ kodes::scalar kodes::Seulex::step
                 {
                     if (err > 1)
                     {
-                        resources->reject = true;
+                        reject = true;
                         if
                         (
                             kTarg > 1
-                        && temp[kTarg-1] < kSeulexKFactor1*temp[kTarg]
+                        && temp_[kTarg-1] < kSeulexKFactor1*temp_[kTarg]
                         )
                         {
                             kTarg--;
                         }
-                        dtNew = dtOpt[kTarg];
+                        dtNew = dtOpt_[kTarg];
                     }
                     break;
                 }
             }
         }
-        if (resources->reject)
+        if (reject)
         {
-            resources->prevReject = true;
+            prevReject = true;
             if (!jacUpdated)
             {
                 theta = 2*jacRedo;
 
                 if (theta > jacRedo && !jacUpdated)
                 {
-                    ode->jacobian(t, resources->currentParameter(0), y, dfdy);
+                    ode->jacobian(t, currentParameter(0), y, dfdy_);
                     jacUpdated = true;
                 }
             }
@@ -313,7 +354,7 @@ kodes::scalar kodes::Seulex::step
     }
     jacUpdated = false;
 
-    resources->deltaTDid = dt;
+    deltaTDid = dt;
     t += dt;
 
     label kopt;
@@ -324,11 +365,11 @@ kodes::scalar kodes::Seulex::step
     else if (k <= kTarg)
     {
         kopt=k;
-        if (temp[k-1] < kSeulexKFactor1*temp[k])
+        if (temp_[k-1] < kSeulexKFactor1*temp_[k])
         {
             kopt = k - 1;
         }
-        else if (temp[k] < kSeulexKFactor2*temp[k - 1])
+        else if (temp_[k] < kSeulexKFactor2*temp_[k - 1])
         {
             kopt = min(k + 1, kSeulexMaxOrder - 1);
         }
@@ -336,44 +377,41 @@ kodes::scalar kodes::Seulex::step
     else
     {
         kopt = k - 1;
-        if (k > 2 && temp[k-2] < kSeulexKFactor1*temp[k - 1])
+        if (k > 2 && temp_[k-2] < kSeulexKFactor1*temp_[k - 1])
         {
             kopt = k - 2;
         }
-        if (temp[k] < kSeulexKFactor2*temp[kopt])
+        if (temp_[k] < kSeulexKFactor2*temp_[kopt])
         {
             kopt = min(k, kSeulexMaxOrder - 1);
         }
     }
 
-    if (resources->prevReject)
+    if (prevReject)
     {
         kTarg = min(kopt, k);
-        dtNew = min(fabs(dt), dtOpt[kTarg]);
-        resources->prevReject = false;
+        dtNew = min(fabs(dt), dtOpt_[kTarg]);
+        prevReject = false;
     }
     else
     {
         if (kopt <= k)
         {
-            dtNew = dtOpt[kopt];
+            dtNew = dtOpt_[kopt];
         }
         else
         {
-            if (k < kTarg && temp[k] < kSeulexKFactor2*temp[k - 1])
+            if (k < kTarg && temp_[k] < kSeulexKFactor2*temp_[k - 1])
             {
-                dtNew = dtOpt[k]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
+                dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt + 1]/kSeulexWorkEstimate[k];
             }
             else
             {
-                dtNew = dtOpt[k]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
+                dtNew = dtOpt_[k]*kSeulexWorkEstimate[kopt]/kSeulexWorkEstimate[k];
             }
         }
         kTarg = kopt;
     }
 
-    resources->deltaTTry = resources->forward ? dtNew : -dtNew;
-
-    // the step is already accepted and sized; nothing for adaptiveStep to judge
-    return 0.0;
+    deltaTTry = forward ? dtNew : -dtNew;
 }

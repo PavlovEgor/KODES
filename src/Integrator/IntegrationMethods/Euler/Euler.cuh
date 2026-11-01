@@ -4,26 +4,27 @@
 
 #include <cuda_runtime.h>
 
-#include "IntegrationMethod.cuh"
-#include "EulerDeviceResources.cuh"
+#include "AdaptiveIntegrationMethod.cuh"
 
 namespace kodes
 {
 
 // Explicit Euler, as a trial step: it takes one step of deltaTTry and reports
-// how wrong it was, and the controller in IntegrationMethod::adaptiveStep does
-// the rest. Useful as the simplest thing the machinery can be checked against,
-// not for a stiff mechanism.
+// how wrong it was, and the controller in AdaptiveIntegrationMethod::advance
+// does the rest. Useful as the simplest thing the machinery can be checked
+// against, not for a stiff mechanism.
 //
-// Selected by the name "euler", see methodTable, which pairs it with
-// EulerDeviceResources.
+// Selected by the name "euler", see methodTable.
 class Euler
     :
-    public IntegrationMethod
+    public AdaptiveIntegrationMethod
 {
-public:
+protected:
 
-    static constexpr bool kUsesAdaptiveStep = true;
+    // The step itself, dt*dydt0, which is also the error estimate
+    ThreadVector<scalar> err_;
+
+public:
 
     __device__ __host__
     Euler
@@ -34,21 +35,26 @@ public:
         const label systemSize,
         const label parameterSize
     )
-        : IntegrationMethod
-          (
-              batchSize, scratchSize, blocks, systemSize, parameterSize,
-              kUsesAdaptiveStep
-          )
+        : AdaptiveIntegrationMethod(batchSize, scratchSize, blocks, systemSize, parameterSize)
     {}
 
     __device__ __host__
     ~Euler() = default;
 
+    __host__ void allocate();
+
+    __host__ void deallocate();
+
+    __host__ static size_t scratchBytesPerThread(const label systemSize, const label parameterSize)
+    {
+        return AdaptiveIntegrationMethod::scratchBytesPerThread(systemSize, parameterSize)
+             + size_t(systemSize) * sizeof(scalar);
+    }
+
     __device__ scalar
-    step
+    trialStep
     (
         ODESystem* ode,
-        DeviceResources* resources,
         IntegratorControls controls
     ) const override;
 

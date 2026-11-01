@@ -29,7 +29,7 @@
 | Что | Стиль | Примеры |
 |---|---|---|
 | Пространство имён | одно, всё внутри | `kodes` |
-| Классы, структуры, enum | `UpperCamelCase` | `Integrator`, `SeulexDeviceResources`, `TypeEntry` |
+| Классы, структуры, enum | `UpperCamelCase` | `Integrator`, `AdaptiveIntegrationMethod`, `TypeEntry` |
 | Параметры шаблона | `UpperCamelCase` | `Base`, `Derived`, `ODESystem` |
 | Функции и методы | `lowerCamelCase`, глагол первым | `loadSystem()`, `scratchBytesPerThread()` |
 | Ядра (`__global__`) | `lowerCamelCase` + суффикс `Kernel` | `solveKernel`, `setDeltaTKernel` |
@@ -45,16 +45,18 @@
 
 `k` — не украшение. Он отвечает на вопрос, который в этом коде задаёшь чаще
 всего: «это значение прилетело откуда-то в рантайме или было известно при
-сборке?» В `Seulex::step` рядом стоят `dtOpt` (заполняется по ходу шага) и
+сборке?» В `Seulex::advance` рядом стоят `dtOpt_` (заполняется по ходу шага) и
 `kSeulexStepFactor3` (коэффициент из таблицы) — без префикса они выглядят
 одинаково и читаются одинаково неправильно.
 
-Он же снимает настоящую ловушку. У `IntegrationMethod` есть метод
+Он же снимает настоящую ловушку. До 1.2 у `IntegrationMethod` был метод
 `usesAdaptiveStep()`, а у каждого наследника — своя `static constexpr bool` с
 тем же смыслом. Назовись они одинаково, константа наследника **скрыла** бы метод
 базового класса, и `usesAdaptiveStep()` внутри наследника означало бы не то, что
-кажется. Поэтому это `kUsesAdaptiveStep` и `usesAdaptiveStep()`, и спутать их
-нельзя.
+кажется. Поэтому это были `kUsesAdaptiveStep` и `usesAdaptiveStep()`, и спутать
+их было нельзя. (Теперь вместо флага — промежуточный класс
+`AdaptiveIntegrationMethod`, но ловушка та же для любой пары «константа и
+метод».)
 
 ### Макрос или константа
 
@@ -89,7 +91,7 @@
 Имя файла:
 
 * заголовок с **одним главным классом** называется по нему, `UpperCamelCase`:
-  `Integrator.cuh`, `SeulexDeviceResources.cuh`;
+  `Integrator.cuh`, `AdaptiveIntegrationMethod.cuh`;
 * всё остальное — свободные функции, таблицы, константы, набор мелких
   сопутствующих типов — называется по тому, что даёт, `snake_case`:
   `basic_types.cuh`, `type_table.cuh`, `method_table.cu`,
@@ -99,8 +101,9 @@
 собой:
 
 ```
-IntegrationMethod.cu      method_table.cu
-IntegrationMethod.cuh     method_table.cuh
+AdaptiveIntegrationMethod.cu      method_table.cu
+AdaptiveIntegrationMethod.cuh     method_table.cuh
+IntegrationMethod.cuh
 Euler/
 Seulex/
 ```
@@ -133,13 +136,12 @@ Seulex/
   видно, где кончается один вариант реализации и начинается другой. То, что
   классом не является — примеси, свободные функции, хостовые классы — остаётся
   в корне подсистемы.
-* Каталог заводится на **строку таблицы**, а не на класс. У метода
-  интегрирования строка выбирает сразу два класса — сам метод и его хранилище,
-  — значит и лежат они вместе: `IntegrationMethods/Seulex/` это `Seulex`,
-  `SeulexDeviceResources` и `seulex_constants`. Так каталог совпадает с тем,
-  что вообще можно выбрать в файле настроек.
+* Каталог заводится на **строку таблицы**, а не на класс: в нём всё, что нужно
+  одному выбору, — `IntegrationMethods/Seulex/` это `Seulex`, его
+  `ExtrapolationTable` и `seulex_constants`. Так каталог совпадает с тем, что
+  вообще можно выбрать в файле настроек.
 * Промежуточный наследник каталога не получает: он не вариант выбора, а часть
-  базы (`Resources/AdaptiveDeviceResources.cuh`).
+  базы (`IntegrationMethods/AdaptiveIntegrationMethod.cuh`).
 * Константы и таблицы, принадлежащие одному конкретному классу, переезжают
   вместе с ним: `Seulex/seulex_constants.cu`.
 * Включения внутри семейства плоские — `#include "IntegrationMethod.cuh"`, — потому что
@@ -163,18 +165,14 @@ Seulex/
 * `*` и `&` прижимаются к типу: `scalar* y`, `const LaunchConfig& config`.
 
 ```cpp
-__host__ size_t
-SeulexDeviceResources::orderStorage
+__host__ size_t kodes::methodScratchBytesPerThread
 (
-    const label systemSize
+    const char* name,
+    const label systemSize,
+    const label parameterSize
 )
 {
-    if (systemSize > kSeulexTableSize)
-    {
-        return systemSize;
-    }
-
-    return kSeulexTableSize;
+    return methodType(name)->scratchBytesPerThread(systemSize, parameterSize);
 }
 ```
 
@@ -185,8 +183,8 @@ SeulexDeviceResources::orderStorage
 разметки.
 
 Особенно это касается мест, где код выглядит странно и это намеренно: порядок
-copy-then-construct в фабрике, запрет трогать указатели в конструкторе,
-приведение `DeviceResources*` вниз внутри `step()`. Такое место без объяснения
+copy-then-construct в фабрике, запрет трогать указатели в конструкторе, копии
+представлений перед циклом в `Seulex::seul`. Такое место без объяснения
 кто-нибудь «починит».
 
 ## 6. Правила, специфичные для CUDA

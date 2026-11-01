@@ -14,9 +14,10 @@
 namespace kodes
 {
 
-// The solve kernel. One instantiation for the whole library: the ODE system,
-// the method and the resources are all device objects the kernel dispatches
-// on, so nothing about it depends on which ones were chosen.
+// The solve kernel. One instantiation for the whole library: the ODE system and
+// the method - which holds the batch and the scratch, see IntegrationMethod -
+// are device objects the kernel dispatches on, so nothing about it depends on
+// which ones were chosen.
 //
 // One system per thread: each thread takes its share of the batch in a
 // grid-stride loop and integrates every system it picks up on its own, from
@@ -25,8 +26,7 @@ __global__
 void solveKernel
 (
     ODESystem* ode,
-    DeviceResources* resources,
-    const IntegrationMethod* method,
+    IntegrationMethod* method,
     IntegratorControls controls
 );
 
@@ -48,7 +48,7 @@ __host__ label maxConcurrentSystems
 // per batch.
 //
 // The names are what tie the plan to the run: the method's entry knows what its
-// resources cost per thread, per block and per system, the system's entry
+// scratch costs per thread, per block and per system, the system's entry
 // knows what its own workspace costs - for a pyJac mechanism,
 // required_mechanism_size() - and this adds both up before either exists. Anything a caller owns
 // outside all three still goes in the extra - which is now the empty case,
@@ -84,8 +84,7 @@ protected:
     LaunchConfig config_;
 
     ODESystem* ode_;
-    DeviceResources* resources_;
-    const IntegrationMethod* method_;
+    IntegrationMethod* method_;
 
     IntegratorControls controls_;
 
@@ -94,8 +93,7 @@ public:
     Integrator
     (
         ODESystem* ode,
-        DeviceResources* resources,
-        const IntegrationMethod* method,
+        IntegrationMethod* method,
         const LaunchConfig& config,
         const IntegratorControls& controls = IntegratorControls()
     );

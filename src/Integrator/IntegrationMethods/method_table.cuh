@@ -4,39 +4,28 @@
 #pragma once
 
 #include "IntegrationMethod.cuh"
-#include "DeviceResources.cuh"
 #include "type_table.cuh"
 
 // The integration methods a name may select, and how to build the one it
-// selects. Unlike the ODE system's table, an entry names two classes: a method
-// and the resources holding its scratch are chosen together.
+// selects. Until 1.2 an entry named two classes, a method and the resources
+// holding its scratch; now a method is its own resources, and the table is
+// the ODE system's again.
 //
 // Safe for any caller to include - it declares, it does not define.
 
 namespace kodes
 {
 
-struct MethodType
-{
-    const char* name;
-
-    TypeEntry<IntegrationMethod> method;
-
-    // The DeviceResources subclass carrying the scratch this method's step()
-    // casts down to reach. Nothing else may be handed to it.
-    TypeEntry<DeviceResources> resources;
-};
-
-__host__ const MethodType* methodTable();
+__host__ const TypeEntry<IntegrationMethod>* methodTable();
 
 __host__ label methodTableSize();
 
 // The entry `name` selects. Fails with the list of known names if there is no
 // such method.
-__host__ const MethodType* methodType(const char* name);
+__host__ const TypeEntry<IntegrationMethod>* methodType(const char* name);
 
-// What the method and its resources cost together, before there are any -
-// planLaunch needs both numbers to size the run they are then built against.
+// What the method costs, before there is one - planLaunch needs it to size the
+// run it is then built against.
 __host__ size_t methodScratchBytesPerThread
 (
     const char* name,
@@ -59,18 +48,6 @@ __host__ size_t methodStateBytesPerSystem
 );
 
 __host__ Handle<IntegrationMethod> newMethod
-(
-    const char* name,
-    const label batchSize,
-    const label scratchSize,
-    const label blocks,
-    const label systemSize,
-    const label parameterSize
-);
-
-// The resources that go with that method. Built separately from the method
-// because the Operator needs the host stub of these and nothing else does.
-__host__ Handle<DeviceResources> newResources
 (
     const char* name,
     const label batchSize,

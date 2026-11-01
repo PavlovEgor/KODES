@@ -10,7 +10,7 @@ namespace kodes
 
 // Highest extrapolation order Seulex may reach, and the length of the tables
 // indexed by it. Also what sizes the order-indexed part of the Seulex scratch,
-// which is why SeulexDeviceResources includes this header.
+// which is why Seulex.cuh includes this header.
 //
 // Constants rather than macros: nothing about a build should override them, and
 // a constant obeys the scoping rules a macro ignores.
@@ -33,7 +33,7 @@ extern __constant__ label  kSeulexStepSequence[kSeulexTableSize];
 extern __constant__ scalar kSeulexWorkEstimate[kSeulexTableSize];
 extern __constant__ scalar kSeulexExtrapolationCoeff[kSeulexTableSize * kSeulexTableSize];
 
-// Fill the three tables above. Called from SeulexDeviceResources::allocate,
+// Fill the three tables above. Called from Seulex::allocate,
 // since it is the same tableau that sizes the order-indexed scratch.
 __host__ void uploadSeulexConstants();
 

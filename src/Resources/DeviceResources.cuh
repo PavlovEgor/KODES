@@ -23,23 +23,15 @@ namespace kodes
 // threads that can run at the same time, the systemSize^2 temporaries stay
 // small for a batch of millions of systems.
 //
-// The abstract base of a device object family, like ODESystem:
-// the subclasses keep the same three-point contract and are built by the same
-// four statics. What it does *not* have, and must not, is a table of its own.
+// The base of IntegrationMethod: a method is the storage it integrates in, and
+// adds its own scratch to this as members. Until 1.2 a DeviceResources subclass
+// was a separate object, chosen by the same row of the method table as the
+// method that cast its pointer down to it.
 //
-// A method and the resources holding its scratch can only be chosen together -
-// Seulex::step() casts this pointer down to SeulexDeviceResources*, Euler::step()
-// to EulerDeviceResources*, IntegrationMethod::adaptiveStep() to
-// AdaptiveDeviceResources* - so the row that selects a subclass is a field of
-// the method's row, in IntegrationMethods/method_table.cu. Were it a table with
-// a name of its own, a settings file naming "euler" and "seulexResources"
-// would pass every check and fail inside the kernel.
-//
-// Which is also why this class and AdaptiveDeviceResources carry no
-// KODES_DECLARE_DEVICE_OBJECT: neither is ever a row, so the four statics would
-// be four host functions and two construction kernels nobody calls. Only the
-// placement operator new below is inherited, and only the leaves - Seulex's
-// and Euler's - declare the rest.
+// Never a row of a table itself, so no KODES_DECLARE_DEVICE_OBJECT: the four
+// statics would be four host functions and two construction kernels nobody
+// calls. Only the placement operator new below is inherited, and only the
+// leaves - Seulex and Euler - declare the rest.
 class DeviceResources
     :
     public Resources,

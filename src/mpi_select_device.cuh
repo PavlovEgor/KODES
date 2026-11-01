@@ -22,7 +22,7 @@ namespace kodes
 // - there is no scatter/gather here, only device selection.
 //
 // Call this exactly once per rank, right after MPI_Init and before creating
-// any device-side kodes object (DeviceResources, SeulexDeviceResources,
+// any device-side kodes object (an IntegrationMethod, an ODESystem, an
 // Integrator, ...). Every kodes CUDA call the calling host thread makes
 // afterwards (cudaMalloc, kernel launches, cudaMemcpy) targets the bound
 // device, since that's ordinary per-thread CUDA runtime state - if the host

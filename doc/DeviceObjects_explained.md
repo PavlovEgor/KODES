@@ -2,8 +2,9 @@
 
 Этот файл объясняет один-единственный паттерн, по которому в библиотеке сделаны
 **все** классы, выбираемые в момент запуска программы: интегратор
-(`IntegrationMethod` → `Seulex`, `Euler`), хранилище (`DeviceResources` →
-`SeulexDeviceResources`, ...) и система уравнений (`ODESystem` → `PyJacSystem`).
+(`IntegrationMethod` → `Seulex`, `Euler`), который заодно и хранилище —
+`IntegrationMethod` наследует `DeviceResources`, — и система уравнений
+(`ODESystem` → `PyJacSystem`).
 
 Раньше эти механизмы работали по-разному: система уравнений строила себя сама
 своими ядрами, интегратор был шаблонным параметром, то есть выбирался при
@@ -27,7 +28,7 @@ kodes::IntegrationMethod* method = ...;   // какой именно — реш�
 method->step(...);                         // виртуальный вызов
 ```
 
-но `step()` вызывается **внутри CUDA-ядра**, то есть на устройстве. И тут обычный
+но `advance()` вызывается **внутри CUDA-ядра**, то есть на устройстве. И тут обычный
 C++ ломается о три вещи подряд.
 
 ### 1.1. Таблица виртуальных функций у хоста и у устройства — разные
@@ -104,9 +105,9 @@ __global__ void constructDeviceObjectKernel(T* object, ...)
 
 ### 1.4. И, наконец: хостовую vtable может выпустить не всякий компилятор
 
-`step()` объявлена только как `__device__`. Хостовая vtable класса всё равно
+`advance()` объявлена только как `__device__`. Хостовая vtable класса всё равно
 нужна — она есть у `hostStub`, ведь это обычный хостовой объект. Но что положить
-в её слот для `step()`, если хостовой версии `step()` не существует?
+в её слот для `advance()`, если хостовой версии `advance()` не существует?
 
 * **nvcc** — придумывает заглушку и vtable выпускает;
 * **`nvc++ -cuda`** (а именно им собирается модель химии OpenFOAM) — не
@@ -173,7 +174,7 @@ __host__ T* createDeviceObject(..., T* hostStub)
 Получается разделение, ради которого паттерн и существует:
 
 * **на хосте — статический полиморфизм** (шаблон подставляет нужный `allocate`);
-* **на устройстве — динамический** (ядро зовёт `step()`/`derivatives()` через vtable).
+* **на устройстве — динамический** (ядро зовёт `advance()`/`derivatives()` через vtable).
 
 Хостовая vtable нужна только для деструктора, и ни один виртуальный вызов на
 хосте паттерн не делает.
@@ -197,7 +198,7 @@ KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethodDeviceResources)
 
 Если классу нужно что-то сверх этих четырёх шагов, он пишет свой `create()`
 руками и зовёт `createDeviceObject()` внутри — так, например,
-`SeulexDeviceResources::allocate()` дополнительно заливает таблицы
+`Seulex::allocate()` дополнительно заливает таблицы
 экстраполяции в `__constant__`-память.
 
 ---
@@ -208,7 +209,7 @@ KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethodDeviceResources)
 
 Соблазнительно сделать это хостовыми виртуальными функциями — но тогда чужой
 компилятор должен был бы согласиться с nvcc о раскладке vtable, в которой есть
-слот для несуществующей на хосте `step()`. Это лишний риск на ровном месте.
+слот для несуществующей на хосте `advance()`. Это лишний риск на ровном месте.
 
 Вместо этого один конкретный класс сводится к набору **обычных указателей на
 функции** (`type_table.cuh`):
@@ -259,18 +260,11 @@ ABI сверх обычных. Поэтому таблицу может испо
 
 ```cpp
 // src/Integrator/IntegrationMethods/method_table.cu — таблица лежит в корне
-// семейства, а каждый конкретный класс в своём каталоге рядом. В одной строке
-// метод и хранилище, потому что выбирать их порознь нельзя: Seulex::step()
-// приводит DeviceResources* к SeulexDeviceResources*
-static const MethodType table[] =
+// семейства, а каждый конкретный класс в своём каталоге рядом
+static const TypeEntry<IntegrationMethod> table[] =
 {
-    { "seulex",
-      typeEntry<IntegrationMethod, Seulex>("seulex"),
-      typeEntry<DeviceResources, SeulexDeviceResources>("seulexResources") },
-
-    { "euler",
-      typeEntry<IntegrationMethod, Euler>("euler"),
-      typeEntry<DeviceResources, EulerDeviceResources>("eulerResources") }
+    typeEntry<IntegrationMethod, Seulex>("seulex"),
+    typeEntry<IntegrationMethod, Euler>("euler")
 };
 ```
 
@@ -285,73 +279,66 @@ static const TypeEntry<ODESystem> table[] =
 Имя, которого в таблице нет, обрывает запуск сообщением со списком известных —
 и обрывает его в конструкторе `Settings`, то есть до первого `cudaMalloc`.
 
-### Почему у `DeviceResources` своей таблицы нет и быть не должно
+### Почему у `DeviceResources` своей таблицы нет: метод и есть хранилище
 
-Семейств устройственных объектов три, а таблиц две. Третье —
-`DeviceResources → AdaptiveDeviceResources → {Seulex,Euler}DeviceResources` —
-паттерну следует полностью, но **выбирается не само по себе**:
+Семейств устройственных объектов два, и таблиц две. Хранилище отдельного выбора
+не имеет: `IntegrationMethod` наследует `DeviceResources`, а `Seulex` и `Euler`
+держат свои временные массивы полями и обращаются к ним по имени — так же, как
+`seulex` в OpenFOAM держит `dy_`, `a_`, `table_`:
 
 ```cpp
 // Seulex.cu
+dy_ = dydt_ - dy_/dt;
+LUBacksubstitute(a_, pivotIndices_, dy_);
+```
+
+До 1.2 было иначе. Хранилище было третьим семейством —
+`DeviceResources → AdaptiveDeviceResources → {Seulex,Euler}DeviceResources`, —
+метод получал его указатель и в начале каждого шага приводил вниз без проверки
+(`dynamic_cast` на устройстве нет):
+
+```cpp
 SeulexDeviceResources* resources =
     static_cast<SeulexDeviceResources*>(deviceResources);
 ```
 
-Приведение вниз без проверки — единственное, что здесь вообще возможно: `dynamic_cast`
-на устройстве нет, а виртуальный интерфейс поверх десятка scratch-массивов означал
-бы виртуальный вызов на каждое обращение к временному вектору. Значит, метод и его
-хранилище обязаны приезжать вместе, и строка таблицы для хранилища — **поле** строки
-метода:
-
-```cpp
-struct MethodType
-{
-    const char* name;
-    TypeEntry<IntegrationMethod> method;
-    TypeEntry<DeviceResources>   resources;   // не отдельный выбор
-};
-```
-
-Была бы отдельная таблица со своим именем — файл настроек с
+Поэтому метод и его хранилище обязаны были приезжать вместе, и строка таблицы
+для хранилища была **полем** строки метода, иначе файл настроек с
 `{"method": "euler", "resources": "seulexResources"}` прошёл бы всю валидацию и
-упал бы внутри ядра. Сейчас такую комбинацию **нельзя записать**.
+упал внутри ядра. Слияние убрало и приведение, и второе поле строки, и три
+класса, а заодно простыню локальных переменных в начале каждого шага.
 
-Отсюда же правило, общее для всех трёх семейств: `KODES_DECLARE_DEVICE_OBJECT`
+Отсюда же правило, общее для обоих семейств: `KODES_DECLARE_DEVICE_OBJECT`
 несёт только тот класс, который встречается **строкой таблицы**. База и
-промежуточные наследники — нет: их `create()` никто бы не позвал, а макрос стоит
-четырёх хостовых функций и двух ядер на класс. У баз остаётся только placement
-`operator new`, написанный руками.
+промежуточные наследники (`DeviceResources`, `IntegrationMethod`,
+`AdaptiveIntegrationMethod`) — нет: их `create()` никто бы не позвал, а макрос
+стоит четырёх хостовых функций и двух ядер на класс. У баз остаётся только
+placement `operator new`, написанный руками.
 
 ### И то же самое в дереве каталогов
 
-Раз метод и его хранилище — один выбор, то и лежат они в одном каталоге:
+Один метод — одна строка таблицы — один каталог:
 
 ```
 Integrator/IntegrationMethods/
-    IntegrationMethod.{cuh,cu}     база
-    method_table.{cuh,cu}          таблица
-    Seulex/                        ← одна строка таблицы = один каталог
+    IntegrationMethod.cuh                 база
+    AdaptiveIntegrationMethod.{cuh,cu}    промежуточный: контроллер шага
+    method_table.{cuh,cu}                 таблица
+    Seulex/
         Seulex.{cuh,cu}
-        SeulexDeviceResources.{cuh,cu}
+        ExtrapolationTable.cuh
         seulex_constants.{cuh,cu}
     Euler/
         Euler.{cuh,cu}
-        EulerDeviceResources.{cuh,cu}
 ```
 
 В `src/Resources/` остаётся только то, чем может пользоваться **любой** метод:
-абстрактная часть семейства (`Resources`, `DeviceResources`,
-`AdaptiveDeviceResources`), примесь `StepState` и две хостовые вещи, которые
+`Resources`, `DeviceResources`, примесь `StepState`, представление `BatchArray`
+и база представлений `DeviceBuffer`, плюс две хостовые вещи, которые
 устройственными объектами не являются вовсе, — `HostResources` и `Operator`.
-Поэтому у этого каталога нет ни таблицы, ни конкретных классов, и это не
-недоделка, а прямое следствие того, что описано выше.
-
-Есть и механическая причина. `SeulexDeviceResources` нужна таблица
-экстраполяции из `seulex_constants.cuh`, так что пока хранилища лежали в
-`Resources/`, каталоги включали друг друга в обе стороны. Теперь зависимость
-односторонняя: `IntegrationMethods` включает из `Resources` (за базой), а
-`Resources` не включает ничего, кроме `basic_types.cuh`, `LinearAlgebra/` и
-`Factory/`.
+Зависимость односторонняя: `IntegrationMethods` включает из `Resources` (за
+базой), а `Resources` не включает ничего, кроме `basic_types.cuh`,
+`LinearAlgebra/` и `Factory/`.
 
 ### Таблица из одной строки — зачем она
 
@@ -392,12 +379,12 @@ include-пути, — `PyJacSystem.cu` и `system_table.cu`. Модели хим
 именно оттуда.
 
 ```cpp
-kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
+kodes::Handle<kodes::IntegrationMethod> method = kodes::newMethod
 (
     "seulex", batchSize, scratchSize, blocks, systemSize, parameterSize
 );
 
-kodes::Operator op(&hostRes, resources.host());
+kodes::Operator op(&hostRes, method.host());
 // деструктор Handle сам вернёт обе половины тому, кто их сделал
 ```
 
@@ -440,15 +427,15 @@ kodes::Operator op(&hostRes, resources.host());
 интегрирования — четыре шага:
 
 1. `src/Integrator/IntegrationMethods/MyMethod/MyMethod.cuh`: наследник
-   `IntegrationMethod` с конструктором из пяти аргументов, `step()` и строкой
-   `KODES_DECLARE_DEVICE_OBJECT(MyMethod)`. Если методу нужны свои временные
-   массивы — рядом наследник `DeviceResources` (или `AdaptiveDeviceResources`)
-   с собственными `allocate()`/`deallocate()` и `scratchBytesPerThread`, по
-   тому же паттерну.
+   `IntegrationMethod` с конструктором из пяти аргументов, `advance()` и строкой
+   `KODES_DECLARE_DEVICE_OBJECT(MyMethod)` — или наследник
+   `AdaptiveIntegrationMethod` с одним `trialStep()`, если метод умеет только
+   пробный шаг. Временные массивы — полями-представлениями, с собственными
+   `allocate()`/`deallocate()` и `scratchBytesPerThread`.
 2. `src/Integrator/IntegrationMethods/MyMethod/MyMethod.cu`:
-   `KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethod)` — и то же для хранилища.
+   `KODES_DEFINE_DEVICE_OBJECT(kodes::MyMethod)`.
 3. Одна строка в `method_table.cu`: `#include "MyMethod/MyMethod.cuh"` и строка
-   самой таблицы, где рядом с методом указан его класс хранилища.
+   самой таблицы.
 4. Одна строка в `KODES_SOURCES` в `cmake/kodes.cmake` на каждый новый `.cu`.
 
 Пятого шага — правки списка `-I` — **нет, и это намеренно.** Внутри семейства
@@ -477,7 +464,7 @@ kodes::Operator op(&hostRes, resources.host());
 ## 7. Чего этот паттерн стоит
 
 Виртуальный вызов на устройстве не инлайнится: компилятор обязан соблюсти ABI и
-завести кадр стека. Для `step()` это неважно — вызов происходит один раз на шаг
+завести кадр стека. Для `advance()` это неважно — вызов происходит один раз на шаг
 системы, против шага, который факторизует матрицу `systemSize × systemSize`. И
 ядро всё равно уже делало такие вызовы: `ODESystem::derivatives()` и
 `ODESystem::jacobian()` виртуальны с самого начала, а при раздельной компиляции
@@ -485,7 +472,7 @@ kodes::Operator op(&hostRes, resources.host());
 
 Что действительно поменялось — `planLaunch()` теперь спрашивает занятость одного
 ядра `solveKernel` на все методы сразу, а не отдельной инстанциации на каждый.
-Раньше в ядро инлайнился весь `Seulex::step`, и занятость считалась по его
+Раньше в ядро инлайнился весь `Seulex::step` (теперь `Seulex::advance`), и занятость считалась по его
 регистрам; теперь ядро само по себе маленькое. Если после замеров окажется, что
 сетка выходит крупнее, чем устройство реально держит резидентной, — лишнее место
 уходит в scratch-слоты, и это лечится `"share": "half"` или явными

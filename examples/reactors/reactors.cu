@@ -63,12 +63,6 @@ int main(int argc, char** argv)
     // and hands both back when it goes out of scope. pyJac's own per-thread
     // scratch is one of those buffers - the system's allocate() pads it to
     // config.scratchSize - so there is nothing to initialize or free here.
-    kodes::Handle<kodes::DeviceResources> resources = kodes::newResources
-    (
-        method, batchSize, config.scratchSize, config.blocks,
-        hostRes.systemSize(), hostRes.parameterSize()
-    );
-
     kodes::Handle<kodes::IntegrationMethod> integrationMethod = kodes::newMethod
     (
         method, batchSize, config.scratchSize, config.blocks,
@@ -81,11 +75,13 @@ int main(int argc, char** argv)
         hostRes.systemSize(), hostRes.parameterSize()
     );
 
-    kodes::Operator op(&hostRes, resources.host());
+    // the method is also the device side of the batch, which the Operator
+    // fills and empties through its host stub
+    kodes::Operator op(&hostRes, integrationMethod.host());
 
     kodes::Integrator solver
     (
-        ode.device(), resources.device(), integrationMethod.device(),
+        ode.device(), integrationMethod.device(),
         config, settings.controls()
     );
 

@@ -81,12 +81,15 @@ __device__ ThreadVectorExpression<Max, L, R> cmptMax(const L& l, const R& r)
 template <typename X, typename = std::enable_if_t<kIsThreadVectorOperand<X>>>
 __device__ auto magSqr(const X& x)
 {
-    decltype(Sqr::apply(element(x, 0))) sum = 0;
+    // a copy, for the reason ThreadVector::update gives
+    const X from = x;
+
+    decltype(Sqr::apply(element(from, 0))) sum = 0;
 
     #pragma unroll 4
     for (label i = 0; i < kThreadVectorOperandSize<X>; ++i)
     {
-        sum += Sqr::apply(element(x, i));
+        sum += Sqr::apply(element(from, i));
     }
     return sum;
 }
@@ -100,12 +103,15 @@ __device__ auto mag(const X& x)
 template <typename X, typename = std::enable_if_t<kIsThreadVectorOperand<X>>>
 __device__ auto cmptMax(const X& x)
 {
-    auto result = element(x, 0);
+    // a copy, for the reason ThreadVector::update gives
+    const X from = x;
+
+    auto result = element(from, 0);
 
     #pragma unroll 4
     for (label i = 1; i < kThreadVectorOperandSize<X>; ++i)
     {
-        result = max(result, element(x, i));
+        result = max(result, element(from, i));
     }
     return result;
 }

@@ -1,36 +1,25 @@
 #include "method_table.cuh"
 
 #include "Seulex/Seulex.cuh"
-#include "Seulex/SeulexDeviceResources.cuh"
-
 #include "Euler/Euler.cuh"
-#include "Euler/EulerDeviceResources.cuh"
 
 namespace kodes
 {
 
-// Adding a method is a subclass with a step(), the one line of
-// KODES_DEFINE_DEVICE_OBJECT in its .cu, and one line here naming the resources
-// that hold its scratch.
-static const MethodType table[] =
+// Adding a method is a subclass with an advance() - or, taking trial steps, an
+// AdaptiveIntegrationMethod with a trialStep() - the one line of
+// KODES_DEFINE_DEVICE_OBJECT in its .cu, and one line here.
+static const TypeEntry<IntegrationMethod> table[] =
 {
-    {
-        "seulex",
-        typeEntry<IntegrationMethod, Seulex>("seulex"),
-        typeEntry<DeviceResources, SeulexDeviceResources>("seulexResources")
-    },
-    {
-        "euler",
-        typeEntry<IntegrationMethod, Euler>("euler"),
-        typeEntry<DeviceResources, EulerDeviceResources>("eulerResources")
-    }
+    typeEntry<IntegrationMethod, Seulex>("seulex"),
+    typeEntry<IntegrationMethod, Euler>("euler")
 };
 
 static const label tableSize = label(sizeof(table)/sizeof(table[0]));
 
 }
 
-__host__ const kodes::MethodType* kodes::methodTable()
+__host__ const kodes::TypeEntry<kodes::IntegrationMethod>* kodes::methodTable()
 {
     return kodes::table;
 }
@@ -40,7 +29,8 @@ __host__ kodes::label kodes::methodTableSize()
     return kodes::tableSize;
 }
 
-__host__ const kodes::MethodType* kodes::methodType(const char* name)
+__host__ const kodes::TypeEntry<kodes::IntegrationMethod>*
+kodes::methodType(const char* name)
 {
     if (!name || !*name)
     {
@@ -48,23 +38,7 @@ __host__ const kodes::MethodType* kodes::methodType(const char* name)
         std::exit(EXIT_FAILURE);
     }
 
-    for (label i = 0; i < tableSize; ++i)
-    {
-        if (strcmp(table[i].name, name) == 0)
-        {
-            return table + i;
-        }
-    }
-
-    fprintf(stderr, "kodes::methodType error at %s:%d: unknown integration method \"%s\", known are", __FILE__, __LINE__, name);
-    for (label i = 0; i < tableSize; ++i)
-    {
-        fprintf(stderr, " \"%s\"", table[i].name);
-    }
-    fprintf(stderr, "\n");
-    std::exit(EXIT_FAILURE);
-
-    return nullptr;
+    return findType<IntegrationMethod>(table, tableSize, name, "integration method");
 }
 
 __host__ size_t kodes::methodScratchBytesPerThread
@@ -74,10 +48,7 @@ __host__ size_t kodes::methodScratchBytesPerThread
     const label parameterSize
 )
 {
-    const MethodType* type = methodType(name);
-
-    return type->method.scratchBytesPerThread(systemSize, parameterSize)
-         + type->resources.scratchBytesPerThread(systemSize, parameterSize);
+    return methodType(name)->scratchBytesPerThread(systemSize, parameterSize);
 }
 
 __host__ size_t kodes::methodScratchBytesPerBlock
@@ -87,10 +58,7 @@ __host__ size_t kodes::methodScratchBytesPerBlock
     const label parameterSize
 )
 {
-    const MethodType* type = methodType(name);
-
-    return type->method.scratchBytesPerBlock(systemSize, parameterSize)
-         + type->resources.scratchBytesPerBlock(systemSize, parameterSize);
+    return methodType(name)->scratchBytesPerBlock(systemSize, parameterSize);
 }
 
 __host__ size_t kodes::methodStateBytesPerSystem
@@ -100,10 +68,7 @@ __host__ size_t kodes::methodStateBytesPerSystem
     const label parameterSize
 )
 {
-    const MethodType* type = methodType(name);
-
-    return type->method.stateBytesPerSystem(systemSize, parameterSize)
-         + type->resources.stateBytesPerSystem(systemSize, parameterSize);
+    return methodType(name)->stateBytesPerSystem(systemSize, parameterSize);
 }
 
 __host__ kodes::Handle<kodes::IntegrationMethod> kodes::newMethod
@@ -118,22 +83,6 @@ __host__ kodes::Handle<kodes::IntegrationMethod> kodes::newMethod
 {
     return Handle<IntegrationMethod>
     (
-        &methodType(name)->method, batchSize, scratchSize, blocks, systemSize, parameterSize
-    );
-}
-
-__host__ kodes::Handle<kodes::DeviceResources> kodes::newResources
-(
-    const char* name,
-    const label batchSize,
-    const label scratchSize,
-    const label blocks,
-    const label systemSize,
-    const label parameterSize
-)
-{
-    return Handle<DeviceResources>
-    (
-        &methodType(name)->resources, batchSize, scratchSize, blocks, systemSize, parameterSize
+        methodType(name), batchSize, scratchSize, blocks, systemSize, parameterSize
     );
 }

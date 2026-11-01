@@ -236,10 +236,17 @@ private:
             "an assignment of a vector of the same size"
         );
 
+        // Both copied before the loop, a view being a pointer: either may be a
+        // member of the very object the loop writes through - a method's own
+        // scratch - and nvcc would then read the pointer back out of it after
+        // every element it stores
+        const ThreadVector to = *this;
+        const X from = x;
+
         #pragma unroll 4
         for (label i = 0; i < N; ++i)
         {
-            f((*this)[i], element(x, i));
+            f(to[i], element(from, i));
         }
         return *this;
     }

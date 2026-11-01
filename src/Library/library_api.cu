@@ -76,7 +76,7 @@ class LibrarySolver
 
     LaunchConfig config_;
 
-    Handle<DeviceResources> resources_;
+    // the method, which is also the batch and the scratch it integrates in
     Handle<IntegrationMethod> method_;
     Handle<ODESystem> system_;
 
@@ -134,14 +134,6 @@ public:
                 settings.deviceStackBytes
             )
         ),
-        resources_
-        (
-            newResources
-            (
-                settings.method, config_.batchSize, config_.scratchSize,
-                config_.blocks, NSP, kPyJacParameterSize
-            )
-        ),
         method_
         (
             newMethod
@@ -159,11 +151,10 @@ public:
             )
         ),
         // the Operator reads the device addresses off the host stub
-        operator_(&host_, resources_.host()),
+        operator_(&host_, method_.host()),
         integrator_
         (
             system_.device(),
-            resources_.device(),
             method_.device(),
             config_,
             IntegratorControls

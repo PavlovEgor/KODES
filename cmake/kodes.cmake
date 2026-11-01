@@ -27,17 +27,14 @@ set(KODES_SOURCES
     ${KODES_SRC_DIR}/Resources/StepState.cu
     ${KODES_SRC_DIR}/Resources/HostResources.cu
     ${KODES_SRC_DIR}/Resources/DeviceResources.cu
-    ${KODES_SRC_DIR}/Resources/AdaptiveDeviceResources.cu
     ${KODES_SRC_DIR}/Resources/Operator.cu
 
     ${KODES_SRC_DIR}/Integrator/Integrator.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/IntegrationMethod.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/AdaptiveIntegrationMethod.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/method_table.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/Seulex.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/SeulexDeviceResources.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Seulex/seulex_constants.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler/Euler.cu
-    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Euler/EulerDeviceResources.cu
 
     ${KODES_SRC_DIR}/ODESystem/PyJacSystem/PyJacSystem.cu
     ${KODES_SRC_DIR}/ODESystem/system_table.cu
