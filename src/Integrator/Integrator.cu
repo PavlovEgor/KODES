@@ -197,6 +197,21 @@ kodes::Integrator::Integrator
         fprintf(stderr, "Integrator ctor error at %s:%d: batchSize <= 0\n", __FILE__, __LINE__);
         std::exit(EXIT_FAILURE);
     }
+
+    // Seulex's jacRedo is min(1e-4, relTol), and decides whether a Jacobian
+    // is reused: a relTol of 0 or less would make it 0 or less, and nothing
+    // would say why the step control had gone strange
+    if (controls_.relTol <= 0 || controls_.absTol < 0)
+    {
+        fprintf
+        (
+            stderr,
+            "Integrator ctor error at %s:%d: relTol %g must be positive and "
+            "absTol %g not negative\n",
+            __FILE__, __LINE__, controls_.relTol, controls_.absTol
+        );
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 

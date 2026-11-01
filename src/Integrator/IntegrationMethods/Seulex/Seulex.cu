@@ -192,16 +192,13 @@ void kodes::Seulex::advance
         {
             prevReject = true;
 
+            // a rejected step is retried with a fresh Jacobian, if this one
+            // was an old one
             if (!jacUpdated)
             {
                 theta_ = 2*jacRedo;
-
-                // false only for a relTol of 0 or less
-                if (theta_ > jacRedo)
-                {
-                    ode->jacobian(t, currentParameter(0), y, dfdy_);
-                    jacUpdated = true;
-                }
+                ode->jacobian(t, currentParameter(0), y, dfdy_);
+                jacUpdated = true;
             }
         }
     } while (reject);
