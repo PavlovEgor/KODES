@@ -3,14 +3,6 @@
 namespace kodes
 {
 
-__constant__ scalar kSeulexStepFactor1 = 0.6;
-__constant__ scalar kSeulexStepFactor2 = 0.93;
-__constant__ scalar kSeulexStepFactor3 = 0.1;
-__constant__ scalar kSeulexStepFactor4 = 4;
-__constant__ scalar kSeulexStepFactor5 = 0.5;
-__constant__ scalar kSeulexKFactor1 = 0.7;
-__constant__ scalar kSeulexKFactor2 = 0.9;
-
 __constant__ label  kSeulexStepSequence[kSeulexTableSize];
 __constant__ scalar kSeulexWorkEstimate[kSeulexTableSize];
 __constant__ scalar kSeulexExtrapolationCoeff
