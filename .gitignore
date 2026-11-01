@@ -1,3 +1,4 @@
 *.out
 /venv_kodes
 build/
+__pycache__/

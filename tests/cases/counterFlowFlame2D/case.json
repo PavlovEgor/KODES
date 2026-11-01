@@ -1,0 +1,59 @@
+{
+    "_comment": "Generated states come from the streams below; replace <mechanism>.csv with states of the developed flame, see ../../README.md",
+    "tutorial": "kodes4foam/tutorials/counterFlowFlame2D",
+    "description": "CH4/air counterflow diffusion flame, laminar. No h2o2: it has no carbon.",
+    "mechanisms": [
+        "grimech",
+        "C1_C3_HT_NOX_159_2459"
+    ],
+    "deltaT": 1e-06,
+    "deltaTFrom": "the initial deltaT of system/controlDict - maxDeltaT is 1, a bound the Courant number reaches first",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.1
+    },
+    "streams": {
+        "fuel": {
+            "T": 293,
+            "p": 100000.0,
+            "Y": {
+                "CH4": 1
+            }
+        },
+        "air": {
+            "T": 293,
+            "p": 100000.0,
+            "Y": {
+                "O2": 0.23,
+                "N2": 0.77
+            }
+        },
+        "hotN2": {
+            "T": 2000,
+            "p": 100000.0,
+            "Y": {
+                "N2": 1
+            }
+        }
+    },
+    "streamsFrom": "the fuel and air inlets of 0.<mechanism>/{T,CH4,O2,N2}, and the uniform internal fields",
+    "mixtures": [
+        [
+            "fuel",
+            "air"
+        ],
+        [
+            "fuel",
+            "hotN2"
+        ],
+        [
+            "air",
+            "hotN2"
+        ]
+    ],
+    "mixingFractions": [
+        0.25,
+        0.5,
+        0.75
+    ]
+}

@@ -1,0 +1,48 @@
+{
+    "_comment": "Generated states come from the streams below; replace <mechanism>.csv with states of the developed flame, see ../../README.md",
+    "tutorial": "kodes4foam/tutorials/2D_planar_flame",
+    "description": "Freely propagating premixed H2/air front, phi = 0.5, laminar.",
+    "mechanisms": [
+        "h2o2",
+        "grimech",
+        "C1_C3_HT_NOX_159_2459"
+    ],
+    "deltaT": 2e-06,
+    "deltaTFrom": "maxDeltaT of system/controlDict",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.001
+    },
+    "streams": {
+        "unburnt": {
+            "T": 320,
+            "p": 101325,
+            "Y": {
+                "H2": 0.01446221408,
+                "O2": 0.2295446063,
+                "N2": 0.7559931796
+            }
+        },
+        "burnt": {
+            "T": 1660,
+            "p": 101325,
+            "Y": {
+                "O2": 0.1147720726,
+                "N2": 0.7559916611,
+                "H2O": 0.1292362663
+            }
+        }
+    },
+    "streamsFrom": "system/setFieldsDict: defaultFieldValues and the ignition box",
+    "mixtures": [
+        [
+            "unburnt",
+            "burnt"
+        ]
+    ],
+    "mixingFractions": [
+        0.25,
+        0.5,
+        0.75
+    ]
+}

@@ -1,0 +1,62 @@
+{
+    "_comment": "Generated states come from the streams below; replace <mechanism>.csv with states of the developed flame, see ../../README.md",
+    "tutorial": "kodes4foam/tutorials/3D_nonPremixed_burner",
+    "description": "Coaxial H2/air injector in a confinement, RAS k-epsilon, PaSR.",
+    "mechanisms": [
+        "h2o2",
+        "grimech",
+        "C1_C3_HT_NOX_159_2459"
+    ],
+    "deltaT": 1e-05,
+    "deltaTFrom": "maxDeltaT of system/controlDict",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.001
+    },
+    "streams": {
+        "air": {
+            "T": 320,
+            "p": 101325,
+            "Y": {
+                "O2": 0.2329130446,
+                "N2": 0.7670869554
+            }
+        },
+        "fuel": {
+            "T": 320,
+            "p": 101325,
+            "Y": {
+                "H2": 1
+            }
+        },
+        "products": {
+            "T": 1800,
+            "p": 101325,
+            "Y": {
+                "O2": 0.1147720726,
+                "N2": 0.7559916611,
+                "H2O": 0.1292362663
+            }
+        }
+    },
+    "streamsFrom": "system/setFieldsDict (air, ignition box) and the fuelInlet of 0.<mechanism>/H2",
+    "mixtures": [
+        [
+            "fuel",
+            "air"
+        ],
+        [
+            "fuel",
+            "products"
+        ],
+        [
+            "air",
+            "products"
+        ]
+    ],
+    "mixingFractions": [
+        0.25,
+        0.5,
+        0.75
+    ]
+}

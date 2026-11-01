@@ -1,0 +1,30 @@
+{
+    "_comment": "Generated states come from the streams below; replace <mechanism>.csv with states of the developed flame, see ../../README.md",
+    "tutorial": "kodes4foam/tutorials/nonUniformHeating2D",
+    "description": "Homogeneous stoichiometric H2/air autoignition at 1500 K: every cell the same reactor.",
+    "mechanisms": [
+        "h2o2",
+        "grimech",
+        "C1_C3_HT_NOX_159_2459"
+    ],
+    "deltaT": 1e-06,
+    "deltaTFrom": "deltaT = maxDeltaT of system/controlDict",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.01
+    },
+    "streams": {
+        "initial": {
+            "T": 1500,
+            "p": 101325,
+            "Y": {
+                "H2": 0.02723,
+                "O2": 0.21608,
+                "N2": 0.75669
+            }
+        }
+    },
+    "streamsFrom": "0.<mechanism>: the uniform internal fields",
+    "mixtures": [],
+    "mixingFractions": []
+}

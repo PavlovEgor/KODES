@@ -519,6 +519,10 @@ examples/
                           with no CUDA in the program
   config/                 everything kodes::Config can read
   mpi_device_select/      binding one rank per GPU
+
+tests/                    states of kodes4foam's flames, one set per case and
+                          mechanism, for benchmarks against OpenFOAM and Cantera
+                          and validation against Cantera — see tests/README.md
 ```
 
 Includes stay flat within a family — `#include "IntegrationMethod.cuh"` — because every family

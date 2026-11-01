@@ -1,0 +1,48 @@
+{
+    "_comment": "Generated states come from the streams below; replace <mechanism>.csv with states of the developed flame, see ../../README.md",
+    "tutorial": "kodes4foam/tutorials/3D_premixed_burner",
+    "description": "Premixed H2/air, phi = 0.6, through a sudden expansion, RAS k-epsilon, PaSR.",
+    "mechanisms": [
+        "h2o2",
+        "grimech",
+        "C1_C3_HT_NOX_159_2459"
+    ],
+    "deltaT": 1e-05,
+    "deltaTFrom": "maxDeltaT of system/controlDict",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.001
+    },
+    "streams": {
+        "unburnt": {
+            "T": 320,
+            "p": 101325,
+            "Y": {
+                "H2": 0.01730460432,
+                "O2": 0.2288825765,
+                "N2": 0.7538128192
+            }
+        },
+        "burnt": {
+            "T": 1860,
+            "p": 101325,
+            "Y": {
+                "O2": 0.09155281057,
+                "N2": 0.7538110074,
+                "H2O": 0.154636182
+            }
+        }
+    },
+    "streamsFrom": "system/setFieldsDict: defaultFieldValues and the ignition box",
+    "mixtures": [
+        [
+            "unburnt",
+            "burnt"
+        ]
+    ],
+    "mixingFractions": [
+        0.25,
+        0.5,
+        0.75
+    ]
+}
