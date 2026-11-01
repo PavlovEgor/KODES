@@ -167,12 +167,13 @@ void kodes::Seulex::advance
     const ThreadVector<scalar> y = currentVector();
     scalar& t = currentT;
 
-    bool jacUpdated = false;
+    // Read once: the sequences of order 0 and 1 below set refreshJacobian_
+    // afresh for the next step
+    const bool jacobianFresh = refreshJacobian_;
 
-    if (refreshJacobian_)
+    if (jacobianFresh)
     {
         ode->jacobian(t, currentParameter(0), y, dfdy_);
-        jacUpdated = true;
     }
 
     scalar dt = deltaTTry;
@@ -183,9 +184,8 @@ void kodes::Seulex::advance
     // StepState::prevReject, with reject beside it, though neither ever
     // outlived the step: reset here at the end of every one.
     bool rejected = false;
-    bool accepted;
 
-    do
+    for (;;)
     {
         dt = forward ? dtNew : -dtNew;
 
@@ -194,21 +194,21 @@ void kodes::Seulex::advance
             printf("step size underflow : %0.16f \n", dt);
         }
 
-        accepted = tryOrders(ode, controls, jacRedo, dt, rejected, k, dtNew);
-
-        if (!accepted)
+        if (tryOrders(ode, controls, jacRedo, dt, rejected, k, dtNew))
         {
-            rejected = true;
-
-            // a rejected step is retried with a fresh Jacobian, if this one
-            // was an old one
-            if (!jacUpdated)
-            {
-                ode->jacobian(t, currentParameter(0), y, dfdy_);
-                jacUpdated = true;
-            }
+            break;
         }
-    } while (!accepted);
+
+        // The first rejection retries with a fresh Jacobian, if the step did
+        // not start with one; later ones already have it. Was a jacUpdated
+        // flag, which is exactly this.
+        if (!jacobianFresh && !rejected)
+        {
+            ode->jacobian(t, currentParameter(0), y, dfdy_);
+        }
+
+        rejected = true;
+    }
 
     deltaTDid = dt;
     t += dt;
