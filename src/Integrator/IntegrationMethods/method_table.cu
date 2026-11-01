@@ -2,7 +2,10 @@
 
 #include "Seulex/Seulex.cuh"
 #include "Euler/Euler.cuh"
-#include "Rosenbrock34/Rosenbrock34.cuh"
+#include "Rosenbrock/Rosenbrock23.cuh"
+#include "Rosenbrock/Rosenbrock34.cuh"
+#include "Rosenbrock/Rodas23.cuh"
+#include "Rosenbrock/Rodas34.cuh"
 
 namespace kodes
 {
@@ -14,7 +17,10 @@ static const TypeEntry<IntegrationMethod> table[] =
 {
     typeEntry<IntegrationMethod, Seulex>("seulex"),
     typeEntry<IntegrationMethod, Euler>("euler"),
-    typeEntry<IntegrationMethod, Rosenbrock34>("rosenbrock34")
+    typeEntry<IntegrationMethod, Rosenbrock23>("rosenbrock23"),
+    typeEntry<IntegrationMethod, Rosenbrock34>("rosenbrock34"),
+    typeEntry<IntegrationMethod, Rodas23>("rodas23"),
+    typeEntry<IntegrationMethod, Rodas34>("rodas34")
 };
 
 static const label tableSize = label(sizeof(table)/sizeof(table[0]));
