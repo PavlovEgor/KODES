@@ -21,8 +21,6 @@ namespace kodes
         ThreadValue<scalar> currentT;
         ThreadValue<bool> first;
         ThreadValue<bool> last;
-        ThreadValue<bool> reject;
-        ThreadValue<bool> prevReject;
 
         // Empty, and written out rather than `= default`, which is not the
         // same thing here.
@@ -51,7 +49,7 @@ namespace kodes
 
         __host__ static size_t bytesPerThread()
         {
-            return 3 * sizeof(scalar) + 5 * sizeof(bool);
+            return 3 * sizeof(scalar) + 3 * sizeof(bool);
         }
 
         __device__

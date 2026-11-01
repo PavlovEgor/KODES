@@ -42,7 +42,6 @@ void kodes::solveKernel
         for (label nStep = 0; nStep < maxSteps; ++nStep)
         {
             const scalar dtTry0 = method->deltaTTry;
-            method->reject = false;
 
             if ((t + method->deltaTTry - tEnd)*(t + method->deltaTTry - tStart) > 0)
             {
@@ -63,11 +62,6 @@ void kodes::solveKernel
             }
 
             method->first = false;
-
-            if (method->reject)
-            {
-                method->prevReject = true;
-            }
         }
 
         if (!reachedEnd)

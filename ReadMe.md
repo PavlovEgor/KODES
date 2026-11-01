@@ -256,7 +256,7 @@ leaves declare the four statics, the same division as in `ODESystem`.
   `parameters`, sized `systemSize*batchSize` and `parameterSize*batchSize`. Scratch space:
   `currentVector()` and `currentParameter(i)`, the working copy of the system a thread is
   integrating right now, sized with `scratchSize`, and the `StepState` arrays - the trial step, the
-  local time, the direction and the first/last/reject flags of that system.
+  local time, the direction and the first/last flags of that system.
   `loadSystem(system)`/`storeSystem(system)` move one system between the two. The base of every
   integration method, so its buffers are allocated by the method's `allocate()` into a host stub
   that `Operator` then reads to find them. The statics `stateBytesPerSystem`/`scratchBytesPerThread`/

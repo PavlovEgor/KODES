@@ -179,21 +179,26 @@ void kodes::Seulex::advance
     scalar dtNew = fabs(dt);
     label k;
 
+    // Whether an attempt of this step has been rejected. Until 1.2.6 it was
+    // StepState::prevReject, with reject beside it, though neither ever
+    // outlived the step: reset here at the end of every one.
+    bool rejected = false;
+    bool accepted;
+
     do
     {
         dt = forward ? dtNew : -dtNew;
-        reject = false;
 
         if (fabs(dt) <= fabs(t) * sqr(SMALL))
         {
             printf("step size underflow : %0.16f \n", dt);
         }
 
-        k = tryOrders(ode, controls, jacRedo, dt, dtNew);
+        accepted = tryOrders(ode, controls, jacRedo, dt, rejected, k, dtNew);
 
-        if (reject)
+        if (!accepted)
         {
-            prevReject = true;
+            rejected = true;
 
             // a rejected step is retried with a fresh Jacobian, if this one
             // was an old one
@@ -203,12 +208,12 @@ void kodes::Seulex::advance
                 jacUpdated = true;
             }
         }
-    } while (reject);
+    } while (!accepted);
 
     deltaTDid = dt;
     t += dt;
 
-    const scalar dtNext = chooseStepSize(k, chooseOrder(k), dt);
+    const scalar dtNext = chooseStepSize(k, chooseOrder(k), dt, rejected);
 
     deltaTTry = forward ? dtNext : -dtNext;
 }
@@ -226,13 +231,10 @@ void kodes::Seulex::startStep
     y0_ = currentVector();
     dtOpt_[0] = fabs(0.1*deltaTTry);
 
-    if (first || prevReject)
-    {
-        refreshJacobian_ = true;
-    }
-
     if (first)
     {
+        refreshJacobian_ = true;
+
         const scalar logTol = -log10(relTol + absTol)*0.6 + 0.5;
         kTarg_ = max(1, min(kSeulexMaxOrder - 1, label(logTol)));
     }
@@ -241,27 +243,27 @@ void kodes::Seulex::startStep
 }
 
 __device__
-kodes::label kodes::Seulex::tryOrders
+bool kodes::Seulex::tryOrders
 (
     kodes::ODESystem* ode,
     const kodes::IntegratorControls& controls,
     const scalar jacRedo,
     const scalar dt,
+    const bool rejected,
+    label& k,
     scalar& dtNew
 ) const
 {
     const ThreadVector<scalar> y = currentVector();
 
     scalar errOld = 0;
-    label k;
 
     for (k = 0; k <= kTarg_ + 1; k++)
     {
         if (seul(ode, currentT, dt, k, jacRedo) != Sequence::Converged)
         {
-            reject = true;
             dtNew = fabs(dt)*kSeulexStepFactor5;
-            break;
+            return false;
         }
 
         if (k == 0)
@@ -277,32 +279,31 @@ kodes::label kodes::Seulex::tryOrders
 
         if (err > 1/SMALL || (k > 1 && err >= errOld))
         {
-            reject = true;
             dtNew = fabs(dt)*kSeulexStepFactor5;
-            break;
+            return false;
         }
 
         errOld = min(4*err, 1.0);
 
         estimateOrderCost(k, err, dt);
 
-        const Convergence convergence = checkConvergence(k, err);
-
-        if (convergence == Convergence::Undecided)
-        {
-            continue;
-        }
+        const Convergence convergence = checkConvergence(k, err, rejected);
 
         if (convergence == Convergence::Rejected)
         {
-            reject = true;
             dtNew = dtOpt_[kTarg_];
+            return false;
         }
 
-        break;
+        if (convergence == Convergence::Accepted)
+        {
+            return true;
+        }
     }
 
-    return k;
+    // not reached: order kTarg_ + 1 always decides, and kTarg_ only moves on a
+    // rejection, which returns
+    return true;
 }
 
 __device__
@@ -361,7 +362,8 @@ __device__
 kodes::Seulex::Convergence kodes::Seulex::checkConvergence
 (
     const label k,
-    const scalar err
+    const scalar err,
+    const bool rejected
 ) const
 {
     label& kTarg = kTarg_;
@@ -372,7 +374,7 @@ kodes::Seulex::Convergence kodes::Seulex::checkConvergence
     }
 
     // one order short of the target, on a step that follows an accepted one
-    if (k == kTarg - 1 && !prevReject && !first && !last)
+    if (k == kTarg - 1 && !rejected && !first && !last)
     {
         if (err <= 1)
         {
@@ -457,15 +459,15 @@ kodes::scalar kodes::Seulex::chooseStepSize
 (
     const label k,
     const label kopt,
-    const scalar dt
+    const scalar dt,
+    const bool rejected
 ) const
 {
     label& kTarg = kTarg_;
 
-    if (prevReject)
+    if (rejected)
     {
         kTarg = min(kopt, k);
-        prevReject = false;
 
         return min(fabs(dt), dtOpt_[kTarg]);
     }

@@ -9,8 +9,6 @@ void kodes::StepState::allocate(const label scratchSize)
     currentT.allocate(scratchSize);
     first.allocate(scratchSize);
     last.allocate(scratchSize);
-    reject.allocate(scratchSize);
-    prevReject.allocate(scratchSize);
 }
 
 __host__
@@ -22,8 +20,6 @@ void kodes::StepState::deallocate()
     currentT.deallocate();
     first.deallocate();
     last.deallocate();
-    reject.deallocate();
-    prevReject.deallocate();
 }
 
 __device__
@@ -35,8 +31,6 @@ void kodes::StepState::setDeltaT(const scalar deltaT)
     currentT = 0.0;
     first = true;
     last = false;
-    reject = false;
-    prevReject = false;
 }
 
 __device__

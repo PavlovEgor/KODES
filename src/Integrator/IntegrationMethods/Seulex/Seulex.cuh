@@ -143,19 +143,23 @@ public:
     // The steps advance() is made of, in the order it takes them
 
     // Reset the order-indexed estimates, keep the state the step starts from,
-    // and on a system's first step settle kTarg_ and ask for a Jacobian
+    // and on a system's first step settle kTarg_ and ask for a Jacobian. Was
+    // `first || prevReject`, but no step ever began with prevReject set.
     __device__ void startStep(const IntegratorControls& controls) const;
 
-    // Raise the order k from 0 until an extrapolation is accepted or the step
-    // is rejected, which sets reject and the step to retry with in dtNew.
-    // Returns the order it stopped at.
-    __device__ label
+    // Raise the order k from 0 until an extrapolation is accepted, and return
+    // true, or the step is rejected, and return false with the step to retry
+    // with in dtNew. `rejected` says whether an attempt of this step already
+    // was; k is left at the order it stopped at.
+    __device__ bool
     tryOrders
     (
         ODESystem* ode,
         const IntegratorControls& controls,
         const scalar jacRedo,
         const scalar dt,
+        const bool rejected,
+        label& k,
         scalar& dtNew
     ) const;
 
@@ -182,7 +186,13 @@ public:
         Undecided
     };
 
-    __device__ Convergence checkConvergence(const label k, const scalar err) const;
+    __device__ Convergence
+    checkConvergence
+    (
+        const label k,
+        const scalar err,
+        const bool rejected
+    ) const;
 
     // The order to aim the next step at, from the work estimates
     __device__ label chooseOrder(const label k) const;
@@ -193,7 +203,8 @@ public:
     (
         const label k,
         const label kopt,
-        const scalar dt
+        const scalar dt,
+        const bool rejected
     ) const;
 
     // kTarg, or the order below it if that would have done the work for less,
