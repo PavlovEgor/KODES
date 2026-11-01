@@ -18,7 +18,7 @@
 // entry has a default, so a file naming nothing but the method is valid.
 //
 //   {
-//       "method":   "seulex",       // methodTable: seulex | euler | rosenbrock23 | rosenbrock34 | rodas23 | rodas34
+//       "method":   "seulex",       // methodTable: seulex | euler | rosenbrock23 | rosenbrock34 | rodas23 | rodas34 | bdf
 //       "system":   "pyJac",        // systemTable: pyJac
 //       "device": {
 //           "share":           "best",   // best | half, see kDeviceShares

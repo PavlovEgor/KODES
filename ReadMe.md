@@ -303,6 +303,14 @@ leaves declare the four statics, the same division as in `ODESystem`.
   `Rodas34` ("rosenbrock23", "rosenbrock34", "rodas23", "rodas34") name OpenFOAM's tableaux of
   the same names, all L-stable, the rodas ones stiffly accurate. The df/dt terms are left out: the
   systems are autonomous.
+- **`kodes::Bdf`** (`Integrator/IntegrationMethods/Bdf/`, "bdf") — the variable order (1 to 5)
+  backward differentiation formulas with Shampine and Reichelt's NDF modification, a port of
+  scipy's `BDF` step for step. It keeps the Jacobian and its factorisation across steps for as
+  long as the simplified Newton iteration converges, which for a large mechanism is where the time
+  goes. It controls its own step and order, so it is a plain `IntegrationMethod`; its history, the
+  `DifferenceTable`, lives in scratch between the steps of a system and starts afresh, at order 1,
+  with each one. Its order-indexed coefficients are `__constant__`, filled at compile time
+  (`bdf_constants.cuh`).
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — drives the solve. It owns the
   `solveKernel` kernel: the grid-stride loop over the batch and the step-count loop that walks one
   system from local time 0 to the target end time. `solve(deltaT, realBatchSize)` launches it for
@@ -490,6 +498,7 @@ src/
       Euler/              Euler
       Rosenbrock/         Rosenbrock, rosenbrock_tableaux, and the leaves
                           Rosenbrock23, Rosenbrock34, Rodas23, Rodas34
+      Bdf/                Bdf, DifferenceTable, bdf_constants
   Settings/               Config (JSON reader), Settings
   Library/                library_api.h — the CUDA-free interface of a prebuilt
                           libkodes_<mechanism>.so — and library_api.cu behind it

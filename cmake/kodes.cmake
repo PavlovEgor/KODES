@@ -39,6 +39,8 @@ set(KODES_SOURCES
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Rosenbrock/Rosenbrock34.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Rosenbrock/Rodas23.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Rosenbrock/Rodas34.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Bdf/Bdf.cu
+    ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Bdf/bdf_constants.cu
 
     ${KODES_SRC_DIR}/ODESystem/PyJacSystem/PyJacSystem.cu
     ${KODES_SRC_DIR}/ODESystem/system_table.cu
