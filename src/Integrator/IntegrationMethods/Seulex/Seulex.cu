@@ -196,7 +196,6 @@ void kodes::Seulex::advance
             // was an old one
             if (!jacUpdated)
             {
-                theta_ = 2*jacRedo;
                 ode->jacobian(t, currentParameter(0), y, dfdy_);
                 jacUpdated = true;
             }
