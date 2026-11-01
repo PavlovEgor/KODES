@@ -57,6 +57,17 @@ public:
              + 2 * size_t(systemSize) * sizeof(scalar);
     }
 
+    // Whatever the trial steps of one step share and a retry need not redo,
+    // worked out once from the state the step starts from, after dydt0_.
+    // Nothing, unless a subclass says otherwise.
+    //
+    // Not given the controls: nvlink matches an indirect call to whatever
+    // has its signature, and startStep(ode, controls) would have advance's -
+    // a call of advance from advance, a recursion, and a solveKernel stack it
+    // can no longer work out.
+    __device__ virtual void startStep(ODESystem* ode) const
+    {}
+
     // One trial step of deltaTTry from the current vector into yTemp_, and its
     // error normalised so that 1 is the tolerance
     __device__ virtual scalar

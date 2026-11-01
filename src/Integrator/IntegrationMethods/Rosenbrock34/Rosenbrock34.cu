@@ -44,8 +44,15 @@ kodes::Rosenbrock34::deallocate()
     AdaptiveIntegrationMethod::deallocate();
 }
 
-// OpenFOAM's Rosenbrock34::solve. The Jacobian is taken afresh for every trial,
-// as there, though a retry starts from the same state as the trial before it.
+__device__
+void kodes::Rosenbrock34::startStep(kodes::ODESystem* ode) const
+{
+    ode->jacobian(currentT, currentParameter(0), currentVector(), dfdy_);
+}
+
+// OpenFOAM's Rosenbrock34::solve, but for the Jacobian: OpenFOAM takes it
+// afresh for every trial, though a retry starts from the same state as the
+// trial before it, so here startStep() takes it once a step.
 __device__
 kodes::scalar kodes::Rosenbrock34::trialStep
 (
@@ -56,8 +63,6 @@ kodes::scalar kodes::Rosenbrock34::trialStep
     const ThreadVector<scalar> y = currentVector();
     const scalar t = currentT;
     const scalar dt = deltaTTry;
-
-    ode->jacobian(t, currentParameter(0), y, dfdy_);
 
     {
         // Copies of the two views, as in Seulex::seul: written through a

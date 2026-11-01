@@ -46,6 +46,8 @@ kodes::AdaptiveIntegrationMethod::advance
 
     ode->derivatives(t, currentParameter(0), y, dydt0_);
 
+    startStep(ode);
+
     // Loop over solver and adjust step-size as necessary
     // to achieve desired error
     do

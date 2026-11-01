@@ -107,6 +107,9 @@ public:
              + n * sizeof(label);                   // pivotIndices_
     }
 
+    // The Jacobian at the top of the step, the same for every retry
+    __device__ void startStep(ODESystem* ode) const override;
+
     __device__ scalar
     trialStep
     (
