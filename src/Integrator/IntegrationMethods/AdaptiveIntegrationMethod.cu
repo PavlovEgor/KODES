@@ -1,4 +1,3 @@
-#include <cuda/std/algorithm>
 #include "AdaptiveIntegrationMethod.cuh"
 
 // No KODES_DEFINE_DEVICE_OBJECT here: an intermediate of the family is never a
@@ -79,7 +78,7 @@ kodes::AdaptiveIntegrationMethod::advance
     if (err > pow(maxScale/safeScale, -1.0/alphaInc))
     {
         scalar scale = safeScale*pow(err, -alphaInc);
-        deltaTTry = cuda::std::clamp(scale, minScale, maxScale)*dt;
+        deltaTTry = fmin(fmax(scale, minScale), maxScale)*dt;
     }
     else
     {
