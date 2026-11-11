@@ -37,7 +37,7 @@ namespace kodes
 //
 // 2 is this line, kodes-v2, whose SolverSettings has a balancer and whose
 // Solver a balancer(); 1 is kodes-v1, which has neither. The block-collective
-// line, kodes-v3, has this same interface, and the same number.
+// line, kodes-dev, has this same interface, and the same number.
 constexpr int kLibraryApiVersion = 2;
 
 constexpr const char* kLibraryApiVersionSymbol = "kodesLibraryApiVersion";

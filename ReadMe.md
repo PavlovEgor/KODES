@@ -26,9 +26,10 @@ is the 2.x line, `kodes-v2`, which adds one thing to it: a `Balancer` that sorts
 device before it is solved. The 32 threads of a warp issue together however independent their
 systems are, so a warp finishes when its stiffest system does; grouping systems alike keeps the
 other lanes from waiting. Nothing else changes — every thread still integrates on its own, and
-`"balancer": "none"` is exactly 1.x. 0.20 to 0.23 went further and integrated a whole block in
-lockstep, with one Jacobian and one LU factorization for all its threads; that line goes on as 3.x
-on the `kodes-v3` branch.
+`"balancer": "none"` is exactly 1.x. The 3.x line, `kodes-v3`, adds to this one a `solve()` of
+fewer systems than the ensemble, for a caller that leaves out the cells it knows will not react.
+0.20 to 0.23 went further and integrated a whole block in lockstep, with one Jacobian and one LU
+factorization for all its threads; that line is kept, not developed, on the `kodes-dev` branch.
 
 Which integration method runs, which balancer orders the batch and every tolerance are read from
 a JSON settings file when the program starts — see *Typical run* below. How a class whose virtual functions only exist on the GPU
@@ -494,7 +495,7 @@ That one answers what the mechanism is — its name, the KODES version it was bu
 in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
 `kodes::Solver` from a `kodes::SolverSettings`: the method, the device share or the sizes by hand,
 the balancer, the tolerances. It is the interface 0.23 had, `SolverSettings::balancer` and
-`Solver::balancer()` included, and the one `kodes-v3` keeps: `kLibraryApiVersion` is 2 for both,
+`Solver::balancer()` included, and the one `kodes-dev` keeps: `kLibraryApiVersion` is 2 for both,
 and 1 for `kodes-v1`, which has neither. The solver plans, builds and integrates exactly as *Typical run*
 above; `solve(deltaT, state, parameters)` takes the ensemble in the `HostResources` layout and
 integrates it in place, batch by batch. The types in the interface are `double` and `int`, not
