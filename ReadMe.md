@@ -254,9 +254,9 @@ leaves declare the four statics, the same division as in `ODESystem`.
 
 - **`kodes::Resources`** (`Resources/Resources.cuh`) — common base: `numOfSystems`,
   `sizeOfSystem`, `numOfParameters` and their accessors.
-- **`kodes::HostResources`** (`Resources/HostResources.cuh`/`.cu`) — host-side state as an array of
-  `sizeOfSystem` pointers (`vectors`) plus `numOfParameters` pointers (`parameters`); each pointer
-  is caller-owned storage for that component across all systems (`setVector`/`setParameter` assign
+- **`kodes::HostResources`** (`Resources/HostResources.cuh`/`.cu`) — host-side state as a
+  `std::array` of `kSystemSize` pointers (`vectors`) plus one of `kParameterSize` pointers
+  (`parameters`), `.data()` where a `scalar**` is wanted; each pointer is caller-owned storage for that component across all systems (`setVector`/`setParameter` assign
   them directly — no ownership transfer, so callers can point straight at their own arrays).
 - **`kodes::DeviceResources`** (`Resources/DeviceResources.cuh`/`.cu`) — the device-side
   counterpart, and the place where the two address spaces meet. State space: `vectors` and

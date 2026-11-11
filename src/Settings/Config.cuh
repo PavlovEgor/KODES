@@ -17,22 +17,20 @@ class Config
 {
 private:
     rapidjson::Document document;
-    FILE* file;
 
     // Looks up a dotted path: "controls.absTol" is absTol inside the controls
     // object, not a member called "controls.absTol".
     const rapidjson::Value* getValue(const std::string& name) const;
 
 public:
+    // Reads and parses the whole file; it is closed again before this returns
     explicit Config(const std::string& json_path);
-    
-    ~Config();
-    
+
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
-    
-    Config(Config&& other) noexcept;
-    Config& operator=(Config&& other) noexcept;
+
+    Config(Config&&) = default;
+    Config& operator=(Config&&) = default;
 
     double getDouble(const std::string& name, double default_value) const;
     int getInt(const std::string& name, int default_value) const;

@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
     kodes::HostResources hostRes(ensembleSize, NSP, 1);
 
-    set_same_initial_conditions(hostRes.ensembleSize(), hostRes.vectors, hostRes.parameters);
+    set_same_initial_conditions(hostRes.ensembleSize(), hostRes.vectors.data(), hostRes.parameters.data());
 
     printf("\ninitial state of reactor 0:\n  ");
     hostRes.printVectori(0);

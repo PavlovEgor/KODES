@@ -1,19 +1,21 @@
 #include "Config.cuh"
 #include <iostream> 
+#include <memory>
 
 namespace kodes 
 {
 
+// The document copies every string it parses, so the file is not needed past
+// this constructor - and closed on the way out of it, a parse error included
 Config::Config(const std::string& json_path)
-    : file(nullptr)
 {
-    file = fopen(json_path.c_str(), "rb");
+    const std::unique_ptr<FILE, int (*)(FILE*)> file(fopen(json_path.c_str(), "rb"), &fclose);
     if (!file) {
         throw std::runtime_error("Cannot open config file: " + json_path);
     }
     
     char readBuffer[65536];
-    rapidjson::FileReadStream is(file, readBuffer, sizeof(readBuffer));
+    rapidjson::FileReadStream is(file.get(), readBuffer, sizeof(readBuffer));
     
     document.ParseStream(is);
     
@@ -28,29 +30,6 @@ Config::Config(const std::string& json_path)
     if (!document.IsObject()) {
         throw std::runtime_error("Config file root must be a JSON object");
     }
-}
-
-Config::~Config() {
-    if (file) {
-        fclose(file);
-    }
-}
-
-Config::Config(Config&& other) noexcept
-    : document(std::move(other.document))
-    , file(other.file)
-{
-    other.file = nullptr;
-}
-
-Config& Config::operator=(Config&& other) noexcept {
-    if (this != &other) {
-        document = std::move(other.document);
-        if (file) fclose(file);
-        file = other.file;
-        other.file = nullptr;
-    }
-    return *this;
 }
 
 // "controls.absTol" walks into the nested object rather than looking for a

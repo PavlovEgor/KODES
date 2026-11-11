@@ -4,16 +4,11 @@ namespace kodes
 {
 
 HostResources::HostResources(const label ensembleSize, const label systemSize, const label parameterSize)
-    : Resources(ensembleSize, systemSize, parameterSize)
+    : Resources(ensembleSize, systemSize, parameterSize),
+      vectors{},
+      parameters{}
 {
-    this->vectors       = (scalar**)malloc(systemSize * sizeof(scalar*));
-    this->parameters    = (scalar**)malloc(parameterSize * sizeof(scalar*));
-}
-
-HostResources::~HostResources()
-{
-    free(this->vectors);
-    free(this->parameters);
+    checkSystemDimensions(systemSize, parameterSize, "HostResources");
 }
 
 HostResources& HostResources::operator=(const HostResources& other)
@@ -49,7 +44,7 @@ void HostResources::printVectori(const label i) const
 
 void HostResources::printParameteri(const label i) const
 {
-    for (label j = 0; j < systemSize_; ++j) {
+    for (label j = 0; j < parameterSize_; ++j) {
         printf("%f ", this->parameters[j][i]);
     }
     printf("\n");

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -145,7 +146,8 @@ int main(int argc, char** argv)
         parameterPointers.push_back(c.data());
     }
 
-    kodes::Solver* solver = library.newSolver(ensembleSize, settings);
+    // made by the library and given back with delete, which unique_ptr does
+    const std::unique_ptr<kodes::Solver> solver(library.newSolver(ensembleSize, settings));
 
     printf
     (
@@ -169,8 +171,6 @@ int main(int argc, char** argv)
             ensembleSize - 1
         );
     }
-
-    delete solver;
 
     // The library stays open until the program ends: unloading a CUDA module
     // while the runtime is still up gains nothing and can only go wrong.
