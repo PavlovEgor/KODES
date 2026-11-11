@@ -50,6 +50,13 @@ def main():
 
     for name in names:
         case = json.loads((CASES_DIR/name/"case.json").read_text())
+
+        # A case whose states are a developed flame has no streams to make any
+        # from, and its files are not to be overwritten
+        if "streams" not in case:
+            print(f"{name}: states of a developed flame, left as they are")
+            continue
+
         states = states_of(case)
 
         for mechanism in case["mechanisms"]:

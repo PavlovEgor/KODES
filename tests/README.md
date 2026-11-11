@@ -36,6 +36,7 @@ tests/
 | 3D_premixed_burner | premixed H2/air, phi = 0.6, PaSR | h2o2, grimech, C1_C3 | 1e-5 | 1e-3 |
 | nonUniformHeating2D | homogeneous H2/air autoignition at 1500 K | h2o2, grimech, C1_C3 | 1e-6 | 1e-2 |
 | counterFlowFlame2D | CH4/air counterflow diffusion flame | grimech, C1_C3 | 1e-6 | 1e-1 |
+| 2D_flat_burner | rich CH4/air flat burner flame, phi = 1.15, developed | grimech | 1.2e-5 | 1e-3 |
 
 absTol is 1e-12 everywhere. Each `case.json` says which file of the tutorial its numbers
 are from: `deltaT` is the tutorial's `maxDeltaT`, the step a developed run settles at,
@@ -64,7 +65,13 @@ last. `tools/states.py` reads and writes the format and reads a `mechanism.cuh`'
 
 ## The states there are now
 
-The simplest ones: the streams of each tutorial's initial and inlet conditions - unburnt
+`2D_flat_burner` is a developed flame already: 2048 of the 86 688 cells of its run at
+t = 0.031 s (the 0.05 mm mesh, standard chemistry, the relaxational oscillation going),
+by ranks, so most of them are the cold mixture, air and co-flow around the flame. Its
+`deltaT` is the step that run took there. It has no streams, and `make_initial_states.py`
+leaves it alone.
+
+The others are the simplest ones: the streams of each tutorial's initial and inlet conditions - unburnt
 mixture, ignition kernel, fuel, air - and mixtures of pairs of them at 25, 50 and 75 % by
 mass (`fuel0.25+air` is a quarter fuel). Temperature is mixed linearly too, which ignores
 that the two cp differ: these states are below, at and above ignition, and that is all

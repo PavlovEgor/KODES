@@ -1,0 +1,14 @@
+{
+    "tutorial": "kodes4foam/tutorials/2D_flat_burner",
+    "description": "Rich CH4/air flame (phi = 1.15) on the LPI flat porous burner with a N2 co-flow, axisymmetric, laminar, in the relaxational oscillation regime; reactingCanteraLMFoam with standard chemistry. The states are the developed flame, not streams.",
+    "mechanisms": [
+        "grimech"
+    ],
+    "deltaT": 1.2e-05,
+    "deltaTFrom": "the time step the run took at t = 0.031 (uniform/time: 1.21e-5), Courant-limited",
+    "controls": {
+        "absTol": 1e-12,
+        "relTol": 0.001
+    },
+    "statesFrom": "an OpenFOAM run at t = 0.031 s, 0.05 mm mesh of 86688 cells: tools/states_from_openfoam.py, 2048 cells by ranks. There are no streams, and tools/make_initial_states.py leaves the case alone"
+}
