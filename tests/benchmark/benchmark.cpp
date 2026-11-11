@@ -25,7 +25,7 @@
 // final states when asked to.
 //
 //     benchmark [options]           2D_flat_burner, libkodes_grimech.so from
-//                                   the library path, seulex
+//                                   the library path, seulex, temperature
 //
 // Through library_api.h, as kodes4foam calls KODES: a solve() is a whole step
 // of the chemistry, host->device and back included. And by name, as the state
@@ -42,6 +42,8 @@ const char* const kUsage =
 "  --library PATH    libkodes_<mechanism>.so to open  (default: from the library path)\n"
 "  --method NAME     seulex | euler | rosenbrock23 | rosenbrock34 | rodas23 |\n"
 "                    rodas34 | bdf                    (default: seulex)\n"
+"  --balancer NAME   temperature | rhsNorm | stiffness | none\n"
+"                                                     (default: temperature)\n"
 "  --ensemble N      systems per solve(), the states repeated (default: 131072)\n"
 "  --order ORDER     shuffled | as-is: shuffled spreads the copies over the\n"
 "                    ensemble with a fixed seed; as-is keeps the file's order,\n"
@@ -66,6 +68,7 @@ struct Options
     std::string mechanism;
     std::string library;
     std::string method = "seulex";
+    std::string balancer = "temperature";
     int ensemble = 131072;
     std::string order = "shuffled";
     int repeats = 5;
@@ -106,6 +109,7 @@ Options parseOptions(int argc, char** argv)
         else if (name == "--mechanism") options.mechanism = value;
         else if (name == "--library") options.library = value;
         else if (name == "--method") options.method = value;
+        else if (name == "--balancer") options.balancer = value;
         else if (name == "--ensemble") options.ensemble = atoi(value);
         else if (name == "--order") options.order = value;
         else if (name == "--repeats") options.repeats = atoi(value);
@@ -454,6 +458,7 @@ int main(int argc, char** argv)
     kodes::SolverSettings settings;
 
     settings.method = options.method.c_str();
+    settings.balancer = options.balancer.c_str();
     settings.deviceShare = options.share.c_str();
     settings.threadsPerBlock = options.threads;
     settings.absTol = c.absTol;
@@ -492,8 +497,9 @@ int main(int argc, char** argv)
 
     printf
     (
-        "%s: %d blocks x %d threads, %d systems per batch, %d batch(es); set up in %.3f s\n\n",
-        solver->method(), solver->blocks(), solver->threads(),
+        "%s, balancer %s: %d blocks x %d threads, %d systems per batch, %d batch(es);"
+        " set up in %.3f s\n\n",
+        solver->method(), solver->balancer(), solver->blocks(), solver->threads(),
         solver->batchSize(), solver->numOfBatches(), setupSeconds
     );
 
@@ -567,8 +573,8 @@ int main(int argc, char** argv)
 
     printf
     (
-        "\n%s, %s, %d systems: median %.4f s, best %.4f s, %.0f systems/s at the median\n",
-        c.name.c_str(), solver->method(), options.ensemble, typical, best,
+        "\n%s, %s, balancer %s, %d systems: median %.4f s, best %.4f s, %.0f systems/s at the median\n",
+        c.name.c_str(), solver->method(), solver->balancer(), options.ensemble, typical, best,
         options.ensemble/typical
     );
     printf
@@ -600,9 +606,9 @@ int main(int argc, char** argv)
         fprintf
         (
             out,
-            "# %s, %s after deltaT = %g s with KODES %s, %s, absTol %g, relTol %g\n",
+            "# %s, %s after deltaT = %g s with KODES %s, %s, balancer %s, absTol %g, relTol %g\n",
             c.name.c_str(), mechanism.c_str(), deltaT, library.version(),
-            solver->method(), settings.absTol, settings.relTol
+            solver->method(), solver->balancer(), settings.absTol, settings.relTol
         );
 
         fprintf(out, "label,T,p");

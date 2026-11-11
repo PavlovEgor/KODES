@@ -119,6 +119,7 @@ species of the file reach the state by name.
 cmake -B build && cmake --build build -j                  # the libraries, at the top
 cd tests/benchmark && cmake -B build && cmake --build build
 LD_LIBRARY_PATH=../../build ./build/benchmark                # 2D_flat_burner, grimech, seulex
+LD_LIBRARY_PATH=../../build ./build/benchmark --balancer none  # the same, unbalanced
 LD_LIBRARY_PATH=../../build ./build/benchmark --method bdf --ensemble 86688 \
     --output bdf.csv                                         # and the final states
 ./build/benchmark --help
@@ -127,7 +128,8 @@ LD_LIBRARY_PATH=../../build ./build/benchmark --method bdf --ensemble 86688 \
 By default the 2048 states of `2D_flat_burner` become 131072 systems, the copies shuffled
 over the ensemble with a fixed seed. The file is sorted by temperature, so taken in its
 own order (`--order as-is`) every warp would get neighbours in temperature - a batch
-already balanced, which is not what a mesh hands over. `--output` writes the final state
+already balanced, which is not what a mesh hands over, and against which `--balancer` would
+have nothing left to do. `--output` writes the final state
 of each state of the file in the same format, for a validation to read.
 
 ## Not here yet
