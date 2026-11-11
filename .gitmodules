@@ -2,3 +2,6 @@
 	path = external/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
 
+[submodule "external/pyJac"]
+	path = external/pyJac
+	url = https://github.com/PavlovEgor/pyJac.git

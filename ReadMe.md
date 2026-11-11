@@ -229,6 +229,13 @@ one class per row in both.
   reactions) and a smaller H2/O2 mechanism (9 species, 28 reactions), and
   `kodes_pyjac_mechanism(grimech ...)` in `cmake/kodes.cmake` selects one by directory name.
   Dropping a new pyJac output in beside them is enough to make it selectable.
+  pyJac itself is the `external/pyJac` submodule (a fork with the CUDA output KODES reads),
+  needed only to generate a mechanism:
+
+  ```sh
+  git submodule update --init external/pyJac
+  PYTHONPATH=external/pyJac python -m pyjac -l cuda -i chem.inp -t therm.dat -b data/mechanisms/<name>/out
+  ```
 
 ### `Resources` — state storage, host and device
 
@@ -379,6 +386,7 @@ which does all four steps behind one call — see *As a prebuilt library* below.
 
 ```sh
 git submodule update --init external/rapidjson      # only for kodes::Settings
+git submodule update --init external/pyJac          # only to generate a mechanism
 
 cd examples/reactors && cmake -B build && cmake --build build
 
