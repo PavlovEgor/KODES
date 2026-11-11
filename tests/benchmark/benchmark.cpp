@@ -24,6 +24,11 @@
 // states. Prints the plan and the wall clock of every solve(), and writes the
 // final states when asked to.
 //
+// With --active, only the systems that pass every condition given are
+// integrated: they are packed at the front and solve() is told how many there
+// are, the way a CFD code leaves out the cells it knows will not react. The
+// others keep their state.
+//
 //     benchmark [options]           2D_flat_burner, libkodes_grimech.so from
 //                                   the library path, seulex, temperature
 //
@@ -45,6 +50,10 @@ const char* const kUsage =
 "  --balancer NAME   temperature | rhsNorm | stiffness | none\n"
 "                                                     (default: temperature)\n"
 "  --ensemble N      systems per solve(), the states repeated (default: 131072)\n"
+"  --active COND     integrate only the systems for which COND holds, the\n"
+"                    rest are left as they are; COND is <name><op><number>,\n"
+"                    name T, p or a specie, op < or >: T>400, CH4>1e-6.\n"
+"                    Repeated, every one must hold    (default: all systems)\n"
 "  --order ORDER     shuffled | as-is: shuffled spreads the copies over the\n"
 "                    ensemble with a fixed seed; as-is keeps the file's order,\n"
 "                    sorted by temperature for 2D_flat_burner (default: shuffled)\n"
@@ -69,6 +78,7 @@ struct Options
     std::string library;
     std::string method = "seulex";
     std::string balancer = "temperature";
+    std::vector<std::string> active;
     int ensemble = 131072;
     std::string order = "shuffled";
     int repeats = 5;
@@ -110,6 +120,7 @@ Options parseOptions(int argc, char** argv)
         else if (name == "--library") options.library = value;
         else if (name == "--method") options.method = value;
         else if (name == "--balancer") options.balancer = value;
+        else if (name == "--active") options.active.push_back(value);
         else if (name == "--ensemble") options.ensemble = atoi(value);
         else if (name == "--order") options.order = value;
         else if (name == "--repeats") options.repeats = atoi(value);
@@ -332,6 +343,97 @@ const kodes::Library& openLibrary(const std::string& path)
     )();
 }
 
+// One --active condition: a component of the state, the pressure or the specie
+// the state leaves out, compared with a number
+struct Condition
+{
+    std::string text;
+    enum { kComponent, kPressure, kLastSpecie } what;
+    int component;
+    bool greater;
+    double value;
+};
+
+Condition parseCondition(const std::string& text, const kodes::Library& library)
+{
+    const size_t at = text.find_first_of("<>");
+
+    if (at == std::string::npos || at == 0 || at + 1 == text.size())
+    {
+        fail("--active " + text + ": not <name><op><number>");
+    }
+
+    Condition c;
+
+    c.text = text;
+    c.greater = text[at] == '>';
+
+    const std::string name = text.substr(0, at);
+    char* end;
+    c.value = strtod(text.c_str() + at + 1, &end);
+
+    if (*end != '\0')
+    {
+        fail("--active " + text + ": " + text.substr(at + 1) + " is not a number");
+    }
+
+    if (name == "T")
+    {
+        c.what = Condition::kComponent;
+        c.component = 0;
+        return c;
+    }
+
+    if (name == "p")
+    {
+        c.what = Condition::kPressure;
+        return c;
+    }
+
+    for (int i = 0; i < library.nSpecie(); ++i)
+    {
+        if (name == library.specie(i))
+        {
+            c.what = i < library.nSpecie() - 1 ? Condition::kComponent : Condition::kLastSpecie;
+            c.component = i + 1;
+            return c;
+        }
+    }
+
+    fail("--active " + text + ": " + name + " is neither T, p nor a specie of " + library.mechanism());
+    return c;
+}
+
+bool holds
+(
+    const Condition& c,
+    const std::vector<std::vector<double>>& state,
+    const std::vector<double>& pressure,
+    const int system
+)
+{
+    double x;
+
+    if (c.what == Condition::kPressure)
+    {
+        x = pressure[system];
+    }
+    else if (c.what == Condition::kComponent)
+    {
+        x = state[c.component][system];
+    }
+    else
+    {
+        x = 1;
+        for (size_t i = 1; i < state.size(); ++i)
+        {
+            x -= state[i][system];
+        }
+    }
+
+    return c.greater ? x > c.value : x < c.value;
+}
+
 double median(std::vector<double> values)
 {
     std::sort(values.begin(), values.end());
@@ -452,6 +554,36 @@ int main(int argc, char** argv)
         pressure[system] = states.p[source[system]];
     }
 
+    // The systems the conditions let through, in the order of the ensemble:
+    // what a CFD code would pack at the front
+    std::vector<Condition> conditions;
+    std::string conditionText;
+
+    for (const std::string& text : options.active)
+    {
+        conditions.push_back(parseCondition(text, library));
+        conditionText += (conditionText.empty() ? "" : " and ") + text;
+    }
+
+    std::vector<int> activeSystems;
+
+    for (int system = 0; system < options.ensemble; ++system)
+    {
+        bool active = true;
+
+        for (const Condition& condition : conditions)
+        {
+            active = active && holds(condition, initial, pressure, system);
+        }
+
+        if (active)
+        {
+            activeSystems.push_back(system);
+        }
+    }
+
+    const int numOfActive = int(activeSystems.size());
+
     const double deltaT = options.deltaT > 0 ? options.deltaT : c.deltaT;
     const double firstStep = options.firstStep > 0 ? options.firstStep : deltaT;
 
@@ -482,6 +614,16 @@ int main(int argc, char** argv)
         settings.absTol, settings.relTol, settings.Treact
     );
 
+    if (!conditions.empty())
+    {
+        printf
+        (
+            "active: %s, %d of %d systems (%.1f %%)\n",
+            conditionText.c_str(), numOfActive, options.ensemble,
+            100.0*numOfActive/options.ensemble
+        );
+    }
+
     using Clock = std::chrono::steady_clock;
 
     const auto seconds = [](const Clock::time_point a, const Clock::time_point b)
@@ -503,13 +645,20 @@ int main(int argc, char** argv)
         solver->batchSize(), solver->numOfBatches(), setupSeconds
     );
 
+    // The whole ensemble, and the active systems packed at the front of
+    // arrays of their own, which is what solve() is handed. Without
+    // conditions every system is active and nothing is packed.
+    const bool packing = !conditions.empty();
+
     std::vector<std::vector<double>> state(systemSize);
-    std::vector<double> parameter;
+    std::vector<std::vector<double>> packed(systemSize, std::vector<double>(numOfActive));
+    std::vector<double> packedPressure(numOfActive);
 
     std::vector<double*> statePointers(systemSize);
     double* parameterPointers[1];
 
     std::vector<double> times;
+    std::vector<double> stepTimes;
     std::vector<double> firstFinalT;
 
     for (int run = 0; run <= options.repeats; ++run)
@@ -518,28 +667,80 @@ int main(int argc, char** argv)
         for (int i = 0; i < systemSize; ++i)
         {
             state[i] = initial[i];
-            statePointers[i] = state[i].data();
         }
-        parameter = pressure;
-        parameterPointers[0] = parameter.data();
+        std::vector<double> parameter = pressure;
 
         solver->setDeltaT(firstStep);
 
+        const Clock::time_point stepStart = Clock::now();
+
+        if (packing)
+        {
+            for (int i = 0; i < systemSize; ++i)
+            {
+                for (int k = 0; k < numOfActive; ++k)
+                {
+                    packed[i][k] = state[i][activeSystems[k]];
+                }
+                statePointers[i] = packed[i].data();
+            }
+
+            for (int k = 0; k < numOfActive; ++k)
+            {
+                packedPressure[k] = parameter[activeSystems[k]];
+            }
+            parameterPointers[0] = packedPressure.data();
+        }
+        else
+        {
+            for (int i = 0; i < systemSize; ++i)
+            {
+                statePointers[i] = state[i].data();
+            }
+            parameterPointers[0] = parameter.data();
+        }
+
         const Clock::time_point start = Clock::now();
 
-        solver->solve(deltaT, statePointers.data(), parameterPointers);
+        solver->solve(deltaT, numOfActive, statePointers.data(), parameterPointers);
 
         const double t = seconds(start, Clock::now());
 
-        printf
-        (
-            "%s %d: %.4f s, %.0f systems/s\n",
-            run == 0 ? "warm-up" : "solve  ", run, t, options.ensemble/t
-        );
+        if (packing)
+        {
+            for (int i = 0; i < systemSize; ++i)
+            {
+                for (int k = 0; k < numOfActive; ++k)
+                {
+                    state[i][activeSystems[k]] = packed[i][k];
+                }
+            }
+        }
+
+        const double tStep = seconds(stepStart, Clock::now());
+
+        // per system of the ensemble, as the CFD code sees it
+        if (packing)
+        {
+            printf
+            (
+                "%s %d: %.4f s, %.4f s with packing, %.0f systems/s\n",
+                run == 0 ? "warm-up" : "solve  ", run, t, tStep, options.ensemble/tStep
+            );
+        }
+        else
+        {
+            printf
+            (
+                "%s %d: %.4f s, %.0f systems/s\n",
+                run == 0 ? "warm-up" : "solve  ", run, t, options.ensemble/t
+            );
+        }
 
         if (run > 0)
         {
             times.push_back(t);
+            stepTimes.push_back(tStep);
         }
 
         if (run == 1)
@@ -577,6 +778,17 @@ int main(int argc, char** argv)
         c.name.c_str(), solver->method(), solver->balancer(), options.ensemble, typical, best,
         options.ensemble/typical
     );
+
+    if (packing)
+    {
+        const double typicalStep = median(stepTimes);
+
+        printf
+        (
+            "%d of them active: median %.4f s with packing, %.0f systems/s of the ensemble\n",
+            numOfActive, typicalStep, options.ensemble/typicalStep
+        );
+    }
     printf
     (
         "T after deltaT: %.1f..%.1f K, largest change %.2f K, repeats agree to %.1e K, %d non-finite values\n",

@@ -120,6 +120,7 @@ cmake -B build && cmake --build build -j                  # the libraries, at th
 cd tests/benchmark && cmake -B build && cmake --build build
 LD_LIBRARY_PATH=../../build ./build/benchmark                # 2D_flat_burner, grimech, seulex
 LD_LIBRARY_PATH=../../build ./build/benchmark --balancer none  # the same, unbalanced
+LD_LIBRARY_PATH=../../build ./build/benchmark --active "T>400"  # the cold cells left out
 LD_LIBRARY_PATH=../../build ./build/benchmark --method bdf --ensemble 86688 \
     --output bdf.csv                                         # and the final states
 ./build/benchmark --help
@@ -131,6 +132,13 @@ own order (`--order as-is`) every warp would get neighbours in temperature - a b
 already balanced, which is not what a mesh hands over, and against which `--balancer` would
 have nothing left to do. `--output` writes the final state
 of each state of the file in the same format, for a validation to read.
+
+`--active` does what a CFD code does with cells it knows will not react: it packs the
+systems that pass every condition at the front, hands `solve()` their number and leaves
+the rest as they are. The time is printed with and without the packing, and the
+throughput per system of the whole ensemble, so it compares with a run without
+`--active`. A condition has to be conservative: in 2D_flat_burner the hot products have
+no CH4 left but still hold CO and H2 that burn, so `CH4>1e-6` would freeze them.
 
 ## Not here yet
 

@@ -21,16 +21,20 @@ batchSize_(deviceRes_->ensembleSize())
         std::exit(EXIT_FAILURE);
     }
 
-    lastBatchIndex_ = ((ensembleSize_ + batchSize_ - 1) / batchSize_) - 1;
+    setNumOfSystems(ensembleSize_);
+}
 
-    if ((ensembleSize_ / batchSize_) == lastBatchIndex_ + 1)
+void kodes::Operator::setNumOfSystems(label numOfSystems)
+{
+    if (numOfSystems < 0 || numOfSystems > ensembleSize_)
     {
-        lastBatchSize_ = batchSize_;
-    } else
-    {
-        lastBatchSize_ = ensembleSize_ - (ensembleSize_ / batchSize_) * batchSize_;
+        fprintf(stderr, "Operator::setNumOfSystems error at %s:%d: %d systems of an ensemble of %d\n", __FILE__, __LINE__, numOfSystems, ensembleSize_);
+        std::exit(EXIT_FAILURE);
     }
 
+    numOfSystems_ = numOfSystems;
+    lastBatchIndex_ = (numOfSystems + batchSize_ - 1) / batchSize_ - 1;
+    lastBatchSize_ = numOfSystems - lastBatchIndex_ * batchSize_;
 }
 
 void kodes::Operator::cpyHostToDevice(label batchIndex)

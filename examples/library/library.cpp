@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 
     for (int step = 1; step <= 10; ++step)
     {
-        solver->solve(deltaT, statePointers.data(), parameterPointers.data());
+        solver->solve(deltaT, ensembleSize, statePointers.data(), parameterPointers.data());
 
         printf
         (

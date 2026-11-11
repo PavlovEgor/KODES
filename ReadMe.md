@@ -21,13 +21,14 @@ comes from the number of systems (mesh cells), not from parallelizing inside one
 matches how CFD scales (more cells, not bigger mechanisms). Every thread is on its own: its own step
 size, its own Jacobian, its own factorization, nothing to wait for.
 
-That is the 1.x line, on the `kodes-v1` branch, and on purpose the simplest form of the idea. This
-is the 2.x line, `kodes-v2`, which adds one thing to it: a `Balancer` that sorts each batch on the
-device before it is solved. The 32 threads of a warp issue together however independent their
+That is the 1.x line, on the `kodes-v1` branch, and on purpose the simplest form of the idea. The
+2.x line, `kodes-v2`, adds one thing to it: a `Balancer` that sorts each batch on the device before
+it is solved. The 32 threads of a warp issue together however independent their
 systems are, so a warp finishes when its stiffest system does; grouping systems alike keeps the
 other lanes from waiting. Nothing else changes — every thread still integrates on its own, and
-`"balancer": "none"` is exactly 1.x. The 3.x line, `kodes-v3`, adds to this one a `solve()` of
-fewer systems than the ensemble, for a caller that leaves out the cells it knows will not react.
+`"balancer": "none"` is exactly 1.x. This is the 3.x line, `kodes-v3`, which adds to 2.x a
+`solve()` of fewer systems than the ensemble, for a caller that leaves out the cells it knows will
+not react.
 0.20 to 0.23 went further and integrated a whole block in lockstep, with one Jacobian and one LU
 factorization for all its threads; that line is kept, not developed, on the `kodes-dev` branch.
 
@@ -495,10 +496,15 @@ That one answers what the mechanism is — its name, the KODES version it was bu
 in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
 `kodes::Solver` from a `kodes::SolverSettings`: the method, the device share or the sizes by hand,
 the balancer, the tolerances. It is the interface 0.23 had, `SolverSettings::balancer` and
-`Solver::balancer()` included, and the one `kodes-dev` keeps: `kLibraryApiVersion` is 2 for both,
-and 1 for `kodes-v1`, which has neither. The solver plans, builds and integrates exactly as *Typical run*
-above; `solve(deltaT, state, parameters)` takes the ensemble in the `HostResources` layout and
-integrates it in place, batch by batch. The types in the interface are `double` and `int`, not
+`Solver::balancer()` included, which `kodes-v2` and `kodes-dev` keep, plus one thing: the number
+of systems a `solve()` integrates. `kLibraryApiVersion` is one counter for every line — 1 for
+`kodes-v1`, 2 for `kodes-v2` and `kodes-dev`, 3 for this line. The solver plans, builds and
+integrates exactly as *Typical run* above; `solve(deltaT, numOfSystems, state, parameters)` takes
+the first `numOfSystems` of the ensemble in the `HostResources` layout and integrates them in
+place, batch by batch. The ensemble the solver was made for is what it is planned for and the most
+a `solve()` may take; a caller that knows some cells will not react — too cold, nothing left to
+burn, whatever it decides by — packs the others at the front and passes their number, and the rest
+are neither copied to the device nor integrated. The types in the interface are `double` and `int`, not
 `scalar` and `label`, so a caller with types of its own of those names converts at the call.
 
 **How it is built.** `kodes_library(<name>)` in `cmake/kodes.cmake`, which the top-level

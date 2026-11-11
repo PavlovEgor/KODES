@@ -219,10 +219,23 @@ public:
     void solve
     (
         const double deltaT,
+        const int numOfSystems,
         double* const* state,
         double* const* parameters
     ) override
     {
+        if (numOfSystems < 0 || numOfSystems > ensembleSize_)
+        {
+            fprintf
+            (
+                stderr,
+                "kodes::Solver::solve error at %s:%d: %d systems, the solver was"
+                " made for 0 to %d\n",
+                __FILE__, __LINE__, numOfSystems, ensembleSize_
+            );
+            std::exit(EXIT_FAILURE);
+        }
+
         // The Operator copies through whatever host_ points at when it is
         // called, so pointing it at the caller's arrays is the whole hand-over
         for (label i = 0; i < host_.systemSize(); ++i)
@@ -235,9 +248,9 @@ public:
             host_.setParameter(i, parameters[i]);
         }
 
-        const label numOfBatches = config_.numOfBatches(ensembleSize_);
+        operator_.setNumOfSystems(numOfSystems);
 
-        for (label batchIndex = 0; batchIndex < numOfBatches; ++batchIndex)
+        for (label batchIndex = 0; batchIndex < operator_.numOfBatches(); ++batchIndex)
         {
             operator_.cpyHostToDevice(batchIndex);
             integrator_.solve(deltaT, operator_.getRealBatchSize(batchIndex));

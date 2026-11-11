@@ -35,10 +35,12 @@ namespace kodes
 // reordered, a member of SolverSettings added or retyped. A caller compares it
 // with the library's before it touches anything else.
 //
-// 2 is this line, kodes-v2, whose SolverSettings has a balancer and whose
-// Solver a balancer(); 1 is kodes-v1, which has neither. The block-collective
-// line, kodes-dev, has this same interface, and the same number.
-constexpr int kLibraryApiVersion = 2;
+// One counter for every line, each change taking the next number no line has
+// used, so that no two interfaces ever share one: 1 is kodes-v1; 2 kodes-v2
+// and kodes-dev, a balancer in SolverSettings and a balancer() in Solver; 3
+// this line, kodes-v3, whose solve() also takes how many systems to
+// integrate.
+constexpr int kLibraryApiVersion = 3;
 
 constexpr const char* kLibraryApiVersionSymbol = "kodesLibraryApiVersion";
 constexpr const char* kLibrarySymbol = "kodesLibrary";
@@ -103,7 +105,8 @@ public:
     // Systems per host->device transfer
     virtual int batchSize() const = 0;
 
-    // Transfers per solve(), the last one usually short
+    // Transfers per solve() of the whole ensemble, the last one usually short;
+    // a solve() of fewer systems takes fewer
     virtual int numOfBatches() const = 0;
 
     // Always false since 1.0.0: no scratch is shared by a block
@@ -121,7 +124,12 @@ public:
     // block carries over the step it ended the previous batch with.
     virtual void setDeltaT(const double deltaT) = 0;
 
-    // Integrate every system of the ensemble over deltaT, in place.
+    // Integrate the first numOfSystems systems over deltaT, in place: 0 to the
+    // ensembleSize the solver was made for, which is what it is planned and
+    // allocated for. A caller that knows some systems will not react - too
+    // cold, no fuel, whatever it decides by - packs the others at the front
+    // and passes their number, and the rest are neither copied nor
+    // integrated.
     //
     // Component-major, like KODES's HostResources: state[i][system] for
     // i < Library::systemSize() and parameters[i][system] for
@@ -129,12 +137,14 @@ public:
     // mechanism component 0 is the temperature, component i the mass fraction of
     // specie i-1 in the mechanism's order - the last specie is not in the state
     // and follows from the others - and the one parameter is the pressure.
+    // Each array needs numOfSystems entries.
     //
     // The pointers are read anew on every call. The parameters are copied back
     // along with the state, unchanged, so they too have to be writable.
     virtual void solve
     (
         const double deltaT,
+        const int numOfSystems,
         double* const* state,
         double* const* parameters
     ) = 0;
