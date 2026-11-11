@@ -21,6 +21,7 @@ tests/
   cases/<case>/               one per tutorial of kodes4foam
     case.json                 where it comes from, deltaT, tolerances, the streams
     <mechanism>.csv           the states, one file per mechanism the case runs with
+  benchmark/                  the KODES runner: a case through a prebuilt libkodes_<mechanism>.so
   tools/
     states.py                 the state file format, and the species of a mechanism.cuh
     make_initial_states.py    the simplest sets, from case.json
@@ -105,12 +106,34 @@ states to keep in git, so it keeps `--max-states` cells (2048 by default):
 - `--sample temperature`: evenly over the range of temperature - what a validation should
   see, without cold cells being most of it.
 
+## Benchmark
+
+`benchmark/` integrates a case with KODES: the states repeated to an ensemble, over the
+case's `deltaT` with its tolerances, one warm-up and then `--repeats` timed `solve()`s,
+each from the same states and the same first trial step. It is a plain C++ program that
+opens a prebuilt `libkodes_<mechanism>.so` through `library_api.h`, as kodes4foam does, so
+a `solve()` is a whole step of the chemistry, host to device and back included, and the
+species of the file reach the state by name.
+
+```bash
+cmake -B build && cmake --build build -j                  # the libraries, at the top
+cd tests/benchmark && cmake -B build && cmake --build build
+LD_LIBRARY_PATH=../../build ./build/benchmark                # 2D_flat_burner, grimech, seulex
+LD_LIBRARY_PATH=../../build ./build/benchmark --method bdf --ensemble 86688 \
+    --output bdf.csv                                         # and the final states
+./build/benchmark --help
+```
+
+By default the 2048 states of `2D_flat_burner` become 131072 systems, the copies shuffled
+over the ensemble with a fixed seed. The file is sorted by temperature, so taken in its
+own order (`--order as-is`) every warp would get neighbours in temperature - a batch
+already balanced, which is not what a mesh hands over. `--output` writes the final state
+of each state of the file in the same format, for a validation to read.
+
 ## Not here yet
 
-The tools only make and check states. Still to come, each reading the files above:
+Still to come, each reading the files above:
 
-- a KODES runner: the states repeated to an ensemble, integrated with a chosen method,
-  the final states and the wall clock written out;
 - a Cantera reference: the same states in `IdealGasConstPressureReactor`, for the final
   states and CVODE's wall clock;
 - the OpenFOAM side: the tutorial's own chemistry, timed through `kodesCase.py`.
