@@ -29,6 +29,11 @@
 // are, the way a CFD code leaves out the cells it knows will not react. The
 // others keep their state.
 //
+// --active oracle is the classifier that is never wrong, as a bound on what
+// any criterion can win: one solve of the whole ensemble first, and a system
+// counts as active if that solve changed it by more than the integrator's own
+// tolerance. --labels writes that verdict out, to train a criterion on.
+//
 //     benchmark [options]           2D_flat_burner, libkodes_grimech.so from
 //                                   the library path, seulex, temperature
 //
@@ -54,6 +59,8 @@ const char* const kUsage =
 "                    rest are left as they are; COND is <name><op><number>,\n"
 "                    name T, p or a specie, op < or >: T>400, CH4>1e-6.\n"
 "                    Repeated, every one must hold    (default: all systems)\n"
+"                    oracle: the systems a full solve changes by more than\n"
+"                    the tolerance, a bound for any criterion\n"
 "  --order ORDER     shuffled | as-is: shuffled spreads the copies over the\n"
 "                    ensemble with a fixed seed; as-is keeps the file's order,\n"
 "                    sorted by temperature for 2D_flat_burner (default: shuffled)\n"
@@ -63,7 +70,9 @@ const char* const kUsage =
 "  --share NAME      best | half                      (default: best)\n"
 "  --threads N       per block                        (default: 256)\n"
 "  --Treact K        systems at or below are left alone (default: 0)\n"
-"  --output FILE     the final state of every state of the file, as a state file\n";
+"  --output FILE     the final state of every state of the file, as a state file\n"
+"  --labels FILE     with --active oracle: label,changeNorm,active for every\n"
+"                    state of the file, changeNorm > 1 being active\n";
 
 void fail(const std::string& message)
 {
@@ -88,6 +97,7 @@ struct Options
     int threads = 256;
     double Treact = 0;
     std::string output;
+    std::string labels;
 };
 
 Options parseOptions(int argc, char** argv)
@@ -130,12 +140,26 @@ Options parseOptions(int argc, char** argv)
         else if (name == "--threads") options.threads = atoi(value);
         else if (name == "--Treact") options.Treact = atof(value);
         else if (name == "--output") options.output = value;
+        else if (name == "--labels") options.labels = value;
         else fail("unknown option " + name + "\n" + kUsage);
     }
 
     if (options.ensemble <= 0 || options.repeats <= 0 || options.threads <= 0)
     {
         fail("--ensemble, --repeats and --threads must be positive");
+    }
+
+    const bool oracle =
+        std::find(options.active.begin(), options.active.end(), "oracle") != options.active.end();
+
+    if (oracle && options.active.size() > 1)
+    {
+        fail("--active oracle stands alone: it already is the best any condition can do");
+    }
+
+    if (!options.labels.empty() && !oracle)
+    {
+        fail("--labels needs --active oracle, which is where the labels come from");
     }
 
     if (options.order != "shuffled" && options.order != "as-is")
@@ -556,15 +580,18 @@ int main(int argc, char** argv)
 
     // The systems the conditions let through, in the order of the ensemble:
     // what a CFD code would pack at the front
-    std::vector<Condition> conditions;
-    std::string conditionText;
+    const bool oracle = options.active.size() == 1 && options.active[0] == "oracle";
 
-    for (const std::string& text : options.active)
+    std::vector<Condition> conditions;
+    std::string conditionText = oracle ? "oracle" : "";
+
+    for (const std::string& text : oracle ? std::vector<std::string>() : options.active)
     {
         conditions.push_back(parseCondition(text, library));
         conditionText += (conditionText.empty() ? "" : " and ") + text;
     }
 
+    // the oracle's are only known after a solve, below
     std::vector<int> activeSystems;
 
     for (int system = 0; system < options.ensemble; ++system)
@@ -576,13 +603,13 @@ int main(int argc, char** argv)
             active = active && holds(condition, initial, pressure, system);
         }
 
-        if (active)
+        if (active && !oracle)
         {
             activeSystems.push_back(system);
         }
     }
 
-    const int numOfActive = int(activeSystems.size());
+    int numOfActive = int(activeSystems.size());
 
     const double deltaT = options.deltaT > 0 ? options.deltaT : c.deltaT;
     const double firstStep = options.firstStep > 0 ? options.firstStep : deltaT;
@@ -645,10 +672,117 @@ int main(int argc, char** argv)
         solver->batchSize(), solver->numOfBatches(), setupSeconds
     );
 
+    // The oracle: one solve of every system, and a system is active when it
+    // came out of that solve changed by more than the tolerance, in the norm
+    // the integrator accepts a step by. What it leaves out would have moved by
+    // less than the integrator is asked to be accurate to.
+    std::vector<double> changeNorm;
+
+    if (oracle)
+    {
+        std::vector<std::vector<double>> labelState = initial;
+        std::vector<double> labelPressure = pressure;
+
+        std::vector<double*> labelPointers(systemSize);
+        for (int i = 0; i < systemSize; ++i)
+        {
+            labelPointers[i] = labelState[i].data();
+        }
+        double* labelParameters[1] = { labelPressure.data() };
+
+        solver->setDeltaT(firstStep);
+
+        const Clock::time_point start = Clock::now();
+        solver->solve(deltaT, options.ensemble, labelPointers.data(), labelParameters);
+        const double t = seconds(start, Clock::now());
+
+        changeNorm.assign(options.ensemble, 0);
+        double restNorm = 0;
+
+        for (int system = 0; system < options.ensemble; ++system)
+        {
+            double norm = 0;
+
+            for (int i = 0; i < systemSize; ++i)
+            {
+                const double before = initial[i][system];
+                const double after = labelState[i][system];
+
+                norm = std::max
+                (
+                    norm,
+                    std::fabs(after - before)
+                   /(settings.absTol + settings.relTol*std::max(std::fabs(before), std::fabs(after)))
+                );
+            }
+
+            // a system that blew up is not one to leave out
+            if (!std::isfinite(norm))
+            {
+                norm = INFINITY;
+            }
+
+            changeNorm[system] = norm;
+
+            if (norm > 1)
+            {
+                activeSystems.push_back(system);
+            }
+            else
+            {
+                restNorm = std::max(restNorm, norm);
+            }
+        }
+
+        numOfActive = int(activeSystems.size());
+
+        printf
+        (
+            "oracle: one solve of all %d systems in %.4f s; %d active (%.1f %%), "
+            "the rest changed by at most %.2f of the tolerance\n",
+            options.ensemble, t, numOfActive, 100.0*numOfActive/options.ensemble, restNorm
+        );
+
+        // What a temperature threshold would make of it: the active systems
+        // below each edge are what T > edge would freeze, the inactive ones
+        // above it what it would integrate for nothing
+        const double edges[] = {400, 1000, 1500};
+
+        printf("  T band           systems    active\n");
+
+        for (int band = 0; band <= 3; ++band)
+        {
+            const double lo = band == 0 ? -INFINITY : edges[band - 1];
+            const double hi = band == 3 ? INFINITY : edges[band];
+
+            int systems = 0, active = 0;
+
+            for (int system = 0; system < options.ensemble; ++system)
+            {
+                const double T = initial[0][system];
+
+                if (T > lo && T <= hi)
+                {
+                    ++systems;
+                    active += changeNorm[system] > 1;
+                }
+            }
+
+            char name[32];
+            if (band == 0) snprintf(name, sizeof(name), "<= %g K", hi);
+            else if (band == 3) snprintf(name, sizeof(name), "> %g K", lo);
+            else snprintf(name, sizeof(name), "%g..%g K", lo, hi);
+
+            printf("  %-14s %9d %9d\n", name, systems, active);
+        }
+
+        printf("\n");
+    }
+
     // The whole ensemble, and the active systems packed at the front of
     // arrays of their own, which is what solve() is handed. Without
     // conditions every system is active and nothing is packed.
-    const bool packing = !conditions.empty();
+    const bool packing = oracle || !conditions.empty();
 
     std::vector<std::vector<double>> state(systemSize);
     std::vector<std::vector<double>> packed(systemSize, std::vector<double>(numOfActive));
@@ -785,8 +919,8 @@ int main(int argc, char** argv)
 
         printf
         (
-            "%d of them active: median %.4f s with packing, %.0f systems/s of the ensemble\n",
-            numOfActive, typicalStep, options.ensemble/typicalStep
+            "%d of them active (%s): median %.4f s with packing, %.0f systems/s of the ensemble\n",
+            numOfActive, conditionText.c_str(), typicalStep, options.ensemble/typicalStep
         );
     }
     printf
@@ -795,19 +929,60 @@ int main(int argc, char** argv)
         TMin, TMax, dTMax, repeatDiff, nonFinite
     );
 
-    if (!options.output.empty())
-    {
-        // The first system that started from each state of the file
-        std::vector<int> systemOf(numOfStates, -1);
+    // The first system that started from each state of the file, -1 for one
+    // the ensemble was too small to hold
+    std::vector<int> systemOf(numOfStates, -1);
 
-        for (int system = 0; system < options.ensemble; ++system)
+    for (int system = 0; system < options.ensemble; ++system)
+    {
+        if (systemOf[source[system]] < 0)
         {
-            if (systemOf[source[system]] < 0)
-            {
-                systemOf[source[system]] = system;
-            }
+            systemOf[source[system]] = system;
+        }
+    }
+
+    if (!options.labels.empty())
+    {
+        FILE* out = fopen(options.labels.c_str(), "w");
+
+        if (!out)
+        {
+            fail("cannot write " + options.labels);
         }
 
+        fprintf
+        (
+            out,
+            "# %s, %s: the oracle of tests/benchmark, deltaT = %g s, KODES %s, %s, absTol %g, relTol %g\n"
+            "# changeNorm: max over T and Y of |after - before|/(absTol + relTol*max(|before|, |after|));"
+            " active when above 1. The states are in %s\n",
+            c.name.c_str(), mechanism.c_str(), deltaT, library.version(), solver->method(),
+            settings.absTol, settings.relTol, statesPath.c_str()
+        );
+        fprintf(out, "label,changeNorm,active\n");
+
+        int written = 0;
+
+        for (int s = 0; s < numOfStates; ++s)
+        {
+            const int system = systemOf[s];
+
+            if (system < 0)
+            {
+                continue;
+            }
+
+            fprintf(out, "%s,%.6g,%d\n", states.labels[s].c_str(), changeNorm[system], int(changeNorm[system] > 1));
+            ++written;
+        }
+
+        fclose(out);
+
+        printf("%d labels written to %s\n", written, options.labels.c_str());
+    }
+
+    if (!options.output.empty())
+    {
         FILE* out = fopen(options.output.c_str(), "w");
 
         if (!out)

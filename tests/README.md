@@ -138,7 +138,22 @@ systems that pass every condition at the front, hands `solve()` their number and
 the rest as they are. The time is printed with and without the packing, and the
 throughput per system of the whole ensemble, so it compares with a run without
 `--active`. A condition has to be conservative: in 2D_flat_burner the hot products have
-no CH4 left but still hold CO and H2 that burn, so `CH4>1e-6` would freeze them.
+no CH4 left but still hold CO and H2 that burn, so `CH4>1e-6` would freeze them. Quote a
+condition, `'T>400'`: unquoted, the shell takes `>` for a redirection.
+
+`--active oracle` is the criterion that is never wrong, the bound on what any can win. It
+solves the whole ensemble once, calls a system active if that solve changed it by more than
+the tolerance - `max |after - before|/(absTol + relTol*max(|before|, |after|)) > 1` over T
+and every Y, the norm the integrator accepts a step by - and then times only those. It also
+prints how the active systems fall in bands of temperature, which is what a threshold on T
+would make of them, and `--labels FILE` writes `label,changeNorm,active` for every state of
+the file, to train a criterion on.
+
+```bash
+LD_LIBRARY_PATH=../../build ./build/benchmark                      # everything
+LD_LIBRARY_PATH=../../build ./build/benchmark --active 'T>400'      # a threshold
+LD_LIBRARY_PATH=../../build ./build/benchmark --active oracle --labels labels.csv
+```
 
 ## Not here yet
 
