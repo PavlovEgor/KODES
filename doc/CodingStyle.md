@@ -127,11 +127,11 @@ Seulex/
 
 * `src/<Подсистема>` — `UpperCamelCase`, по имени подсистемы:
   `Integrator/`, `Resources/`, `Factory/`, `Settings/`, `ODESystem/`,
-  `LinearAlgebra/`, `Library/`.
+  `Balancer/`, `LinearAlgebra/`, `Library/`.
 * У семейства, выбираемого по имени в рантайме, в корне подсистемы лежат только
   **абстрактная база и таблица типов**, а каждый **конкретный** класс — в
   каталоге своего имени: `Integrator/IntegrationMethods/Seulex/`,
-  `ODESystem/PyJacSystem/`. Каталог
+  `ODESystem/PyJacSystem/`, `Balancer/StiffnessBalancer/`. Каталог
   ради одного класса здесь оправдан: в нём с самого начала пара `.cuh`/`.cu`, и
   видно, где кончается один вариант реализации и начинается другой. То, что
   классом не является — примеси, свободные функции, хостовые классы — остаётся
@@ -211,8 +211,9 @@ copy-then-construct в фабрике, запрет трогать указат�
   способ. Проверять `cudaError_t` руками не нужно — есть `CUDA_CHECK` и
   `CUDA_CHECK_LAST`.
 * **Индексация** живёт только в представлениях — `ThreadVector`,
-  `ThreadMatrix` и `ThreadValue` в `LinearAlgebra/`, `BatchArray` в
-  `Resources/`, `ExtrapolationTable` у Seulex. Они применяют макросы
+  `ThreadMatrix` и `ThreadValue` в `LinearAlgebra/`, `BatchArray` и
+  `DeviceArray` в `Resources/`, `KeyTable` в `Balancer/`, `ExtrapolationTable`
+  у Seulex. Они применяют макросы
   `INDEXVEC`/`INDEXMAT` (scratch) и `INDEXSTATE` (state), а весь остальной код
   пишет `y[i]`, `a(i, j)`, `vectors(system, i)` и не считает адрес на месте:
   перепутать шаг `GRID_DIM` и `batchSize` слишком легко, и ошибка проявится не

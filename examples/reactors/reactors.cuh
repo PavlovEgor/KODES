@@ -16,6 +16,7 @@
 #include "Integrator.cuh"
 #include "IntegrationMethod.cuh"
 #include "method_table.cuh"
+#include "balancer_table.cuh"
 #include "system_table.cuh"
 #include "Settings.cuh"
 

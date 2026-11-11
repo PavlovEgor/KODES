@@ -1,8 +1,9 @@
 # The KODES library, as a source list and an include list.
 #
-# Every method is compiled in, whichever one a given run ends up naming: the
-# choice is made when the program starts, so the code for all of them has to be
-# in the binary. That is what the table in method_table.cu refers to.
+# Every method and every balancer is compiled in, whichever one a given run
+# ends up naming: the choice is made when the program starts, so the code for
+# all of them has to be in the binary. That is what the tables in
+# method_table.cu and balancer_table.cu refer to.
 #
 # Include with
 #   include(${CMAKE_CURRENT_SOURCE_DIR}/<path to>/cmake/kodes.cmake)
@@ -42,6 +43,12 @@ set(KODES_SOURCES
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Bdf/Bdf.cu
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods/Bdf/bdf_constants.cu
 
+    ${KODES_SRC_DIR}/Balancer/Balancer.cu
+    ${KODES_SRC_DIR}/Balancer/TemperatureBalancer/TemperatureBalancer.cu
+    ${KODES_SRC_DIR}/Balancer/RHSNormBalancer/RHSNormBalancer.cu
+    ${KODES_SRC_DIR}/Balancer/StiffnessBalancer/StiffnessBalancer.cu
+    ${KODES_SRC_DIR}/Balancer/balancer_table.cu
+
     ${KODES_SRC_DIR}/ODESystem/PyJacSystem/PyJacSystem.cu
     ${KODES_SRC_DIR}/ODESystem/system_table.cu
 )
@@ -57,6 +64,7 @@ set(KODES_INCLUDE_DIRS
     ${KODES_SRC_DIR}/Resources
     ${KODES_SRC_DIR}/Integrator
     ${KODES_SRC_DIR}/Integrator/IntegrationMethods
+    ${KODES_SRC_DIR}/Balancer
     ${KODES_SRC_DIR}/Settings
 )
 
@@ -229,7 +237,7 @@ endfunction()
 #   kodes_library(C1_C3 DIRECTORY /path/to/C1_C3)     a mechanism of your own
 #
 # Why it has to be one library per mechanism: the solve kernel calls the
-# method and the mechanism through device-only virtuals, and
+# method, the balancer and the mechanism through device-only virtuals, and
 # those are resolved at device link time. CUDA does not link device code across
 # shared libraries, so the device link has to see all of it at once - mechanism
 # included - and it is done here, when the .so is built

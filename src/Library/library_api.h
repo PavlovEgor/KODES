@@ -10,8 +10,8 @@
 // CUDA compiler and includes nothing of KODES but this header.
 //
 // Why one library per mechanism, and why only this much crosses into it. The
-// device code is compiled -rdc=true and the solve kernel reaches the method
-// and the mechanism through device-only virtuals, which are
+// device code is compiled -rdc=true and the solve kernel reaches the method,
+// the balancer and the mechanism through device-only virtuals, which are
 // resolved at *device* link time. CUDA does not link device code across shared
 // objects, so everything a kernel can call - the mechanism included - has to go
 // through one device link, and that link is done when the .so is built. What is
@@ -34,7 +34,11 @@ namespace kodes
 // Raised whenever anything below changes shape: a virtual added, removed or
 // reordered, a member of SolverSettings added or retyped. A caller compares it
 // with the library's before it touches anything else.
-constexpr int kLibraryApiVersion = 1;
+//
+// 2 is this line, kodes-v2, whose SolverSettings has a balancer and whose
+// Solver a balancer(); 1 is kodes-v1, which has neither. The block-collective
+// line, kodes-v3, has this same interface, and the same number.
+constexpr int kLibraryApiVersion = 2;
 
 constexpr const char* kLibraryApiVersionSymbol = "kodesLibraryApiVersion";
 constexpr const char* kLibrarySymbol = "kodesLibrary";
@@ -51,6 +55,9 @@ struct SolverSettings
 {
     // seulex | euler | rosenbrock23 | rosenbrock34 | rodas23 | rodas34 | bdf
     const char* method = "seulex";
+
+    // temperature | rhsNorm | stiffness | none. Null or empty is none.
+    const char* balancer = "temperature";
 
     // How much of the device one run may take: best | half
     const char* deviceShare = "best";
@@ -76,8 +83,8 @@ struct SolverSettings
     double Treact = 0;
 };
 
-// One run: a plan resolved against the device, and the method, the mechanism
-// and their buffers built against that plan. Made by
+// One run: a plan resolved against the device, and the method, the balancer,
+// the mechanism and their buffers built against that plan. Made by
 // Library::newSolver(), and given back with delete.
 class Solver
 {
@@ -105,8 +112,10 @@ public:
     // The call stack of a device thread as the driver has it now
     virtual size_t deviceStack() const = 0;
 
-    // The method the settings selected
+    // What the settings selected, "none" for no balancer
     virtual const char* method() const = 0;
+
+    virtual const char* balancer() const = 0;
 
     // The trial step every block starts its first solve() from. Afterwards each
     // block carries over the step it ended the previous batch with.

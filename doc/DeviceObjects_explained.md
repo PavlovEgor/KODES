@@ -276,12 +276,24 @@ static const TypeEntry<ODESystem> table[] =
 };
 ```
 
+```cpp
+// src/Balancer/balancer_table.cu — единственная таблица, у которой есть имя
+// «ничего»: "none" (или пустое имя) даёт nullptr вместо строки и пустой Handle
+static const TypeEntry<Balancer> table[] =
+{
+    typeEntry<Balancer, TemperatureBalancer>("temperature"),
+    typeEntry<Balancer, RHSNormBalancer>("rhsNorm"),
+    typeEntry<Balancer, StiffnessBalancer>("stiffness")
+};
+```
+
 Имя, которого в таблице нет, обрывает запуск сообщением со списком известных —
 и обрывает его в конструкторе `Settings`, то есть до первого `cudaMalloc`.
 
 ### Почему у `DeviceResources` своей таблицы нет: метод и есть хранилище
 
-Семейств устройственных объектов два, и таблиц две. Хранилище отдельного выбора
+Семейств устройственных объектов три — метод, балансировщик, система, — и таблиц
+три. Хранилище отдельного выбора
 не имеет: `IntegrationMethod` наследует `DeviceResources`, а `Seulex` и `Euler`
 держат свои временные массивы полями и обращаются к ним по имени — так же, как
 `seulex` в OpenFOAM держит `dy_`, `a_`, `table_`:
@@ -308,10 +320,10 @@ SeulexDeviceResources* resources =
 упал внутри ядра. Слияние убрало и приведение, и второе поле строки, и три
 класса, а заодно простыню локальных переменных в начале каждого шага.
 
-Отсюда же правило, общее для обоих семейств: `KODES_DECLARE_DEVICE_OBJECT`
+Отсюда же правило, общее для всех семейств: `KODES_DECLARE_DEVICE_OBJECT`
 несёт только тот класс, который встречается **строкой таблицы**. База и
 промежуточные наследники (`DeviceResources`, `IntegrationMethod`,
-`AdaptiveIntegrationMethod`) — нет: их `create()` никто бы не позвал, а макрос
+`AdaptiveIntegrationMethod`, `Balancer`) — нет: их `create()` никто бы не позвал, а макрос
 стоит четырёх хостовых функций и двух ядер на класс. У баз остаётся только
 placement `operator new`, написанный руками.
 
@@ -449,7 +461,10 @@ kodes::Operator op(&hostRes, method.host());
 который попадёт в строку таблицы: промежуточному наследнику он не нужен.
 
 Система уравнений — тоже то же самое: наследник `ODESystem` с `derivatives()` и
-`jacobian()`, строка в `system_table.cu`, строка в `KODES_SOURCES`.
+`jacobian()`, строка в `system_table.cu`, строка в `KODES_SOURCES`. Балансировщик —
+наследник `Balancer` с `key()`, двумя `static constexpr` (`kKeyCount`,
+`kUsesDerivatives`), которые он передаёт базе, и двумя функциями стоимости,
+строка в `balancer_table.cu`, строка в `KODES_SOURCES`.
 `stateBytesPerSystem` и `scratchBytesPerBlock` переопределять не нужно — база
 отвечает за оба нулём, потому что состояние партии принадлежит `DeviceResources`,
 а правую часть считает один поток для одной системы. А вот

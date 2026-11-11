@@ -1,0 +1,85 @@
+#ifndef KODES_RHS_NORM_BALANCER
+#define KODES_RHS_NORM_BALANCER
+
+#pragma once
+
+#include "Balancer.cuh"
+
+namespace kodes
+{
+
+// Groups the batch by how fast it is moving: log10 of the RMS relative rate of
+// change of the state, see relativeRHSNorm(). Where temperature is a proxy for
+// stiffness, this is a measurement of it - it sees a cell that is hot but burnt
+// out, and one that is cool but about to ignite, for what they are.
+//
+// It is not free: the pass loads every system into a scratch slot and
+// evaluates the right hand side once per system, which for a generated
+// mechanism is the same work as one step of an explicit integrator. Against a
+// solve that takes hundreds of implicit steps that is small, but it is not
+// nothing, and it is why TemperatureBalancer is still worth having.
+//
+// Selected by the name "rhsNorm", see balancerTable.
+class RHSNormBalancer
+    :
+    public Balancer
+{
+public:
+
+    static constexpr label kKeyCount = 1;
+
+    static constexpr bool kUsesDerivatives = true;
+
+    __device__ __host__
+    RHSNormBalancer
+    (
+        const label batchSize,
+        const label scratchSize,
+        const label blocks,
+        const label systemSize,
+        const label parameterSize
+    )
+        : Balancer
+          (
+              batchSize, scratchSize, blocks, systemSize, parameterSize,
+              kKeyCount, kUsesDerivatives
+          )
+    {}
+
+    __device__ __host__
+    ~RHSNormBalancer() = default;
+
+    __device__ void
+    key
+    (
+        const DeviceResources* batch,
+        const ODESystem* ode,
+        const label system,
+        scalar* key
+    ) const override
+    {
+        const ThreadVector<scalar> y = batch->currentVector();
+
+        ode->derivatives(0.0, batch->currentParameter(0), y, dydt_);
+
+        key[0] = relativeRHSNorm(y, dydt_);
+    }
+
+    __host__ static size_t
+    stateBytesPerSystem(const label systemSize, const label parameterSize)
+    {
+        return Balancer::keyBytesPerSystem(kKeyCount);
+    }
+
+    __host__ static size_t
+    scratchBytesPerThread(const label systemSize, const label parameterSize)
+    {
+        return Balancer::keyScratchBytesPerThread(systemSize, kUsesDerivatives);
+    }
+
+    KODES_DECLARE_DEVICE_OBJECT(RHSNormBalancer)
+};
+
+}
+
+#endif

@@ -9,14 +9,15 @@ using kodes::scalar;
 //
 // One program, two cases. Which mechanism it holds is fixed when it is built,
 // because pyJac generates C for one mechanism and NSP is a macro of its
-// mechanism.cuh; everything else - the integration method, the tolerances,
-// how many reactors and how far to integrate them - is a name or a number in
-// the settings file, read when the program starts.
+// mechanism.cuh; everything else - the integration method, the balancer, the
+// tolerances, how many reactors and how far to integrate them - is a name or a
+// number in the settings file, read when the program starts.
 //
 //     ./reactors_grimech [settings.json]     default: grimech.json
 //     ./reactors_h2o2    [settings.json]     default: h2o2.json
 //
-// So switching from seulex to euler is an edit to the .json - not a rebuild.
+// So switching from seulex to euler, or from grouping the batch by temperature
+// to grouping it by stiffness, is an edit to the .json - not a rebuild.
 int main(int argc, char** argv)
 {
     kodes::Settings settings(argc > 1 ? argv[1] : KODES_DEFAULT_SETTINGS);
@@ -30,6 +31,7 @@ int main(int argc, char** argv)
     settings.print();
 
     const char* method = settings.method().c_str();
+    const char* balancer = settings.balancer().c_str();
     const char* odeSystem = settings.system().c_str();
 
     label ensembleSize = settings.ensembleSize();
@@ -41,8 +43,9 @@ int main(int argc, char** argv)
     printf("\ninitial state of reactor 0:\n  ");
     hostRes.printVectori(0);
 
-    // The two names carry what the classes they select will cost: the method's
-    // entry knows what its resources need and the system's knows what pyJac's
+    // The three names carry what the classes they select will cost: the
+    // method's entry knows what its resources need, the balancer's knows what
+    // the keys and the order need, and the system's knows what pyJac's
     // per-thread workspace needs. Nothing is left for the caller to declare.
     kodes::LaunchConfig config = kodes::planLaunch
     (
@@ -50,6 +53,7 @@ int main(int argc, char** argv)
         hostRes.systemSize(),
         hostRes.parameterSize(),
         method,
+        balancer,
         odeSystem,
         settings.launchRequest()
     );
@@ -69,6 +73,14 @@ int main(int argc, char** argv)
         hostRes.systemSize(), hostRes.parameterSize()
     );
 
+    // an empty handle when the settings say "none", which leaves the batch in
+    // the order it was copied in
+    kodes::Handle<kodes::Balancer> balancing = kodes::newBalancer
+    (
+        balancer, batchSize, config.scratchSize, config.blocks,
+        hostRes.systemSize(), hostRes.parameterSize()
+    );
+
     kodes::Handle<kodes::ODESystem> ode = kodes::newSystem
     (
         odeSystem, batchSize, config.scratchSize, config.blocks,
@@ -84,6 +96,8 @@ int main(int argc, char** argv)
         ode.device(), integrationMethod.device(),
         config, settings.controls()
     );
+
+    solver.setBalancer(balancing.device(), balancing.host());
 
     scalar endTime = settings.endTime();
     solver.setDeltaT(settings.initialTimeStep());

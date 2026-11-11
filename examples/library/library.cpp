@@ -15,7 +15,7 @@
 //
 //     ./library h2o2                   opens libkodes_h2o2.so from the
 //                                      library path
-//     ./library path/to/libkodes_h2o2.so [reactors [method]]
+//     ./library path/to/libkodes_h2o2.so [reactors [method [balancer]]]
 //
 // The mixture is stoichiometric hydrogen and oxygen, with the rest of the mass
 // in whatever specie the mechanism leaves out of the state - the bath gas of
@@ -75,6 +75,7 @@ int main(int argc, char** argv)
     kodes::SolverSettings settings;
 
     settings.method = argc > 3 ? argv[3] : "seulex";
+    settings.balancer = argc > 4 ? argv[4] : "temperature";
     settings.relTol = 1e-3;
 
     // RTLD_LOCAL: nothing of one KODES library is visible to the next
@@ -151,9 +152,10 @@ int main(int argc, char** argv)
 
     printf
     (
-        "%s: %d blocks x %d threads, %d reactors per batch, %d batch(es)\n\n",
-        solver->method(), solver->blocks(), solver->threads(),
-        solver->batchSize(), solver->numOfBatches()
+        "%s, balancer %s: %d blocks x %d threads, %d reactors per batch,"
+        " %d batch(es)\n\n",
+        solver->method(), solver->balancer(), solver->blocks(),
+        solver->threads(), solver->batchSize(), solver->numOfBatches()
     );
 
     solver->setDeltaT(1e-7);

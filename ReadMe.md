@@ -21,15 +21,17 @@ comes from the number of systems (mesh cells), not from parallelizing inside one
 matches how CFD scales (more cells, not bigger mechanisms). Every thread is on its own: its own step
 size, its own Jacobian, its own factorization, nothing to wait for.
 
-That is the 1.x line, and on purpose the simplest form of the idea. 0.20 to 0.23 integrated a whole
-block in lockstep, with one Jacobian and one LU factorization for all its threads, and sorted the
-batch with a `Balancer` so that a block got cells alike; that line goes on as 2.x on the `kodes-v2`
-branch. 1.0.0 keeps everything else 0.23 brought — the device object pattern, the type tables, the
-ODE system as a table row, the plan, the prebuilt per-mechanism libraries — and returns the solve to
-one system per thread.
+That is the 1.x line, on the `kodes-v1` branch, and on purpose the simplest form of the idea. This
+is the 2.x line, `kodes-v2`, which adds one thing to it: a `Balancer` that sorts each batch on the
+device before it is solved. The 32 threads of a warp issue together however independent their
+systems are, so a warp finishes when its stiffest system does; grouping systems alike keeps the
+other lanes from waiting. Nothing else changes — every thread still integrates on its own, and
+`"balancer": "none"` is exactly 1.x. 0.20 to 0.23 went further and integrated a whole block in
+lockstep, with one Jacobian and one LU factorization for all its threads; that line goes on as 3.x
+on the `kodes-v3` branch.
 
-Which integration method runs and every tolerance are read from a JSON settings file when the
-program starts — see *Typical run* below. How a class whose virtual functions only exist on the GPU
+Which integration method runs, which balancer orders the batch and every tolerance are read from
+a JSON settings file when the program starts — see *Typical run* below. How a class whose virtual functions only exist on the GPU
 can be selected by name at run time is a pattern used everywhere in the library, and
 **[`DeviceObjects_explained.md`](DeviceObjects_explained.md)** explains it in full.
 
@@ -83,7 +85,9 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
   that nothing else has to: `ThreadVector` (`y[i]`), `ThreadMatrix` (`a(i, j)`) and `ThreadValue`
   (one value per thread) in `LinearAlgebra/`, all three in scratch space, and `BatchArray`
   (`vectors(system, i)`, state space) in `Resources/`, all on the one base `DeviceBuffer`
-  (`Resources/`) that holds the buffer, allocates it and frees it. A view owns nothing and copies
+  (`Resources/`) that holds the buffer, allocates it and frees it. Two more serve the balancer:
+  `DeviceArray` (`Resources/`, a plain `a[i]`, for what is per bucket or per position) and
+  `KeyTable` (`Balancer/`, `keys(system, k)`, state space with a key count chosen at run time). A view owns nothing and copies
   like a pointer, but assigning to a vector writes its elements, like assigning through a
   reference. A matrix or a batch cannot be assigned at all.
 - **Vector arithmetic** — `+ - * /` between vectors and numbers build a `ThreadVectorExpression`,
@@ -157,8 +161,8 @@ occupancy of the solve kernel for the mechanism at hand, see `LaunchConfig` belo
 
 ### Device objects — one pattern for every class chosen at run time
 
-Which method integrates and which mechanism is integrated are decisions made when the program
-starts, and both are made the same way. The mechanics are
+Which method integrates, which balancer orders the batch and which mechanism is integrated are
+decisions made when the program starts, and all three are made the same way. The mechanics are
 worth reading once — **`DeviceObjects_explained.md`** covers them in full, with the reasons — but
 in short:
 
@@ -181,8 +185,8 @@ in short:
   holding nothing but a pointer. `Handle<Base>` owns the device object and its stub together and
   returns both to the class that made them.
 
-The tables are `Integrator/IntegrationMethods/method_table.cu` and `ODESystem/system_table.cu`,
-one class per row in both.
+The tables are `Integrator/IntegrationMethods/method_table.cu`, `Balancer/balancer_table.cu` and
+`ODESystem/system_table.cu`, one class per row in each.
 - **`kodes::mpiSelectDevice`** (`mpi_select_device.cuh`/`.cu`) — optional MPI device-binding helper for
   running across an arbitrary number of ranks and an arbitrary number of GPUs (single node or a
   heterogeneous multi-node cluster). Each rank is assumed to already own its own local slice of
@@ -319,12 +323,39 @@ leaves declare the four statics, the same division as in `ODESystem`.
   with each one. Its order-indexed coefficients are `__constant__`, filled at compile time
   (`bdf_constants.cuh`).
 - **`kodes::Integrator`** (`Integrator/Integrator.cuh`) — drives the solve. It owns the
-  `solveKernel` kernel: the grid-stride loop over the batch and the step-count loop that walks one
-  system from local time 0 to the target end time. `solve(deltaT, realBatchSize)` launches it for
-  one batch and `setDeltaT` seeds the trial step of every scratch slot; a slot carries the step it
-  ended one system with into the next, so a system starts warm from its predecessor. It is not a
-  template: the ODE system and the method are device objects it dispatches on, so there is one
-  instantiation of the kernel however the run was configured.
+  `solveKernel` kernel: the grid-stride loop over the positions of the batch and the step-count
+  loop that walks one system from local time 0 to the target end time. `solve(deltaT,
+  realBatchSize)` balances the batch, when `setBalancer` gave it a balancer, and launches the
+  kernel for it; `setDeltaT` seeds the trial step of every scratch slot. A slot carries the step it
+  ended one system with into the next, so a system starts warm from its predecessor — which the
+  balanced order makes a closer guess. It is not a template: the ODE system, the method and the
+  balancer are device objects it dispatches on, so there is one instantiation of the kernel however
+  the run was configured.
+
+### `Balancer` — the order a batch is integrated in
+
+- **`kodes::Balancer`** (`Balancer/Balancer.cuh`) — abstract base: `__device__ virtual void
+  key(batch, ode, system, key)` gives up to `kBalancerMaxKeys` keys of one system, most
+  significant first, and `balance()` sorts the batch by them in four passes, all on the device and
+  on the default stream: the keys and the range of each over the batch (one warp shuffle and one
+  pair of 64 bit atomics per warp, on the doubles mapped to integers of the same order), the
+  bucket of every system, an exclusive scan of the bucket counts in one block, and a scatter of
+  every system into its bucket. That is `KODES_BALANCER_BUCKETS` = 16384 buckets shared out
+  between the keys — exact between buckets, arbitrary inside one, and no comparison sort. The
+  result is `order`, one system per position, which `solveKernel` reads through `systemAt()`;
+  nothing in the batch moves. A device object like the others, chosen by name out of
+  `balancer_table.cu`, and `"none"` — or an empty name — is no balancer and an empty `Handle`.
+- What it buys and costs. A warp is done when its slowest system is, so a stiff cell among 31 easy
+  ones idles the other lanes for every step it takes beyond theirs; sorted, a warp gets neighbours
+  in the key. What it gives up is coalescing — a warp now loads and stores systems from anywhere in
+  the batch, not 32 neighbours — plus its own passes and, for a key needing the right hand side,
+  one `derivatives()` per system.
+- **`TemperatureBalancer`** ("temperature") — component 0. Free: one read per system.
+- **`RHSNormBalancer`** ("rhsNorm") — log10 of the RMS of `dydt/(SMALL + |y|)`, an inverse time
+  scale. One `derivatives()` per system, in the scratch slot of the thread and with the solve's
+  grid, into a `systemSize` vector of its own per thread.
+- **`StiffnessBalancer`** ("stiffness") — temperature, then the RHS norm inside each band of it:
+  128 bins each instead of 16384.
 
 ## Typical run
 
@@ -333,19 +364,20 @@ plan first (it needs the free VRAM before anything has been allocated), then siz
 from the plan.
 
 ```cpp
-// 1) the method and the system are names, read from a file
+// 1) the method, the balancer and the system are names, read from a file
 kodes::Settings settings("grimech.json");
 
-const char* method   = settings.method().c_str();     // "seulex"
+const char* method    = settings.method().c_str();    // "seulex"
+const char* balancer  = settings.balancer().c_str();  // "stiffness", or "none"
 const char* odeSystem = settings.system().c_str();    // "pyJac"
 
 // 2) ask the device how many systems it can run at once and how big a batch
-//    fits. The two names carry what their classes will cost, pyJac's own
+//    fits. The three names carry what their classes will cost, pyJac's own
 //    per-thread workspace included - there is nothing left to declare by hand.
 kodes::LaunchConfig config = kodes::planLaunch
 (
     ensembleSize, host_res.systemSize(), host_res.parameterSize(),
-    method, odeSystem,
+    method, balancer, odeSystem,
     settings.launchRequest()              // "best", "half", or explicit sizes
 );
 
@@ -357,6 +389,8 @@ kodes::LaunchConfig config = kodes::planLaunch
 //    for it.
 auto integrationMethod = kodes::newMethod(method, config.batchSize, config.scratchSize,
                                           config.blocks, systemSize, parameterSize);
+auto balancing = kodes::newBalancer(balancer, config.batchSize, config.scratchSize,
+                                    config.blocks, systemSize, parameterSize);
 auto ode = kodes::newSystem(odeSystem, config.batchSize, config.scratchSize,
                             config.blocks, systemSize, parameterSize);
 
@@ -367,6 +401,9 @@ kodes::Integrator solver
 (
     ode.device(), integrationMethod.device(), config, settings.controls()
 );
+
+// empty handles for "none": the batch is then taken in the order it came
+solver.setBalancer(balancing.device(), balancing.host());
 
 solver.setDeltaT(settings.initialTimeStep());
 
@@ -394,8 +431,8 @@ cd examples/reactors && cmake -B build && cmake --build build
 ./build/reactors_h2o2               # H2/O2,        reads build/h2o2.json
 ```
 
-Every method is compiled in, whichever one a run names: the choice is made when the program
-starts, so all of them have to be in the binary. `CUDA_SEPARABLE_COMPILATION` is not
+Every method and every balancer is compiled in, whichever one a run names: the choice is made when
+the program starts, so all of them have to be in the binary. `CUDA_SEPARABLE_COMPILATION` is not
 optional — a device-only virtual is called from a kernel in another translation unit.
 
 ## Building against KODES
@@ -456,8 +493,9 @@ before anything else, and `kodesLibrary()`, which hands out the `kodes::Library`
 That one answers what the mechanism is — its name, the KODES version it was built from, its species
 in pyJac's order, so a consumer maps them onto its own without reading `mechanism.cuh` — and makes a
 `kodes::Solver` from a `kodes::SolverSettings`: the method, the device share or the sizes by hand,
-the tolerances. Unlike 0.23's, it has no `balancer` setting and no `Solver::balancer()`; a 0.23
-caller drops both. The solver plans, builds and integrates exactly as *Typical run*
+the balancer, the tolerances. It is the interface 0.23 had, `SolverSettings::balancer` and
+`Solver::balancer()` included, and the one `kodes-v3` keeps: `kLibraryApiVersion` is 2 for both,
+and 1 for `kodes-v1`, which has neither. The solver plans, builds and integrates exactly as *Typical run*
 above; `solve(deltaT, state, parameters)` takes the ensemble in the `HostResources` layout and
 integrates it in place, batch by batch. The types in the interface are `double` and `int`, not
 `scalar` and `label`, so a caller with types of its own of those names converts at the call.
@@ -494,8 +532,9 @@ src/
                           anywhere in src/
     PyJacSystem/
   Resources/              only what any method can use: Resources,
-                          DeviceResources, StepState, the view BatchArray and
-                          the DeviceBuffer every view is built on, and the
+                          DeviceResources, StepState, the views BatchArray and
+                          DeviceArray and the DeviceBuffer every view is
+                          built on, and the
                           host side HostResources, Operator. No table and no
                           concrete classes — see the Resources section above
   Integrator/             Integrator, LaunchConfig, IntegratorControls
@@ -507,6 +546,10 @@ src/
       Rosenbrock/         Rosenbrock, rosenbrock_tableaux, and the leaves
                           Rosenbrock23, Rosenbrock34, Rodas23, Rodas34
       Bdf/                Bdf, DifferenceTable, bdf_constants
+  Balancer/               Balancer, KeyTable, balancer_table
+    TemperatureBalancer/
+    RHSNormBalancer/
+    StiffnessBalancer/
   Settings/               Config (JSON reader), Settings
   Library/                library_api.h — the CUDA-free interface of a prebuilt
                           libkodes_<mechanism>.so — and library_api.cu behind it

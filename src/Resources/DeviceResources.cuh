@@ -100,8 +100,10 @@ public:
         return vectors(system, i);
     }
 
-    // Consecutive threads touch consecutive systems, so both transfers between
-    // the batch and the scratch slots stay coalesced.
+    // In the order the batch was copied in, consecutive threads touch
+    // consecutive systems, so both transfers between the batch and the scratch
+    // slots stay coalesced. A balancer's order gives that up for warps of
+    // systems alike, see Balancer.
     __device__ void loadSystem(const label system)
     {
         for (label i = 0; i < kSystemSize; ++i)

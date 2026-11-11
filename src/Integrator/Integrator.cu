@@ -1,16 +1,23 @@
 #include "Integrator.cuh"
 #include "thread_vector_functions.cuh"
 #include "method_table.cuh"
+#include "balancer_table.cuh"
 #include "system_table.cuh"
 
 // Each thread owns one scratch slot and walks its share of the batch in a
 // grid-stride loop, pulling one system into the slot, integrating it there on
 // its own and writing it back.
+//
+// It walks positions of the batch, and the balancer, when there is one, says
+// which system is at each: neighbouring threads then hold systems alike. That
+// is the only thing the balancer changes - every thread still integrates on
+// its own.
 __global__
 void kodes::solveKernel
 (
     kodes::ODESystem* ode,
     kodes::IntegrationMethod* method,
+    const kodes::Balancer* balancer,
     kodes::IntegratorControls controls
 )
 {
@@ -20,8 +27,10 @@ void kodes::solveKernel
 
     const ThreadVector<scalar> y = method->currentVector();
 
-    for (label system = T_ID; system < controls.realBatchSize; system += GRID_DIM)
+    for (label position = T_ID; position < controls.realBatchSize; position += GRID_DIM)
     {
+        const label system = balancer ? balancer->systemAt(position) : position;
+
         if (method->vectorComponent(system, 0) <= ctrl.Treact)
         {
             continue;
@@ -97,6 +106,7 @@ __host__ kodes::LaunchConfig kodes::planLaunch
     const label systemSize,
     const label parameterSize,
     const char* methodName,
+    const char* balancerName,
     const char* systemName,
     const LaunchConfig& request,
     const size_t extraScratchBytesPerThread,
@@ -123,11 +133,13 @@ __host__ kodes::LaunchConfig kodes::planLaunch
 
     const size_t scratchPerThread =
         methodScratchBytesPerThread(methodName, systemSize, parameterSize)
+      + balancerScratchBytesPerThread(balancerName, systemSize, parameterSize)
       + systemScratchBytesPerThread(systemName, systemSize, parameterSize)
       + extraScratchBytesPerThread;
 
     const size_t scratchPerBlock =
         methodScratchBytesPerBlock(methodName, systemSize, parameterSize)
+      + balancerScratchBytesPerBlock(balancerName, systemSize, parameterSize)
       + systemScratchBytesPerBlock(systemName, systemSize, parameterSize);
 
     const size_t maxSharedPerBlock = maxSharedMemoryPerBlock();
@@ -152,6 +164,7 @@ __host__ kodes::LaunchConfig kodes::planLaunch
         scratchPerThread,
         scratchPerBlock,
         methodStateBytesPerSystem(methodName, systemSize, parameterSize)
+      + balancerStateBytesPerSystem(balancerName, systemSize, parameterSize)
       + systemStateBytesPerSystem(systemName, systemSize, parameterSize),
         freeDeviceMemory(),
         maxSharedPerBlock
@@ -166,7 +179,7 @@ kodes::Integrator::Integrator
     const kodes::IntegratorControls& controls
 )
 : config_(config), ode_(ode), method_(method),
-  controls_(controls)
+  balancer_(nullptr), balancerStub_(nullptr), controls_(controls)
 {
     if (!ode_ || !method_)
     {
@@ -213,6 +226,31 @@ kodes::Integrator::~Integrator()
 {
 }
 
+void kodes::Integrator::setBalancer(kodes::Balancer* balancer, kodes::Balancer* hostStub)
+{
+    if (bool(balancer) != bool(hostStub))
+    {
+        fprintf(stderr, "Integrator::setBalancer error at %s:%d: need both the device balancer and its host stub, or neither\n", __FILE__, __LINE__);
+        std::exit(EXIT_FAILURE);
+    }
+
+    // its order has an entry per system of the batch
+    if (hostStub && hostStub->batchSize() != config_.batchSize)
+    {
+        fprintf
+        (
+            stderr,
+            "Integrator::setBalancer error at %s:%d: a balancer for batches of %d, "
+            "the plan has %d\n",
+            __FILE__, __LINE__, hostStub->batchSize(), config_.batchSize
+        );
+        std::exit(EXIT_FAILURE);
+    }
+
+    balancer_ = balancer;
+    balancerStub_ = hostStub;
+}
+
 void kodes::Integrator::setDeltaT(const scalar deltaT)
 {
     // One trial step per scratch slot, seeded by the thread that owns it
@@ -230,11 +268,18 @@ void kodes::Integrator::solve(scalar deltaT, label realBatchSize)
         std::exit(EXIT_FAILURE);
     }
 
+    // on the default stream, like the solve, so the solve sees the finished
+    // order without a synchronisation
+    if (balancerStub_)
+    {
+        balancerStub_->balance(balancer_, method_, ode_, realBatchSize, config_);
+    }
+
     controls_.realBatchSize = realBatchSize;
     controls_.deltaT = deltaT;
 
     kodes::solveKernel
         <<<config_.blocks, config_.threads, config_.sharedMemSize>>>
-        (ode_, method_, controls_);
+        (ode_, method_, balancer_, controls_);
     CUDA_CHECK_LAST();
 }

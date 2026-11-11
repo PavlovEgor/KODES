@@ -12,7 +12,7 @@
 // device memory with a device vtable.
 //
 // The same four steps for every such class in the library - the ODE system,
-// the resources, the integration method - so they are written once here and every
+// the integration method, the balancer - so they are written once here and every
 // concrete class hands out four one-line forwards into them.
 //
 // The contract a class has to keep to be built this way:
